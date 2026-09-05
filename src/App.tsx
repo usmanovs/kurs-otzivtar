@@ -418,6 +418,14 @@ export default function App() {
           </div>
         </section>
 
+        {/* Teachers & Mentors Directory */}
+        <TeachersSection
+          teachers={teachers}
+          courses={courses}
+          currentLang={currentLang}
+          onAddTeacher={() => setIsAddTeacherOpen(true)}
+        />
+
         {/* Educational Safety Banner */}
         <TransparencyBanner
           currentLang={currentLang}
@@ -517,14 +525,6 @@ export default function App() {
             </div>
           )}
         </section>
-
-        {/* Teachers & Mentors Directory */}
-        <TeachersSection
-          teachers={teachers}
-          courses={courses}
-          currentLang={currentLang}
-          onAddTeacher={() => setIsAddTeacherOpen(true)}
-        />
       </main>
 
       {/* Footer */}
