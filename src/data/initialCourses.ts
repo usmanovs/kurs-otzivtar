@@ -669,6 +669,71 @@ export const INITIAL_COURSES_RAW: Omit<Course, 'averageRating' | 'reviewCount' |
         unhelpfulCount: 0
       }
     ]
+  },
+  {
+    id: 'geekbrains-python',
+    name: 'Python Developer',
+    academyName: 'GeekBrains (Россия/ТМД онлайн платформасы, Кыргызстанга жеткиликтүү)',
+    category: 'it_programming',
+    format: 'online',
+    durationText: '10 ай',
+    priceKGS: 1700,
+    websiteOrInstagram: 'https://geekbrains.kg/courses/',
+    description: 'GeekBrains — Россиядан башталып, азыр Кыргызстанга багытталган өзүнчө баракчасы бар ири ТМД онлайн-билим берүү платформасы, жергиликтүү Бишкектеги академия эмес. Толугу менен онлайн окутат, видеоматериалдарга мөөнөтсүз мүмкүнчүлүк берет. Баасы 1700 сом/айдан башталат (расмий сайтка ылайык, толук курс баасы эмес — айлык төлөм).',
+    isWarningCourse: false,
+    reviews: []
+  },
+  {
+    id: 'skillbox-programming',
+    name: 'Программалоо курстары (Python, JavaScript, Frontend ж.б.)',
+    academyName: 'Skillbox (ТМД онлайн платформасы, Кыргызстан баракчасы)',
+    category: 'it_programming',
+    format: 'online',
+    durationText: '2-13 ай (программага жараша)',
+    priceKGS: undefined,
+    websiteOrInstagram: 'https://skillbox.kg/ru/courses/programming/',
+    description: 'Skillbox — Кыргызстан үчүн өзүнчө баракчасы бар ири ТМД онлайн-платформасы (жергиликтүү академия эмес). Программалар 2 айлык кыска курстардан 13 айлык кесипкөй программаларга чейин ар түрдүү. Расмий сайтта так баа көрсөтүлгөн эмес, бөлүп төлөө сунушталат — сатып алуудан мурун так суммасын администрация менен тактап алыңыз.',
+    isWarningCourse: false,
+    reviews: []
+  },
+  {
+    id: 'knewit-programming',
+    name: 'Программалоо курстары (Front-End, Back-End, Python Django ж.б.)',
+    academyName: 'KnewIT School (Казакстан — Алматы/Астана, онлайн Кыргызстандан да жеткиликтүү)',
+    category: 'it_programming',
+    format: 'online',
+    durationText: '3-6 ай',
+    priceKGS: undefined,
+    websiteOrInstagram: 'https://knewit.kz/',
+    description: '⚠️ Маанилүү: KnewIT негизинен Казакстандагы мектеп (офлайн сабактар Алматы жана Астанада өтөт, финансылоо казак банктары аркылуу). Кыргызстандан студенттер онлайн форматта гана кошула алат. Так баасы сайтта жарыяланган эмес.',
+    isWarningCourse: false,
+    reviews: []
+  },
+  {
+    id: 'beeline-it-courses',
+    name: 'IT курстары (программалоонун негиздери, UI/UX, Frontend/Backend)',
+    academyName: 'Beeline Кыргызстан',
+    category: 'it_programming',
+    format: 'online',
+    durationText: 'Программага жараша ар түрдүү',
+    priceKGS: undefined,
+    websiteOrInstagram: 'https://beeline.kg/ru/it-courses',
+    description: 'Beeline мобилдик оператору тарабынан сунушталган IT курстары: программалоонун негиздери, UI/UX дизайн, backend, frontend жана компьютердик сабаттуулук. Расмий баракчадан так мөөнөт жана баа маалыматын алуу мүмкүн болгон жок — тизмелөө учурунда жеткиликтүү болгон жалпы багыттарга негизделген.',
+    isWarningCourse: false,
+    reviews: []
+  },
+  {
+    id: 'skillfactory-it-specialist',
+    name: 'IT-специализация (Тест-драйв + адистик тандоо)',
+    academyName: 'SkillFactory (Орусиядан онлайн платформа)',
+    category: 'it_programming',
+    format: 'online',
+    durationText: '2 ай (тест-драйв) + адистик боюнча кошумча',
+    priceKGS: undefined,
+    websiteOrInstagram: 'https://skillfactory.kz/it-specialist',
+    description: 'Россиялык SkillFactory платформасынын Кыргызстан/Казакстан аудиториясына багытталган курсу. 2 айлык "тест-драйв" мезгилинде 8 IT багытын (Python, frontend, QA, Data Science, кибер коопсуздук ж.б.) байкап көрүүгө болот, андан кийин тандалган адистик боюнча окуу уланат. Баасы расмий сайтта орус рублинде көрсөтүлгөн (айына 4300 рубльден башталат, 36 айлык бөлүп төлөө менен) — сомго так конвертация жок, төлөм жасаардан мурун так курсту тактап алыңыз.',
+    isWarningCourse: false,
+    reviews: []
   }
 ];
 

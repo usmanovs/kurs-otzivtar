@@ -128,8 +128,10 @@ export const CourseCard: React.FC<CourseCardProps> = ({
           <div className="flex items-center gap-1.5">
             <Coins className="w-3.5 h-3.5 text-slate-400" />
             <span className="text-slate-500">{t.courseCard.price}:</span>
-            <span className="font-bold text-slate-900">
-              {course.priceKGS.toLocaleString('ru-RU')} сом
+            <span className={`font-bold ${typeof course.priceKGS === 'number' ? 'text-slate-900' : 'text-slate-400 italic font-medium'}`}>
+              {typeof course.priceKGS === 'number'
+                ? `${course.priceKGS.toLocaleString('ru-RU')} сом`
+                : t.courseCard.priceNotSpecified}
             </span>
           </div>
           <div className="flex items-center gap-1 text-slate-500">

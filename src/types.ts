@@ -58,7 +58,7 @@ export interface Course {
   category: CourseCategory;
   format: CourseFormat;
   durationText: string;
-  priceKGS: number;
+  priceKGS?: number;
   websiteOrInstagram?: string;
   description: string;
   isWarningCourse?: boolean;

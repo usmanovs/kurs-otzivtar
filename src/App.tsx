@@ -169,11 +169,13 @@ export default function App() {
         if (sortBy === 'lowest_rated') {
           return a.averageRating - b.averageRating;
         }
-        if (sortBy === 'price_asc') {
-          return a.priceKGS - b.priceKGS;
-        }
-        if (sortBy === 'price_desc') {
-          return b.priceKGS - a.priceKGS;
+        if (sortBy === 'price_asc' || sortBy === 'price_desc') {
+          const aHasPrice = typeof a.priceKGS === 'number';
+          const bHasPrice = typeof b.priceKGS === 'number';
+          if (aHasPrice && !bHasPrice) return -1;
+          if (!aHasPrice && bHasPrice) return 1;
+          if (!aHasPrice && !bHasPrice) return 0;
+          return sortBy === 'price_asc' ? a.priceKGS! - b.priceKGS! : b.priceKGS! - a.priceKGS!;
         }
         return 0;
       });

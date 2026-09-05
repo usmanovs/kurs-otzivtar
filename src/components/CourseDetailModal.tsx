@@ -108,7 +108,9 @@ export const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
               </span>
               <span className="flex items-center gap-1">
                 <Coins className="w-3.5 h-3.5 text-slate-400" />
-                {course.priceKGS.toLocaleString('ru-RU')} сом
+                {typeof course.priceKGS === 'number'
+                  ? `${course.priceKGS.toLocaleString('ru-RU')} сом`
+                  : t.courseCard.priceNotSpecified}
               </span>
               {course.websiteOrInstagram && (
                 <a
