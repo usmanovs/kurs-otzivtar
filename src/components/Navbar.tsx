@@ -47,7 +47,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             {/* Language Switcher */}
             <div className="flex items-center bg-slate-100 rounded-full p-1 border border-slate-200 text-xs font-medium">
               <Globe className="w-3.5 h-3.5 text-slate-500 ml-1.5 mr-1 hidden sm:inline" />
-              {(['ky', 'ru', 'en'] as SupportedLang[]).map((lang) => (
+              {(['ky', 'ru'] as SupportedLang[]).map((lang) => (
                 <button
                   key={lang}
                   type="button"
@@ -59,7 +59,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
-                  {lang === 'ky' ? 'Кыргызча' : lang === 'ru' ? 'Рус' : 'Eng'}
+                  {lang === 'ky' ? 'Кыргызча' : 'Рус'}
                 </button>
               ))}
             </div>

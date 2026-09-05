@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Course, Review, CourseCategory, CourseFormat } from './types';
+import { Course, Review, CourseCategory, CourseFormat, Teacher } from './types';
 import { INITIAL_COURSES, calculateCourseMetrics } from './data/initialCourses';
+import { INITIAL_TEACHERS } from './data/teachers';
 import { SupportedLang, TRANSLATIONS } from './translations';
 import { Navbar } from './components/Navbar';
 import { TransparencyBanner } from './components/TransparencyBanner';
@@ -10,6 +11,8 @@ import { CourseCard } from './components/CourseCard';
 import { CourseDetailModal } from './components/CourseDetailModal';
 import { AddReviewModal } from './components/AddReviewModal';
 import { AddCourseModal } from './components/AddCourseModal';
+import { TeachersSection } from './components/TeachersSection';
+import { AddTeacherModal } from './components/AddTeacherModal';
 import {
   ShieldAlert,
   Search,
@@ -20,13 +23,14 @@ import {
 } from 'lucide-react';
 
 const STORAGE_KEY = 'kursotzivtar_courses_v3';
+const TEACHERS_STORAGE_KEY = 'kursotzivtar_teachers_v1';
 const LANG_STORAGE_KEY = 'kursotzivtar_lang';
 
 export default function App() {
   // Language state
   const [currentLang, setCurrentLang] = useState<SupportedLang>(() => {
     const saved = localStorage.getItem(LANG_STORAGE_KEY);
-    return (saved === 'ru' || saved === 'en' || saved === 'ky') ? saved : 'ky';
+    return (saved === 'ru' || saved === 'ky') ? saved : 'ky';
   });
 
   // Courses state
@@ -45,6 +49,22 @@ export default function App() {
     return INITIAL_COURSES;
   });
 
+  // Teachers state
+  const [teachers, setTeachers] = useState<Teacher[]>(() => {
+    try {
+      const saved = localStorage.getItem(TEACHERS_STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      }
+    } catch (e) {
+      console.error('Error loading teachers from localStorage', e);
+    }
+    return INITIAL_TEACHERS;
+  });
+
   // Filters state
   const [selectedCategory, setSelectedCategory] = useState<CourseCategory>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -57,6 +77,7 @@ export default function App() {
   const [isAddReviewOpen, setIsAddReviewOpen] = useState(false);
   const [reviewPreselectedCourse, setReviewPreselectedCourse] = useState<Course | null>(null);
   const [isAddCourseOpen, setIsAddCourseOpen] = useState(false);
+  const [isAddTeacherOpen, setIsAddTeacherOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const t = TRANSLATIONS[currentLang];
@@ -69,6 +90,15 @@ export default function App() {
       console.error('Failed to save to localStorage', e);
     }
   }, [courses]);
+
+  // Save teachers to localStorage whenever updated
+  useEffect(() => {
+    try {
+      localStorage.setItem(TEACHERS_STORAGE_KEY, JSON.stringify(teachers));
+    } catch (e) {
+      console.error('Failed to save teachers to localStorage', e);
+    }
+  }, [teachers]);
 
   // Save lang to localStorage
   const handleSelectLang = (lang: SupportedLang) => {
@@ -315,6 +345,16 @@ export default function App() {
     setSelectedCourseForDetail(newCourse);
   };
 
+  // Add new teacher
+  const handleAddTeacher = (newTeacherData: Omit<Teacher, 'id'>) => {
+    const newTeacher: Teacher = {
+      ...newTeacherData,
+      id: `teacher-${Date.now()}`,
+    };
+    setTeachers((prev) => [newTeacher, ...prev]);
+    showToast(`"${newTeacher.name}" мугалимдер тизмесине кошулду!`);
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 selection:bg-indigo-100 selection:text-indigo-900">
       {/* Toast Notification */}
@@ -477,6 +517,14 @@ export default function App() {
             </div>
           )}
         </section>
+
+        {/* Teachers & Mentors Directory */}
+        <TeachersSection
+          teachers={teachers}
+          courses={courses}
+          currentLang={currentLang}
+          onAddTeacher={() => setIsAddTeacherOpen(true)}
+        />
       </main>
 
       {/* Footer */}
@@ -522,6 +570,7 @@ export default function App() {
       {isAddReviewOpen && (
         <AddReviewModal
           courses={courses}
+          teachers={teachers}
           preSelectedCourse={reviewPreselectedCourse}
           currentLang={currentLang}
           onClose={() => {
@@ -529,6 +578,14 @@ export default function App() {
             setReviewPreselectedCourse(null);
           }}
           onSubmitReview={handleSubmitReview}
+        />
+      )}
+
+      {isAddTeacherOpen && (
+        <AddTeacherModal
+          currentLang={currentLang}
+          onClose={() => setIsAddTeacherOpen(false)}
+          onAddTeacher={handleAddTeacher}
         />
       )}
 

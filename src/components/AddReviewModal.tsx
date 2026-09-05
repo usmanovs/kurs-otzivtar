@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Course, Review, StudentStatus } from '../types';
+import { Course, Review, StudentStatus, Teacher } from '../types';
 import { SupportedLang, TRANSLATIONS } from '../translations';
 import {
   X,
@@ -15,6 +15,7 @@ import {
 
 interface AddReviewModalProps {
   courses: Course[];
+  teachers: Teacher[];
   preSelectedCourse: Course | null;
   currentLang: SupportedLang;
   onClose: () => void;
@@ -23,6 +24,7 @@ interface AddReviewModalProps {
 
 export const AddReviewModal: React.FC<AddReviewModalProps> = ({
   courses,
+  teachers,
   preSelectedCourse,
   currentLang,
   onClose,
@@ -55,9 +57,13 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
   const [isVerified, setIsVerified] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
 
-  // Existing teacher/mentor names across all courses, for lookup-or-create autocomplete
+  // Existing teacher/mentor names — from the teacher directory and from prior reviews — for lookup-or-create autocomplete
   const knownTeacherNames = useMemo(() => {
     const seen = new Map<string, string>();
+    teachers.forEach((teacher) => {
+      const key = teacher.name.trim().toLowerCase();
+      if (key && !seen.has(key)) seen.set(key, teacher.name.trim());
+    });
     courses.forEach((c) => {
       c.reviews.forEach((r) => {
         if (r.teacherName && r.teacherName.trim()) {
@@ -67,7 +73,7 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
       });
     });
     return Array.from(seen.values()).sort((a, b) => a.localeCompare(b));
-  }, [courses]);
+  }, [courses, teachers]);
 
   const getRatingDesc = (val: number) => {
     switch (val) {

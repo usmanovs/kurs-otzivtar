@@ -51,6 +51,13 @@ export interface Review {
   userVoted?: 'helpful' | 'unhelpful';
 }
 
+export interface Teacher {
+  id: string;
+  name: string;
+  bio?: string;
+  academyName?: string;
+}
+
 export interface Course {
   id: string;
   name: string;

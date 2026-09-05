@@ -1,4 +1,4 @@
-export type SupportedLang = 'ky' | 'ru' | 'en';
+export type SupportedLang = 'ky' | 'ru';
 
 export const TRANSLATIONS = {
   ky: {
@@ -130,6 +130,24 @@ export const TRANSLATIONS = {
       website: 'Instagram баракчасы же веб-сайты',
       description: 'Курс жөнүндө кыскача маалымат',
       submitBtn: 'Курсту кошуу'
+    },
+    teachersSection: {
+      title: 'Мугалимдер жана менторлор',
+      subtitle: 'Сын-пикирлерде аталган жана коомчулук кошкон мугалимдер',
+      addBtn: 'Мугалим кошуу',
+      noReviewsYet: 'Азырынча бул мугалим боюнча сын-пикир жок',
+      reviewsCount: 'сын-пикир',
+      emptyState: 'Азырынча мугалимдер тизмеде жок. Биринчи болуп кошуңуз!'
+    },
+    addTeacherModal: {
+      title: 'Жаңы мугалим же ментор кошуу',
+      subtitle: 'Мугалимди тизмеге кошкондон кийин, аны боюнча сын-пикир калтырса болот',
+      name: 'Мугалимдин же ментордун толук аты-жөнү',
+      academy: 'Иштеген академиясы (милдеттүү эмес)',
+      bio: 'Кыскача маалымат (адистиги, тажрыйбасы) — милдеттүү эмес',
+      submitBtn: 'Мугалимди кошуу',
+      cancelBtn: 'Жокко чыгаруу',
+      errorName: 'Мугалимдин атын жазыңыз'
     },
     stats: {
       coursesCount: 'Талданган курстар',
@@ -268,6 +286,24 @@ export const TRANSLATIONS = {
       description: 'Краткое описание курса',
       submitBtn: 'Добавить курс'
     },
+    teachersSection: {
+      title: 'Преподаватели и менторы',
+      subtitle: 'Преподаватели, упомянутые в отзывах или добавленные сообществом',
+      addBtn: 'Добавить преподавателя',
+      noReviewsYet: 'Пока нет отзывов об этом преподавателе',
+      reviewsCount: 'отзывов',
+      emptyState: 'Пока преподавателей нет. Добавьте первым!'
+    },
+    addTeacherModal: {
+      title: 'Добавить преподавателя или ментора',
+      subtitle: 'После добавления преподавателя о нём можно оставить отзыв',
+      name: 'Полное имя преподавателя или ментора',
+      academy: 'Академия (необязательно)',
+      bio: 'Краткая информация (специализация, опыт) — необязательно',
+      submitBtn: 'Добавить преподавателя',
+      cancelBtn: 'Отмена',
+      errorName: 'Укажите имя преподавателя'
+    },
     stats: {
       coursesCount: 'Курсов проверено',
       reviewsCount: 'Честных отзывов',
@@ -275,141 +311,4 @@ export const TRANSLATIONS = {
       independentNotice: '100% независимый портал'
     }
   },
-  en: {
-    siteTitle: 'Kurs-Otzivtar.com',
-    siteSubtitle: 'Honest Reviews for Online Courses in Kyrgyzstan',
-    tagline: 'Transparency in education and real student experiences',
-    searchPlaceholder: 'Search by course name, school or tech (e.g. Python, Geeks, SMM)...',
-    allCategories: 'All categories',
-    submitReviewBtn: 'Write a Review',
-    addCourseBtn: 'Add Course',
-    warningBannerTitle: 'How to avoid bad courses and scams in Kyrgyzstan:',
-    warningBannerPoint1: 'Never trust promises of "$2,000 in 1 month" — real professional skills require dedication and time.',
-    warningBannerPoint2: 'Always read the contract and refund terms thoroughly before transferring money to personal bank cards.',
-    warningBannerPoint3: 'Inspect the instructors\' real LinkedIn profiles, CVs, and verify alumni project portfolios.',
-    filterTitle: 'Filters',
-    categories: {
-      all: 'All',
-      it_programming: 'IT & Programming',
-      design_uiux: 'Design & UI/UX',
-      languages: 'Foreign Languages',
-      marketing_smm: 'Marketing & SMM',
-      business_trading: 'Business & Trading',
-      data_analytics: 'Data Analytics',
-      psychology: 'Psychology',
-      beauty_cosmetology: 'Beauty & Cosmetology',
-      driving_school: 'Driving School',
-      cooking_culinary: 'Cooking & Culinary',
-      finance_accounting: 'Finance & Accounting',
-      kids_development: 'Kids Development',
-      arts_music: 'Arts & Music',
-      ort_school: 'National Testing (ORT) & School'
-    },
-    format: {
-      all: 'All formats',
-      online: 'Online only',
-      offline: 'Offline',
-      hybrid: 'Hybrid'
-    },
-    ratings: {
-      all: 'Any rating',
-      high: '4.0+ (Top rated)',
-      medium: '3.0 - 4.0 (Average)',
-      low: 'Below 3.0 (⚠️ High complaints / Questionable)'
-    },
-    sorting: {
-      label: 'Sort by:',
-      most_reviewed: 'Most reviews',
-      highest_rated: 'Highest rating',
-      lowest_rated: 'Lowest rating (Problematic courses)',
-      price_asc: 'Price: Low to High',
-      price_desc: 'Price: High to Low'
-    },
-    courseCard: {
-      reviewsCount: 'reviews',
-      recommendRate: 'recommend',
-      price: 'Price:',
-      priceNotSpecified: 'Price not published',
-      duration: 'Duration:',
-      teachers: 'Mentors:',
-      practice: 'Practice:',
-      jobSupport: 'Job Support:',
-      value: 'Value:',
-      viewDetails: 'Read Reviews',
-      addReview: 'Review Course',
-      warningBadge: '⚠️ WARNING: High student complaints',
-      verifiedGraduate: 'Verified Graduate'
-    },
-    detailModal: {
-      close: 'Close',
-      subScoresTitle: 'Rating Breakdown',
-      ratingDistribution: 'Score Distribution',
-      reviewsTab: 'Student Reviews',
-      allReviews: 'All',
-      positive: 'Positive',
-      negative: 'Complaints / Warnings',
-      verifiedOnly: 'Verified Only',
-      pros: 'Pros:',
-      cons: 'Cons & Issues:',
-      advice: 'Advice for newcomers:',
-      pricePaid: 'Tuition paid:',
-      cohort: 'Cohort year:',
-      duration: 'Duration:',
-      helpfulQuestion: 'Was this review helpful?',
-      recommendYes: 'Recommends this course',
-      recommendNo: 'DOES NOT recommend this course',
-      scamWarningReported: 'Warning reported regarding false job promises or refusal of refund',
-      noReviewsYet: 'No reviews yet for this course. Be the first to review!'
-    },
-    addReviewModal: {
-      title: 'Write a Course Review',
-      subtitle: 'Your honest feedback protects future students from wasting money and time',
-      teacherName: "Teacher or mentor's name",
-      selectCourse: 'Select Course',
-      authorName: 'Your Name or Alias',
-      authorStatus: 'Your Status:',
-      statusGraduate: 'Graduated',
-      statusCurrent: 'Currently studying',
-      statusDropped: 'Dropped out due to dissatisfaction',
-      overallRating: 'Overall Rating (1 to 5 stars):',
-      teacherRating: 'Instructor and mentor quality:',
-      practiceRating: 'Practice and assignments:',
-      jobSupportRating: 'Career support & job assistance:',
-      valueRating: 'Value for money:',
-      recommendQuestion: 'Would you recommend this course?',
-      yes: 'Yes, I recommend',
-      no: 'No, I do not recommend',
-      pricePaid: 'How much did you pay (in KGS)?',
-      durationMonths: 'How many months did you study?',
-      cohortYear: 'Year attended (e.g. 2024)',
-      reviewTitle: 'Short headline of your review',
-      fullReview: 'Detailed feedback (what was good, what was bad):',
-      prosLabel: 'Pros (comma or newline separated):',
-      consLabel: 'Cons & problems:',
-      adviceLabel: 'Advice for future students:',
-      scamWarningCheckbox: 'I report misleading claims (e.g. false salary promises, refusal of refunds)',
-      verifiedCheckbox: 'I verify that I was an authentic student of this course',
-      submitBtn: 'Publish Review',
-      cancelBtn: 'Cancel'
-    },
-    addCourseModal: {
-      title: 'Add a New Course or Academy',
-      subtitle: 'List a course so students can write transparent reviews',
-      name: 'Course Title (e.g. Frontend React Developer)',
-      academy: 'Academy / Organizer (e.g. Geeks, Codify, or Independent mentor)',
-      category: 'Category',
-      format: 'Format',
-      duration: 'Duration (e.g. 6 months)',
-      price: 'Estimated Price (KGS)',
-      website: 'Instagram page or website link',
-      description: 'Brief description of the course',
-      submitBtn: 'Add Course'
-    },
-    stats: {
-      coursesCount: 'Courses Analyzed',
-      reviewsCount: 'Honest Reviews',
-      warningCoursesCount: 'Suspicious Courses Flagged',
-      independentNotice: '100% Independent Community Platform'
-    }
-  }
 };
