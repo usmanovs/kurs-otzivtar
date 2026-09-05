@@ -23,7 +23,7 @@ import {
 } from 'lucide-react';
 
 const STORAGE_KEY = 'kursotzivtar_courses_v3';
-const TEACHERS_STORAGE_KEY = 'kursotzivtar_teachers_v3';
+const TEACHERS_STORAGE_KEY = 'kursotzivtar_teachers_v5';
 const LANG_STORAGE_KEY = 'kursotzivtar_lang';
 
 export default function App() {

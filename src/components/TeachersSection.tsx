@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Course, Teacher } from '../types';
 import { SupportedLang, TRANSLATIONS } from '../translations';
-import { GraduationCap, Star, PlusCircle, Building2, Pencil } from 'lucide-react';
+import { GraduationCap, Star, PlusCircle, Building2, Pencil, Instagram, Youtube } from 'lucide-react';
 
 interface TeachersSectionProps {
   teachers: Teacher[];
@@ -121,10 +121,39 @@ export const TeachersSection: React.FC<TeachersSectionProps> = ({
                 <p className="text-xs text-slate-600 leading-relaxed">{teacher.bio}</p>
               )}
 
-              <div className="text-2xs text-slate-400 font-medium mt-auto pt-2">
-                {reviewCount > 0
-                  ? `${reviewCount} ${t.teachersSection.reviewsCount}`
-                  : t.teachersSection.noReviewsYet}
+              <div className="flex items-center justify-between mt-auto pt-2">
+                <div className="text-2xs text-slate-400 font-medium">
+                  {reviewCount > 0
+                    ? `${reviewCount} ${t.teachersSection.reviewsCount}`
+                    : t.teachersSection.noReviewsYet}
+                </div>
+
+                {(teacher.instagramUrl || teacher.youtubeUrl) && (
+                  <div className="flex items-center gap-2">
+                    {teacher.instagramUrl && (
+                      <a
+                        href={teacher.instagramUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label="Instagram"
+                        className="text-slate-400 hover:text-pink-600 transition-colors"
+                      >
+                        <Instagram className="w-4 h-4" />
+                      </a>
+                    )}
+                    {teacher.youtubeUrl && (
+                      <a
+                        href={teacher.youtubeUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label="YouTube"
+                        className="text-slate-400 hover:text-red-600 transition-colors"
+                      >
+                        <Youtube className="w-4 h-4" />
+                      </a>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           ))}

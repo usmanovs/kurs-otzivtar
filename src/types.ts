@@ -57,6 +57,8 @@ export interface Teacher {
   bio?: string;
   academyName?: string;
   photoUrl?: string;
+  instagramUrl?: string;
+  youtubeUrl?: string;
 }
 
 export interface Course {

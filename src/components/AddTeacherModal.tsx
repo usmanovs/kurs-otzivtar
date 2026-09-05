@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { Teacher } from '../types';
 import { SupportedLang, TRANSLATIONS } from '../translations';
-import { X, UserPlus, Upload, Trash2 } from 'lucide-react';
+import { X, UserPlus, Upload, Trash2, Instagram, Youtube } from 'lucide-react';
 
 interface AddTeacherModalProps {
   currentLang: SupportedLang;
@@ -24,6 +24,8 @@ export const AddTeacherModal: React.FC<AddTeacherModalProps> = ({
   const [academyName, setAcademyName] = useState(editingTeacher?.academyName || '');
   const [bio, setBio] = useState(editingTeacher?.bio || '');
   const [photoUrl, setPhotoUrl] = useState(editingTeacher?.photoUrl || '');
+  const [instagramUrl, setInstagramUrl] = useState(editingTeacher?.instagramUrl || '');
+  const [youtubeUrl, setYoutubeUrl] = useState(editingTeacher?.youtubeUrl || '');
   const [error, setError] = useState('');
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -51,6 +53,8 @@ export const AddTeacherModal: React.FC<AddTeacherModalProps> = ({
         academyName: academyName.trim() || undefined,
         bio: bio.trim() || undefined,
         photoUrl: photoUrl.trim() || undefined,
+        instagramUrl: instagramUrl.trim() || undefined,
+        youtubeUrl: youtubeUrl.trim() || undefined,
       },
       editingTeacher?.id
     );
@@ -154,7 +158,7 @@ export const AddTeacherModal: React.FC<AddTeacherModalProps> = ({
               id="new-teacher-name-input"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Мис: Барпиев Азиретали"
+              placeholder="Мис: Азиретали Барпиев"
               className="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
               required
             />
@@ -185,6 +189,38 @@ export const AddTeacherModal: React.FC<AddTeacherModalProps> = ({
               onChange={(e) => setBio(e.target.value)}
               className="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
             />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1 flex items-center gap-1.5">
+                <Instagram className="w-3.5 h-3.5 text-slate-500" />
+                {t.addTeacherModal.instagram}
+              </label>
+              <input
+                type="url"
+                id="new-teacher-instagram-input"
+                value={instagramUrl}
+                onChange={(e) => setInstagramUrl(e.target.value)}
+                placeholder="https://instagram.com/..."
+                className="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1 flex items-center gap-1.5">
+                <Youtube className="w-3.5 h-3.5 text-slate-500" />
+                {t.addTeacherModal.youtube}
+              </label>
+              <input
+                type="url"
+                id="new-teacher-youtube-input"
+                value={youtubeUrl}
+                onChange={(e) => setYoutubeUrl(e.target.value)}
+                placeholder="https://youtube.com/@..."
+                className="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+              />
+            </div>
           </div>
 
           <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200">
