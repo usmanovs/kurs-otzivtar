@@ -19,7 +19,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 
-const STORAGE_KEY = 'kursotzivtar_courses_v2';
+const STORAGE_KEY = 'kursotzivtar_courses_v3';
 const LANG_STORAGE_KEY = 'kursotzivtar_lang';
 
 export default function App() {
