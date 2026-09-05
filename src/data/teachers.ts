@@ -14,21 +14,25 @@ export const INITIAL_TEACHERS: Teacher[] = [
     id: 'teacher-kymbat-akylbekova',
     name: 'Кымбат Акылбекова',
     photoUrl: '/teachers/kymbat-akylbekova.webp',
+    instagramUrl: 'https://www.instagram.com/KYMBAT_AKYLBEKOVA_/',
   },
   {
     id: 'teacher-alymkan-akylbekova',
     name: 'Алымкан Акылбекова',
     photoUrl: '/teachers/alymkan-akylbekova.webp',
+    instagramUrl: 'https://www.instagram.com/alymkan_producer/',
   },
   {
     id: 'teacher-dinara-alieva',
     name: 'Динара Алиева',
     photoUrl: '/teachers/dinara-alieva.png',
+    instagramUrl: 'https://www.instagram.com/dinara_demanbeg/',
   },
   {
     id: 'teacher-jumagul-alaychieva',
     name: 'Жумагул Алайчиева',
     photoUrl: '/teachers/jumagul-alaychieva.png',
+    youtubeUrl: 'https://www.youtube.com/@jumagul_alaichieva',
   },
   {
     id: 'teacher-samara-keneshova',
