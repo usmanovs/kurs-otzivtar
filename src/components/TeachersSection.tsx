@@ -1,20 +1,43 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Course, Teacher } from '../types';
 import { SupportedLang, TRANSLATIONS } from '../translations';
-import { GraduationCap, Star, PlusCircle, Building2 } from 'lucide-react';
+import { GraduationCap, Star, PlusCircle, Building2, Pencil } from 'lucide-react';
 
 interface TeachersSectionProps {
   teachers: Teacher[];
   courses: Course[];
   currentLang: SupportedLang;
   onAddTeacher: () => void;
+  onEditTeacher: (teacher: Teacher) => void;
 }
+
+const TeacherAvatar: React.FC<{ teacher: Teacher }> = ({ teacher }) => {
+  const [imgError, setImgError] = useState(false);
+
+  if (teacher.photoUrl && !imgError) {
+    return (
+      <img
+        src={teacher.photoUrl}
+        alt={teacher.name}
+        onError={() => setImgError(true)}
+        className="w-10 h-10 rounded-xl object-cover shrink-0 border border-slate-200"
+      />
+    );
+  }
+
+  return (
+    <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-700 font-bold flex items-center justify-center text-sm shrink-0">
+      {teacher.name.charAt(0).toUpperCase()}
+    </div>
+  );
+};
 
 export const TeachersSection: React.FC<TeachersSectionProps> = ({
   teachers,
   courses,
   currentLang,
   onAddTeacher,
+  onEditTeacher,
 }) => {
   const t = TRANSLATIONS[currentLang];
 
@@ -63,12 +86,20 @@ export const TeachersSection: React.FC<TeachersSectionProps> = ({
             <div
               key={teacher.id}
               id={`teacher-card-${teacher.id}`}
-              className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs flex flex-col gap-2"
+              className="group relative bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs flex flex-col gap-2"
             >
-              <div className="flex items-start justify-between gap-2">
-                <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-700 font-bold flex items-center justify-center text-sm shrink-0">
-                  {teacher.name.charAt(0).toUpperCase()}
-                </div>
+              <button
+                type="button"
+                id={`edit-teacher-btn-${teacher.id}`}
+                onClick={() => onEditTeacher(teacher)}
+                aria-label="Edit"
+                className="absolute top-3 right-3 p-1.5 rounded-full text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors cursor-pointer opacity-0 group-hover:opacity-100 focus:opacity-100"
+              >
+                <Pencil className="w-3.5 h-3.5" />
+              </button>
+
+              <div className="flex items-start justify-between gap-2 pr-6">
+                <TeacherAvatar teacher={teacher} />
                 {reviewCount > 0 && (
                   <div className="flex items-center gap-1 text-xs font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
                     <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />

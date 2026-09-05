@@ -56,6 +56,7 @@ export interface Teacher {
   name: string;
   bio?: string;
   academyName?: string;
+  photoUrl?: string;
 }
 
 export interface Course {

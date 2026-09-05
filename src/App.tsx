@@ -23,7 +23,7 @@ import {
 } from 'lucide-react';
 
 const STORAGE_KEY = 'kursotzivtar_courses_v3';
-const TEACHERS_STORAGE_KEY = 'kursotzivtar_teachers_v1';
+const TEACHERS_STORAGE_KEY = 'kursotzivtar_teachers_v2';
 const LANG_STORAGE_KEY = 'kursotzivtar_lang';
 
 export default function App() {
@@ -78,6 +78,7 @@ export default function App() {
   const [reviewPreselectedCourse, setReviewPreselectedCourse] = useState<Course | null>(null);
   const [isAddCourseOpen, setIsAddCourseOpen] = useState(false);
   const [isAddTeacherOpen, setIsAddTeacherOpen] = useState(false);
+  const [editingTeacher, setEditingTeacher] = useState<Teacher | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const t = TRANSLATIONS[currentLang];
@@ -345,14 +346,21 @@ export default function App() {
     setSelectedCourseForDetail(newCourse);
   };
 
-  // Add new teacher
-  const handleAddTeacher = (newTeacherData: Omit<Teacher, 'id'>) => {
-    const newTeacher: Teacher = {
-      ...newTeacherData,
-      id: `teacher-${Date.now()}`,
-    };
-    setTeachers((prev) => [newTeacher, ...prev]);
-    showToast(`"${newTeacher.name}" мугалимдер тизмесине кошулду!`);
+  // Add or update a teacher
+  const handleSubmitTeacher = (teacherData: Omit<Teacher, 'id'>, editingId?: string) => {
+    if (editingId) {
+      setTeachers((prev) =>
+        prev.map((t) => (t.id === editingId ? { ...t, ...teacherData } : t))
+      );
+      showToast(`"${teacherData.name}" мугалимдин маалыматы жаңырды!`);
+    } else {
+      const newTeacher: Teacher = {
+        ...teacherData,
+        id: `teacher-${Date.now()}`,
+      };
+      setTeachers((prev) => [newTeacher, ...prev]);
+      showToast(`"${newTeacher.name}" мугалимдер тизмесине кошулду!`);
+    }
   };
 
   return (
@@ -423,7 +431,14 @@ export default function App() {
           teachers={teachers}
           courses={courses}
           currentLang={currentLang}
-          onAddTeacher={() => setIsAddTeacherOpen(true)}
+          onAddTeacher={() => {
+            setEditingTeacher(null);
+            setIsAddTeacherOpen(true);
+          }}
+          onEditTeacher={(teacher) => {
+            setEditingTeacher(teacher);
+            setIsAddTeacherOpen(true);
+          }}
         />
 
         {/* Educational Safety Banner */}
@@ -584,8 +599,12 @@ export default function App() {
       {isAddTeacherOpen && (
         <AddTeacherModal
           currentLang={currentLang}
-          onClose={() => setIsAddTeacherOpen(false)}
-          onAddTeacher={handleAddTeacher}
+          editingTeacher={editingTeacher}
+          onClose={() => {
+            setIsAddTeacherOpen(false);
+            setEditingTeacher(null);
+          }}
+          onSubmit={handleSubmitTeacher}
         />
       )}
 
