@@ -24,7 +24,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Logo & Brand matching Clean Minimalism */}
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold shadow-xs">
-              <span>Б</span>
+              <span>K</span>
             </div>
             <div>
               <div className="flex items-center gap-2">

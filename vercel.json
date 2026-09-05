@@ -1,0 +1,16 @@
+{
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "has": [{ "type": "host", "value": "kurs-otzivtar.vercel.app" }],
+      "destination": "https://kurs-otzivtar.com/$1",
+      "permanent": true
+    },
+    {
+      "source": "/(.*)",
+      "has": [{ "type": "host", "value": "kurs-otzivtar-seyitbeks-projects.vercel.app" }],
+      "destination": "https://kurs-otzivtar.com/$1",
+      "permanent": true
+    }
+  ]
+}
