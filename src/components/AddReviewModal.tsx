@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Course, Review, StudentStatus } from '../types';
 import { SupportedLang, TRANSLATIONS } from '../translations';
 import {
@@ -54,6 +54,20 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
   const [hasJobScamReport, setHasJobScamReport] = useState(false);
   const [isVerified, setIsVerified] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
+
+  // Existing teacher/mentor names across all courses, for lookup-or-create autocomplete
+  const knownTeacherNames = useMemo(() => {
+    const seen = new Map<string, string>();
+    courses.forEach((c) => {
+      c.reviews.forEach((r) => {
+        if (r.teacherName && r.teacherName.trim()) {
+          const key = r.teacherName.trim().toLowerCase();
+          if (!seen.has(key)) seen.set(key, r.teacherName.trim());
+        }
+      });
+    });
+    return Array.from(seen.values()).sort((a, b) => a.localeCompare(b));
+  }, [courses]);
 
   const getRatingDesc = (val: number) => {
     switch (val) {
@@ -208,12 +222,23 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
             <input
               type="text"
               id="teacher-name-input"
+              list="known-teacher-names"
               value={teacherName}
               onChange={(e) => setTeacherName(e.target.value)}
               placeholder="Мис: Динара Асанова"
               className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
               required
             />
+            <datalist id="known-teacher-names">
+              {knownTeacherNames.map((name) => (
+                <option key={name} value={name} />
+              ))}
+            </datalist>
+            {knownTeacherNames.length > 0 && (
+              <p className="text-2xs text-slate-400 mt-1">
+                Мурда башка студенттер пикир калтырган мугалимдер сунушталат. Эгер мугалим тизмеде жок болсо, жөн эле атын жазыңыз — ал автоматтык түрдө кошулат.
+              </p>
+            )}
           </div>
 
           {/* Select Course */}
