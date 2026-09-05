@@ -93,6 +93,13 @@ export default function App() {
       marketing_smm: 0,
       business_trading: 0,
       data_analytics: 0,
+      psychology: 0,
+      beauty_cosmetology: 0,
+      driving_school: 0,
+      cooking_culinary: 0,
+      finance_accounting: 0,
+      kids_development: 0,
+      arts_music: 0,
       ort_school: 0,
     };
     courses.forEach((c) => {

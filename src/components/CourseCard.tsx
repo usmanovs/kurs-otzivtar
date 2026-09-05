@@ -204,6 +204,11 @@ export const CourseCard: React.FC<CourseCardProps> = ({
         {/* Latest review excerpt snippet matching Design HTML */}
         {latestReview && (
           <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+            {latestReview.teacherName && (
+              <div className="text-2xs font-semibold text-indigo-600 mb-1.5">
+                Ментор: {latestReview.teacherName}
+              </div>
+            )}
             <p className="text-sm italic text-slate-600 line-clamp-2">
               "{latestReview.fullReview}"
             </p>

@@ -432,6 +432,11 @@ export const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
                     </div>
 
                     {/* Review Title & Content */}
+                    {review.teacherName && (
+                      <div className="inline-flex items-center gap-1 text-2xs font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100 mb-2">
+                        <span>Ментор: {review.teacherName}</span>
+                      </div>
+                    )}
                     <h4 className="text-base font-bold text-slate-900 mb-1">
                       {review.title}
                     </h4>

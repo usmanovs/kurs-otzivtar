@@ -12,6 +12,13 @@ import {
   GraduationCap,
   Layers,
   SlidersHorizontal,
+  Brain,
+  Scissors,
+  Car,
+  ChefHat,
+  Calculator,
+  Baby,
+  Music,
   X
 } from 'lucide-react';
 
@@ -58,6 +65,13 @@ export const CategoryFilter: React.FC<CategoryFilterProps> = ({
     { id: 'marketing_smm', label: t.categories.marketing_smm, icon: <TrendingUp className="w-4 h-4" /> },
     { id: 'business_trading', label: t.categories.business_trading, icon: <Briefcase className="w-4 h-4" /> },
     { id: 'data_analytics', label: t.categories.data_analytics, icon: <BarChart3 className="w-4 h-4" /> },
+    { id: 'psychology', label: t.categories.psychology, icon: <Brain className="w-4 h-4" /> },
+    { id: 'beauty_cosmetology', label: t.categories.beauty_cosmetology, icon: <Scissors className="w-4 h-4" /> },
+    { id: 'driving_school', label: t.categories.driving_school, icon: <Car className="w-4 h-4" /> },
+    { id: 'cooking_culinary', label: t.categories.cooking_culinary, icon: <ChefHat className="w-4 h-4" /> },
+    { id: 'finance_accounting', label: t.categories.finance_accounting, icon: <Calculator className="w-4 h-4" /> },
+    { id: 'kids_development', label: t.categories.kids_development, icon: <Baby className="w-4 h-4" /> },
+    { id: 'arts_music', label: t.categories.arts_music, icon: <Music className="w-4 h-4" /> },
     { id: 'ort_school', label: t.categories.ort_school, icon: <GraduationCap className="w-4 h-4" /> },
   ];
 

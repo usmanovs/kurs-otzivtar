@@ -130,6 +130,13 @@ export const AddCourseModal: React.FC<AddCourseModalProps> = ({
                 <option value="marketing_smm">{t.categories.marketing_smm}</option>
                 <option value="business_trading">{t.categories.business_trading}</option>
                 <option value="data_analytics">{t.categories.data_analytics}</option>
+                <option value="psychology">{t.categories.psychology}</option>
+                <option value="beauty_cosmetology">{t.categories.beauty_cosmetology}</option>
+                <option value="driving_school">{t.categories.driving_school}</option>
+                <option value="cooking_culinary">{t.categories.cooking_culinary}</option>
+                <option value="finance_accounting">{t.categories.finance_accounting}</option>
+                <option value="kids_development">{t.categories.kids_development}</option>
+                <option value="arts_music">{t.categories.arts_music}</option>
                 <option value="ort_school">{t.categories.ort_school}</option>
               </select>
             </div>

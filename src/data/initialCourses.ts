@@ -623,6 +623,52 @@ export const INITIAL_COURSES_RAW: Omit<Course, 'averageRating' | 'reviewCount' |
         unhelpfulCount: 0
       }
     ]
+  },
+  {
+    id: 'mental-health-hub-psychology',
+    name: 'Практикалык Психология жана Консультация Негиздери',
+    academyName: 'Mental Health Hub KG (Бишкек / Онлайн)',
+    category: 'psychology',
+    format: 'hybrid',
+    durationText: '4-5 ай',
+    priceKGS: 38000,
+    websiteOrInstagram: 'https://instagram.com/mentalhealthhub.kg',
+    description: 'Психологиянын негиздери, консультация берүү техникасы жана эмоционалдык интеллект боюнча практикалык курс. Сертификатталган психологдор сабак өтөт, топтук супервизия жана кейс-практика камтылган.',
+    isWarningCourse: false,
+    reviews: [
+      {
+        id: 'rev-mh1',
+        courseId: 'mental-health-hub-psychology',
+        authorName: 'Айгерим Нурланова',
+        authorStatus: 'graduate',
+        isVerified: true,
+        date: '2024-10-02',
+        overallRating: 5,
+        teacherRating: 5,
+        practiceRating: 4,
+        jobSupportRating: 3,
+        valueRating: 4,
+        wouldRecommend: true,
+        pricePaidKGS: 38000,
+        durationMonths: 5,
+        cohortYear: '2024',
+        title: 'Өзүмдү жана башкаларды түшүнүүгө чоң жардам берди',
+        fullReview: 'Мурда психология жөнүндө китептерден гана окучумун, бул курста практикада кантип консультация берүүнү, активдүү угууну үйрөттү. Топтук супервизиялар өтө пайдалуу болду — реалдуу кейстерди бирге талдадык. Мугалимдер лицензиялуу психологдор экени сезилип турду.',
+        pros: [
+          'Практикалык кейс-иштер жана ролдук оюндар',
+          'Топтук супервизия аркылуу тез өнүгүү',
+          'Жеке терапия тажрыйбасын да бөлүшүштү'
+        ],
+        cons: [
+          'Жумушка орношуу боюнча түздөн-түз колдоо аз',
+          'Топ чоңураак болсо, жеке көңүл бурулбай калат'
+        ],
+        adviceForNewcomers: 'Курска чейин эмоционалдык туруктуулугуңузду текшерип алыңыз — терең темалар көп талкууланат.',
+        hasJobScamReport: false,
+        helpfulCount: 21,
+        unhelpfulCount: 0
+      }
+    ]
   }
 ];
 

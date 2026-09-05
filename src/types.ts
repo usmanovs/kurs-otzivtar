@@ -6,6 +6,13 @@ export type CourseCategory =
   | 'marketing_smm'
   | 'business_trading'
   | 'data_analytics'
+  | 'psychology'
+  | 'beauty_cosmetology'
+  | 'driving_school'
+  | 'cooking_culinary'
+  | 'finance_accounting'
+  | 'kids_development'
+  | 'arts_music'
   | 'ort_school';
 
 export type CourseFormat = 'online' | 'offline' | 'hybrid';
@@ -18,6 +25,7 @@ export type StudentStatus =
 export interface Review {
   id: string;
   courseId: string;
+  teacherName?: string;
   authorName: string;
   isAnonymous?: boolean;
   authorStatus: StudentStatus;

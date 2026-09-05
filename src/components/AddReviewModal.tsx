@@ -30,6 +30,7 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
 }) => {
   const t = TRANSLATIONS[currentLang];
 
+  const [teacherName, setTeacherName] = useState('');
   const [selectedCourseId, setSelectedCourseId] = useState<string>(
     preSelectedCourse ? preSelectedCourse.id : courses[0]?.id || ''
   );
@@ -108,6 +109,10 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!teacherName.trim()) {
+      setErrorMsg('Мугалимдин же ментордун атын жазыңыз!');
+      return;
+    }
     if (!selectedCourseId) {
       setErrorMsg('Курсту тандаңыз!');
       return;
@@ -133,6 +138,7 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
 
     onSubmitReview({
       courseId: selectedCourseId,
+      teacherName: teacherName.trim(),
       authorName: displayName,
       isAnonymous,
       authorStatus,
@@ -193,6 +199,22 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
               <span>{errorMsg}</span>
             </div>
           )}
+
+          {/* Teacher / Mentor Name - asked first, before picking the course */}
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">
+              {t.addReviewModal.teacherName} *
+            </label>
+            <input
+              type="text"
+              id="teacher-name-input"
+              value={teacherName}
+              onChange={(e) => setTeacherName(e.target.value)}
+              placeholder="Мис: Динара Асанова"
+              className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+              required
+            />
+          </div>
 
           {/* Select Course */}
           <div>

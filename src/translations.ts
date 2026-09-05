@@ -22,6 +22,13 @@ export const TRANSLATIONS = {
       marketing_smm: 'Маркетинг жана SMM',
       business_trading: 'Бизнес жана Трейдинг',
       data_analytics: 'Маалымат аналитикасы',
+      psychology: 'Психология',
+      beauty_cosmetology: 'Сулуулук жана Косметология',
+      driving_school: 'Айдоочулук курстары',
+      cooking_culinary: 'Ашпозчулук',
+      finance_accounting: 'Финансы жана Бухгалтерия',
+      kids_development: 'Балдарды өнүктүрүү',
+      arts_music: 'Искусство жана Музыка',
       ort_school: 'ЖРТ жана Мектеп'
     },
     format: {
@@ -82,6 +89,7 @@ export const TRANSLATIONS = {
     addReviewModal: {
       title: 'Курска сын-пикир калтыруу',
       subtitle: 'Сиздин чынчыл пикириңиз башка студенттерге туура тандоо жасоого жардам берет',
+      teacherName: 'Мугалимдин же ментордун аты-жөнү',
       selectCourse: 'Курсту тандаңыз',
       authorName: 'Сиздин атыңыз (же лакап ат)',
       authorStatus: 'Сиздин статусуңуз:',
@@ -150,6 +158,13 @@ export const TRANSLATIONS = {
       marketing_smm: 'Маркетинг и SMM',
       business_trading: 'Бизнес и Трейдинг',
       data_analytics: 'Аналитика данных',
+      psychology: 'Психология',
+      beauty_cosmetology: 'Красота и Косметология',
+      driving_school: 'Автошкола',
+      cooking_culinary: 'Кулинария',
+      finance_accounting: 'Финансы и Бухгалтерия',
+      kids_development: 'Развитие детей',
+      arts_music: 'Искусство и Музыка',
       ort_school: 'ОРТ и Школьные'
     },
     format: {
@@ -210,6 +225,7 @@ export const TRANSLATIONS = {
     addReviewModal: {
       title: 'Оставить отзыв о курсе',
       subtitle: 'Ваш честный отзыв защитит будущих студентов от потери денег и времени',
+      teacherName: 'Имя преподавателя или ментора',
       selectCourse: 'Выберите курс',
       authorName: 'Ваше имя или псевдоним',
       authorStatus: 'Ваш статус:',
@@ -278,6 +294,13 @@ export const TRANSLATIONS = {
       marketing_smm: 'Marketing & SMM',
       business_trading: 'Business & Trading',
       data_analytics: 'Data Analytics',
+      psychology: 'Psychology',
+      beauty_cosmetology: 'Beauty & Cosmetology',
+      driving_school: 'Driving School',
+      cooking_culinary: 'Cooking & Culinary',
+      finance_accounting: 'Finance & Accounting',
+      kids_development: 'Kids Development',
+      arts_music: 'Arts & Music',
       ort_school: 'National Testing (ORT) & School'
     },
     format: {
@@ -338,6 +361,7 @@ export const TRANSLATIONS = {
     addReviewModal: {
       title: 'Write a Course Review',
       subtitle: 'Your honest feedback protects future students from wasting money and time',
+      teacherName: "Teacher or mentor's name",
       selectCourse: 'Select Course',
       authorName: 'Your Name or Alias',
       authorStatus: 'Your Status:',
