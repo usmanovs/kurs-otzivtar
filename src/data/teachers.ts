@@ -126,6 +126,28 @@ const INITIAL_TEACHERS_RAW: Omit<Teacher, 'averageRating' | 'reviewCount' | 'rec
     instagramUrl: 'https://www.instagram.com/kunduz_tashtanova/',
     reviews: [],
   },
+  {
+    id: 'teacher-asylgul-stamova',
+    name: 'Асылгул Стамова',
+    photoUrl: '/teachers/asylgul-stamova.png',
+    instagramUrl: 'https://www.instagram.com/asylstamova/',
+    reviews: [],
+  },
+  {
+    id: 'teacher-talant-egemberdiev',
+    name: 'Талант Эгембердиев',
+    photoUrl: '/teachers/talant-egemberdiev.png',
+    instagramUrl: 'https://www.instagram.com/talantegemberdiev/',
+    reviews: [],
+  },
+  {
+    id: 'teacher-aidai-sakyeva',
+    name: 'Айдай Сакыева',
+    photoUrl: '/teachers/aidai-sakyeva.webp',
+    instagramUrl: 'https://www.instagram.com/aidai_sakyeva/',
+    youtubeUrl: 'https://www.youtube.com/@aidaisakyeva',
+    reviews: [],
+  },
 ];
 
 export const INITIAL_TEACHERS: Teacher[] = INITIAL_TEACHERS_RAW.map((t) => calculateTeacherMetrics(t));
