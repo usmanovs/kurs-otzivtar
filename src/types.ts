@@ -85,3 +85,12 @@ export interface Course {
   isWarningCourse?: boolean;
   warningNotice?: string;
 }
+
+export interface FeaturedVideo {
+  id: string;
+  title: string;
+  channelName: string;
+  channelUrl?: string;
+  thumbnailUrl: string;
+  videoUrl: string;
+}

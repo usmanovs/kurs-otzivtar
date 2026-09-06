@@ -1,5 +1,5 @@
 import { supabase } from './supabaseClient';
-import { Course, Review, Teacher } from '../types';
+import { Course, FeaturedVideo, Review, Teacher } from '../types';
 import { calculateTeacherMetrics } from '../data/teachers';
 
 function mapReviewRow(row: any): Review {
@@ -79,6 +79,26 @@ export async function fetchCourses(): Promise<Course[]> {
     .order('created_at', { ascending: false });
   if (error) throw error;
   return (data ?? []).map(mapCourseRow);
+}
+
+function mapFeaturedVideoRow(row: any): FeaturedVideo {
+  return {
+    id: row.id,
+    title: row.title,
+    channelName: row.channel_name,
+    channelUrl: row.channel_url ?? undefined,
+    thumbnailUrl: row.thumbnail_url,
+    videoUrl: row.video_url,
+  };
+}
+
+export async function fetchFeaturedVideos(): Promise<FeaturedVideo[]> {
+  const { data, error } = await supabase
+    .from('featured_videos')
+    .select('*')
+    .order('added_at', { ascending: false });
+  if (error) throw error;
+  return (data ?? []).map(mapFeaturedVideoRow);
 }
 
 export async function insertTeacher(

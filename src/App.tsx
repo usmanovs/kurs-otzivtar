@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import type { Session } from '@supabase/supabase-js';
-import { Course, Review, CourseCategory, CourseFormat, Teacher } from './types';
+import { Course, Review, CourseCategory, CourseFormat, Teacher, FeaturedVideo } from './types';
 import { calculateTeacherMetrics } from './data/teachers';
 import { supabase } from './lib/supabaseClient';
 import { ADMIN_EMAIL, signOutAdmin } from './lib/auth';
 import {
   fetchCourses,
   fetchTeachers,
+  fetchFeaturedVideos,
   insertTeacher,
   updateTeacher,
   submitReview,
@@ -15,6 +16,7 @@ import {
 import { SupportedLang, TRANSLATIONS } from './translations';
 import { Navbar } from './components/Navbar';
 import { TransparencyBanner } from './components/TransparencyBanner';
+import { FeaturedVideosSection } from './components/FeaturedVideosSection';
 import { StatsBar } from './components/StatsBar';
 import { CategoryFilter } from './components/CategoryFilter';
 import { CourseCard } from './components/CourseCard';
@@ -65,6 +67,7 @@ export default function App() {
   // Courses & Teachers — loaded from Supabase (shared, persistent data)
   const [courses, setCourses] = useState<Course[]>([]);
   const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [featuredVideos, setFeaturedVideos] = useState<FeaturedVideo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
 
@@ -87,6 +90,12 @@ export default function App() {
         if (cancelled) return;
         setCourses(fetchedCourses);
         setTeachers(applyVoteOverlay(fetchedTeachers, votedReviews));
+
+        fetchFeaturedVideos()
+          .then((videos) => {
+            if (!cancelled) setFeaturedVideos(videos);
+          })
+          .catch((e) => console.error('Failed to load featured videos', e));
       } catch (e) {
         console.error('Failed to load data from Supabase', e);
         if (!cancelled) setLoadError(true);
@@ -449,6 +458,9 @@ export default function App() {
           warningCoursesCount={warningCoursesCount}
           onFilterWarningCourses={handleFilterWarningCourses}
         />
+
+        {/* Featured Videos about bad courses */}
+        <FeaturedVideosSection videos={featuredVideos} currentLang={currentLang} />
 
         {/* Stats bar */}
         <StatsBar

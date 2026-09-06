@@ -13,6 +13,9 @@ export const TRANSLATIONS = {
     warningBannerPoint1: '«1 айда $2000 табасың» деген убадаларга ишенбеңиз — кесиптик билим алуу убакытты жана мээнетти талап кылат.',
     warningBannerPoint2: 'Келишимди жана акчаны кайтаруу (refund) шарттарын карточкага акча которуудан мурун кылдат окуп чыгыңыз.',
     warningBannerPoint3: 'Мугалимдердин чыныгы резюмесин, LinkedIn профилин жана мурунку бүтүрүүчүлөрдүн портфолиосун сураңыз.',
+    featuredVideosTitle: 'Шектүү курстар жөнүндө видеолор',
+    featuredVideosSubtitle: 'Башка авторлордун чыныгы окуялары — YouTube аркылуу тааныш болуңуз',
+    featuredVideosWatchBtn: 'YouTube\'дан көрүү',
     filterTitle: 'Фильтрлер',
     categories: {
       all: 'Бардыгы',
@@ -177,6 +180,9 @@ export const TRANSLATIONS = {
     warningBannerPoint1: 'Не верьте обещаниям «$2000 через 1 месяц с нуля» — реальная IT-профессия требует минимум 6-9 месяцев упорного труда.',
     warningBannerPoint2: 'Всегда требуйте официальный договор и внимательно читайте пункт о возврате средств перед переводом денег на карту.',
     warningBannerPoint3: 'Проверяйте реальные резюме преподавателей, профили в LinkedIn и портфолио выпускников.',
+    featuredVideosTitle: 'Видео о сомнительных курсах',
+    featuredVideosSubtitle: 'Реальные истории от других авторов на YouTube',
+    featuredVideosWatchBtn: 'Смотреть на YouTube',
     filterTitle: 'Фильтры',
     categories: {
       all: 'Все',
