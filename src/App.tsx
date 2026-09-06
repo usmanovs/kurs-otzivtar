@@ -392,7 +392,9 @@ export default function App() {
           </div>
 
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-slate-900 leading-[1.1]">
-            {t.hero.headline}
+            {t.hero.headlineLine1}
+            <br />
+            {t.hero.headlineLine2}
           </h1>
 
           <p className="text-base sm:text-lg text-slate-600 leading-relaxed font-normal max-w-xl mx-auto">
@@ -452,7 +454,7 @@ export default function App() {
             <button
               type="button"
               onClick={scrollToTeachers}
-              className="flex flex-col items-center gap-2 pt-4 cursor-pointer group"
+              className="flex flex-col items-center gap-2 pt-4 w-full cursor-pointer group"
             >
               <div className="flex items-center">
                 {featuredTeacherAvatars.map((tch, i) => (
