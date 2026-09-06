@@ -170,7 +170,9 @@ export const TRANSLATIONS = {
       emptyState: 'Азырынча мугалимдер тизмеде жок. Биринчи болуп кошуңуз!',
       noSearchResults: 'Издөөгө дал келген мугалим табылган жок.',
       filteredCount: 'мугалим табылды',
-      clearSearch: 'Издөөнү тазалоо'
+      clearSearch: 'Издөөнү тазалоо',
+      allLetters: 'Бардыгы',
+      allGenders: 'Жынысы боюнча'
     },
     addTeacherModal: {
       title: 'Жаңы мугалим же ментор кошуу',
@@ -181,6 +183,10 @@ export const TRANSLATIONS = {
       academy: 'Иштеген академиясы (милдеттүү эмес)',
       category: 'Адистиги (категория) — милдеттүү эмес',
       categoryNone: 'Категория тандалган жок',
+      gender: 'Жынысы (милдеттүү эмес)',
+      genderNone: 'Тандалган жок',
+      genderFemale: 'Аял',
+      genderMale: 'Эркек',
       bio: 'Кыскача маалымат (адистиги, тажрыйбасы) — милдеттүү эмес',
       photo: 'Сүрөтү (милдеттүү эмес)',
       photoUrlPlaceholder: 'Сүрөттүн шилтемеси (URL)',
@@ -369,7 +375,9 @@ export const TRANSLATIONS = {
       emptyState: 'Пока преподавателей нет. Добавьте первым!',
       noSearchResults: 'По вашему запросу преподавателей не найдено.',
       filteredCount: 'преподавателей найдено',
-      clearSearch: 'Очистить поиск'
+      clearSearch: 'Очистить поиск',
+      allLetters: 'Все',
+      allGenders: 'По полу'
     },
     addTeacherModal: {
       title: 'Добавить преподавателя или ментора',
@@ -387,6 +395,10 @@ export const TRANSLATIONS = {
       youtube: 'Ссылка на YouTube (необязательно)',
       category: 'Специализация (категория) — необязательно',
       categoryNone: 'Категория не выбрана',
+      gender: 'Пол (необязательно)',
+      genderNone: 'Не выбран',
+      genderFemale: 'Женский',
+      genderMale: 'Мужской',
       submitBtn: 'Добавить преподавателя',
       submitBtnEdit: 'Сохранить',
       cancelBtn: 'Отмена',

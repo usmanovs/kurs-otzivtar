@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { CourseCategory, Teacher } from '../types';
+import { CourseCategory, Teacher, TeacherGender } from '../types';
 import { SupportedLang, TRANSLATIONS } from '../translations';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { X, UserPlus, Upload, Trash2, Instagram, Youtube } from 'lucide-react';
@@ -28,6 +28,7 @@ export const AddTeacherModal: React.FC<AddTeacherModalProps> = ({
   const [name, setName] = useState(editingTeacher?.name || '');
   const [academyName, setAcademyName] = useState(editingTeacher?.academyName || '');
   const [category, setCategory] = useState<CourseCategory | ''>(editingTeacher?.category || '');
+  const [gender, setGender] = useState<TeacherGender | ''>(editingTeacher?.gender || '');
   const [bio, setBio] = useState(editingTeacher?.bio || '');
   const [photoUrl, setPhotoUrl] = useState(editingTeacher?.photoUrl || '');
   const [instagramUrl, setInstagramUrl] = useState(editingTeacher?.instagramUrl || '');
@@ -58,6 +59,7 @@ export const AddTeacherModal: React.FC<AddTeacherModalProps> = ({
         name: name.trim(),
         academyName: academyName.trim() || undefined,
         category: category || undefined,
+        gender: gender || undefined,
         bio: bio.trim() || undefined,
         photoUrl: photoUrl.trim() || undefined,
         instagramUrl: instagramUrl.trim() || undefined,
@@ -203,6 +205,22 @@ export const AddTeacherModal: React.FC<AddTeacherModalProps> = ({
                     {t.categories[key as CourseCategory]}
                   </option>
                 ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">
+              {t.addTeacherModal.gender}
+            </label>
+            <select
+              id="new-teacher-gender-select"
+              value={gender}
+              onChange={(e) => setGender(e.target.value as TeacherGender | '')}
+              className="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+            >
+              <option value="">{t.addTeacherModal.genderNone}</option>
+              <option value="female">{t.addTeacherModal.genderFemale}</option>
+              <option value="male">{t.addTeacherModal.genderMale}</option>
             </select>
           </div>
 

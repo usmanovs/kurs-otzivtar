@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Teacher } from '../types';
+import React, { useMemo, useState } from 'react';
+import { CourseCategory, Teacher, TeacherGender } from '../types';
 import { SupportedLang, TRANSLATIONS } from '../translations';
 import { GraduationCap, Star, PlusCircle, Building2, Pencil, Instagram, Youtube, MessageSquarePlus, X } from 'lucide-react';
 
@@ -50,11 +50,45 @@ export const TeachersSection: React.FC<TeachersSectionProps> = ({
   onOpenAddReview,
 }) => {
   const t = TRANSLATIONS[currentLang];
-  const isFiltered = searchQuery.trim().length > 0;
+
+  const [selectedLetter, setSelectedLetter] = useState<string>('all');
+  const [selectedGender, setSelectedGender] = useState<TeacherGender | 'all'>('all');
+  const [selectedCategory, setSelectedCategory] = useState<CourseCategory | 'all'>('all');
+
+  const availableLetters = useMemo(() => {
+    const letters = new Set<string>();
+    teachers.forEach((tch) => {
+      const first = tch.name.trim().charAt(0).toUpperCase();
+      if (first) letters.add(first);
+    });
+    return Array.from(letters).sort((a, b) => a.localeCompare(b, 'ru'));
+  }, [teachers]);
+
+  const displayedTeachers = useMemo(() => {
+    return teachers.filter((tch) => {
+      if (selectedLetter !== 'all' && tch.name.trim().charAt(0).toUpperCase() !== selectedLetter) return false;
+      if (selectedGender !== 'all' && tch.gender !== selectedGender) return false;
+      if (selectedCategory !== 'all' && tch.category !== selectedCategory) return false;
+      return true;
+    });
+  }, [teachers, selectedLetter, selectedGender, selectedCategory]);
+
+  const isFiltered =
+    searchQuery.trim().length > 0 ||
+    selectedLetter !== 'all' ||
+    selectedGender !== 'all' ||
+    selectedCategory !== 'all';
+
+  const handleClearAll = () => {
+    setSelectedLetter('all');
+    setSelectedGender('all');
+    setSelectedCategory('all');
+    onClearSearch();
+  };
 
   return (
     <section id="teachers-section" className="mt-10 scroll-mt-20">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 mb-4">
         <div className="flex items-center gap-3 min-w-0">
           <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
             <GraduationCap className="w-5 h-5" />
@@ -64,26 +98,86 @@ export const TeachersSection: React.FC<TeachersSectionProps> = ({
             <p className="text-xs text-slate-500">{t.teachersSection.subtitle}</p>
           </div>
         </div>
-        <button
-          type="button"
-          id="add-teacher-btn"
-          onClick={onAddTeacher}
-          className="inline-flex items-center gap-1.5 px-4 py-2 text-xs sm:text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-full hover:bg-slate-50 hover:border-slate-300 transition-colors shadow-2xs shrink-0 self-start cursor-pointer"
-        >
-          <PlusCircle className="w-4 h-4 text-slate-500" />
-          <span>{t.teachersSection.addBtn}</span>
-        </button>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <select
+            id="teacher-gender-filter"
+            value={selectedGender}
+            onChange={(e) => setSelectedGender(e.target.value as TeacherGender | 'all')}
+            className="px-3 py-2 bg-white border border-slate-200 rounded-full text-xs sm:text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 shadow-2xs cursor-pointer"
+          >
+            <option value="all">{t.teachersSection.allGenders}</option>
+            <option value="female">{t.addTeacherModal.genderFemale}</option>
+            <option value="male">{t.addTeacherModal.genderMale}</option>
+          </select>
+
+          <select
+            id="teacher-category-filter"
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value as CourseCategory | 'all')}
+            className="px-3 py-2 bg-white border border-slate-200 rounded-full text-xs sm:text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 shadow-2xs cursor-pointer"
+          >
+            <option value="all">{t.categories.all}</option>
+            {(Object.keys(t.categories) as (CourseCategory | 'all')[])
+              .filter((key) => key !== 'all')
+              .map((key) => (
+                <option key={key} value={key}>
+                  {t.categories[key as CourseCategory]}
+                </option>
+              ))}
+          </select>
+
+          <button
+            type="button"
+            id="add-teacher-btn"
+            onClick={onAddTeacher}
+            className="inline-flex items-center gap-1.5 px-4 py-2 text-xs sm:text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-full hover:bg-slate-50 hover:border-slate-300 transition-colors shadow-2xs shrink-0 cursor-pointer"
+          >
+            <PlusCircle className="w-4 h-4 text-slate-500" />
+            <span>{t.teachersSection.addBtn}</span>
+          </button>
+        </div>
       </div>
+
+      {availableLetters.length > 0 && (
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 mb-4 no-scrollbar">
+          <button
+            type="button"
+            onClick={() => setSelectedLetter('all')}
+            className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors cursor-pointer ${
+              selectedLetter === 'all'
+                ? 'bg-indigo-600 text-white'
+                : 'bg-white text-slate-600 border border-slate-200 hover:border-indigo-300 hover:text-indigo-600'
+            }`}
+          >
+            {t.teachersSection.allLetters}
+          </button>
+          {availableLetters.map((letter) => (
+            <button
+              key={letter}
+              type="button"
+              onClick={() => setSelectedLetter(letter)}
+              className={`shrink-0 w-8 h-8 flex items-center justify-center rounded-full text-xs font-semibold transition-colors cursor-pointer ${
+                selectedLetter === letter
+                  ? 'bg-indigo-600 text-white'
+                  : 'bg-white text-slate-600 border border-slate-200 hover:border-indigo-300 hover:text-indigo-600'
+              }`}
+            >
+              {letter}
+            </button>
+          ))}
+        </div>
+      )}
 
       {isFiltered && (
         <div className="flex items-center gap-2 mb-5 -mt-2">
           <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium text-indigo-700 bg-indigo-50 border border-indigo-100 rounded-full">
-            {teachers.length} / {totalCount} {t.teachersSection.filteredCount}
+            {displayedTeachers.length} / {totalCount} {t.teachersSection.filteredCount}
           </span>
           <button
             type="button"
             id="clear-teacher-search-btn"
-            onClick={onClearSearch}
+            onClick={handleClearAll}
             className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-indigo-600 cursor-pointer"
           >
             <X className="w-3.5 h-3.5" />
@@ -92,13 +186,13 @@ export const TeachersSection: React.FC<TeachersSectionProps> = ({
         </div>
       )}
 
-      {teachers.length === 0 ? (
+      {displayedTeachers.length === 0 ? (
         <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center text-sm text-slate-500">
           {isFiltered ? t.teachersSection.noSearchResults : t.teachersSection.emptyState}
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {teachers.map((teacher) => (
+          {displayedTeachers.map((teacher) => (
             <div
               key={teacher.id}
               id={`teacher-card-${teacher.id}`}

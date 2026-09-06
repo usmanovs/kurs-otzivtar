@@ -53,12 +53,15 @@ export interface Review {
   userVoted?: 'helpful' | 'unhelpful';
 }
 
+export type TeacherGender = 'male' | 'female';
+
 export interface Teacher {
   id: string;
   name: string;
   bio?: string;
   academyName?: string;
   category?: CourseCategory;
+  gender?: TeacherGender;
   photoUrl?: string;
   instagramUrl?: string;
   youtubeUrl?: string;
