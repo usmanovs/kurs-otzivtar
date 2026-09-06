@@ -2,7 +2,7 @@ export type SupportedLang = 'ky' | 'ru';
 
 export const TRANSLATIONS = {
   ky: {
-    siteTitle: 'Kurs-Otzivtar.com',
+    siteTitle: 'Kursotzyv.org',
     siteSubtitle: 'Кыргызстандагы онлайн курстардын чынчыл сын-пикирлери',
     tagline: 'Билим берүүдөгү ачык-айкындуулук жана студенттердин чыныгы тажрыйбасы',
     searchPlaceholder: 'Курстун, академиянын же технологиянын атын издеңиз (мис: Python, Geeks, SMM)...',
@@ -207,7 +207,7 @@ export const TRANSLATIONS = {
     }
   },
   ru: {
-    siteTitle: 'Kurs-Otzivtar.com',
+    siteTitle: 'Kursotzyv.org',
     siteSubtitle: 'Честные отзывы об онлайн-курсах в Кыргызстане',
     tagline: 'Прозрачность в образовании и реальный опыт студентов',
     searchPlaceholder: 'Поиск по названию курса, школы или технологии (например: Python, Geeks, SMM)...',

@@ -495,7 +495,7 @@ export default function App() {
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div>
               <div className="flex items-center gap-2.5">
-                <span className="text-lg font-bold text-slate-900 tracking-tight">Kurs-Otzivtar.com</span>
+                <span className="text-lg font-bold text-slate-900 tracking-tight">Kursotzyv.org</span>
                 <span className="text-2xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100 px-2.5 py-0.5 rounded-full">
                   Кыргызстан
                 </span>
@@ -506,7 +506,7 @@ export default function App() {
             </div>
 
             <div className="text-xs text-slate-400 text-center md:text-right">
-              <div>© {new Date().getFullYear()} Kurs-Otzivtar.com. Бардык укуктар корголгон.</div>
+              <div>© {new Date().getFullYear()} Kursotzyv.org. Бардык укуктар корголгон.</div>
               <div className="mt-1">
                 Эгер шектүү курска же алдамчылыкка туш болсоңуз, сын-пикир калтырып элге эскертиңиз!
               </div>
