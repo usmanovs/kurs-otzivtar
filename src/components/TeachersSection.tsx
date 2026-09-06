@@ -119,6 +119,12 @@ export const TeachersSection: React.FC<TeachersSectionProps> = ({
                 </div>
               )}
 
+              {teacher.category && (
+                <span className="inline-block text-2xs font-semibold px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100 mt-2">
+                  {t.categories[teacher.category]}
+                </span>
+              )}
+
               {teacher.bio && (
                 <p className="text-xs text-slate-600 leading-relaxed mt-2">{teacher.bio}</p>
               )}

@@ -58,6 +58,7 @@ export interface Teacher {
   name: string;
   bio?: string;
   academyName?: string;
+  category?: CourseCategory;
   photoUrl?: string;
   instagramUrl?: string;
   youtubeUrl?: string;

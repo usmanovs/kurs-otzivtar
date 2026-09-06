@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { Teacher } from '../types';
+import { CourseCategory, Teacher } from '../types';
 import { SupportedLang, TRANSLATIONS } from '../translations';
 import { X, UserPlus, Upload, Trash2, Instagram, Youtube } from 'lucide-react';
 
@@ -25,6 +25,7 @@ export const AddTeacherModal: React.FC<AddTeacherModalProps> = ({
 
   const [name, setName] = useState(editingTeacher?.name || '');
   const [academyName, setAcademyName] = useState(editingTeacher?.academyName || '');
+  const [category, setCategory] = useState<CourseCategory | ''>(editingTeacher?.category || '');
   const [bio, setBio] = useState(editingTeacher?.bio || '');
   const [photoUrl, setPhotoUrl] = useState(editingTeacher?.photoUrl || '');
   const [instagramUrl, setInstagramUrl] = useState(editingTeacher?.instagramUrl || '');
@@ -54,6 +55,7 @@ export const AddTeacherModal: React.FC<AddTeacherModalProps> = ({
       {
         name: name.trim(),
         academyName: academyName.trim() || undefined,
+        category: category || undefined,
         bio: bio.trim() || undefined,
         photoUrl: photoUrl.trim() || undefined,
         instagramUrl: instagramUrl.trim() || undefined,
@@ -179,6 +181,27 @@ export const AddTeacherModal: React.FC<AddTeacherModalProps> = ({
               placeholder="Мис: Geeks IT Academy"
               className="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
             />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">
+              {t.addTeacherModal.category}
+            </label>
+            <select
+              id="new-teacher-category-select"
+              value={category}
+              onChange={(e) => setCategory(e.target.value as CourseCategory | '')}
+              className="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+            >
+              <option value="">{t.addTeacherModal.categoryNone}</option>
+              {(Object.keys(t.categories) as (CourseCategory | 'all')[])
+                .filter((key) => key !== 'all')
+                .map((key) => (
+                  <option key={key} value={key}>
+                    {t.categories[key as CourseCategory]}
+                  </option>
+                ))}
+            </select>
           </div>
 
           <div>
