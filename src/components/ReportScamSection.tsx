@@ -18,7 +18,7 @@ export const ReportScamSection: React.FC<ReportScamSectionProps> = ({ currentLan
   ];
 
   return (
-    <section className="my-10 bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-xs">
+    <section id="report-scam-section" className="my-10 bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-xs scroll-mt-20">
       <div className="flex items-start gap-3 mb-5">
         <div className="p-2.5 rounded-xl bg-amber-50 text-amber-600 mt-0.5 shrink-0">
           <Landmark className="w-5 h-5" />

@@ -9,6 +9,9 @@ export const TRANSLATIONS = {
     allCategories: 'Бардык багыттар',
     submitReviewBtn: 'Сын-пикир калтыруу',
     addCourseBtn: 'Жаңы курс кошуу',
+    navTeachers: 'Мугалимдер',
+    navVideos: 'Видеолор',
+    navReportScam: 'Кайда кайрылуу',
     hero: {
       badge: 'Бул жерде мугалим жарнамаланбайт. Бул жерде мугалимге чыныгы баа берилет.',
       headline: 'Жарнамага эмес, окуучулардын пикирине карап мугалим тандаңыз.',
@@ -43,6 +46,11 @@ export const TRANSLATIONS = {
     reportScamDisclaimer: 'Бул маалымат жалпы багыт берүү үчүн гана, юридикалык кеңеш эмес. Так жол-жобо жана мыйзамдар өзгөрүшү мүмкүн — расмий сайттардан текшериңиз.',
     reportScamLinkMvd: 'ИИМдин электрондук кызматтар порталы',
     reportScamLinkProkuror: 'Башкы прокуратура',
+    recentReviewPopup: {
+      badge: 'Жаңы сын-пикир',
+      anonymous: 'Аноним',
+      close: 'Жабуу'
+    },
     filterTitle: 'Фильтрлер',
     categories: {
       all: 'Бардыгы',
@@ -214,6 +222,9 @@ export const TRANSLATIONS = {
     allCategories: 'Все направления',
     submitReviewBtn: 'Оставить отзыв',
     addCourseBtn: 'Добавить курс',
+    navTeachers: 'Преподаватели',
+    navVideos: 'Видео',
+    navReportScam: 'Куда обращаться',
     hero: {
       badge: 'Здесь преподаватели не рекламируют себя. Здесь им дают честную оценку.',
       headline: 'Выбирайте преподавателя по отзывам студентов, а не по рекламе.',
@@ -248,6 +259,11 @@ export const TRANSLATIONS = {
     reportScamDisclaimer: 'Эта информация носит общий ознакомительный характер и не является юридической консультацией. Точные процедуры и законы могут меняться — уточняйте на официальных сайтах.',
     reportScamLinkMvd: 'Портал электронных услуг МВД',
     reportScamLinkProkuror: 'Генеральная прокуратура',
+    recentReviewPopup: {
+      badge: 'Новый отзыв',
+      anonymous: 'Аноним',
+      close: 'Закрыть'
+    },
     filterTitle: 'Фильтры',
     categories: {
       all: 'Все',

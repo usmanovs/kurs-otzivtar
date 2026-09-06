@@ -15,6 +15,16 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const t = TRANSLATIONS[currentLang];
 
+  const navLinks = [
+    { id: 'teachers-section', label: t.navTeachers },
+    { id: 'featured-videos-section', label: t.navVideos },
+    { id: 'report-scam-section', label: t.navReportScam },
+  ];
+
+  const scrollToSection = (id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-sm border-b border-slate-200 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-8">
@@ -39,6 +49,21 @@ export const Navbar: React.FC<NavbarProps> = ({
               </p>
             </div>
           </div>
+
+          {/* Section Nav Links */}
+          <nav className="flex items-center gap-1 overflow-x-auto no-scrollbar">
+            {navLinks.map((link) => (
+              <button
+                key={link.id}
+                type="button"
+                id={`navlink-${link.id}`}
+                onClick={() => scrollToSection(link.id)}
+                className="shrink-0 px-3 py-1.5 text-xs sm:text-sm font-medium text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition-colors cursor-pointer whitespace-nowrap"
+              >
+                {link.label}
+              </button>
+            ))}
+          </nav>
 
           {/* Action buttons & Language Switcher */}
           <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-3">

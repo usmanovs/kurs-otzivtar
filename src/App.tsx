@@ -8,6 +8,8 @@ import {
   fetchCourses,
   fetchTeachers,
   fetchFeaturedVideos,
+  fetchMostRecentReview,
+  RecentReviewSummary,
   insertTeacher,
   updateTeacher,
   submitReview,
@@ -24,6 +26,7 @@ import { TeachersSection } from './components/TeachersSection';
 import { AddTeacherModal } from './components/AddTeacherModal';
 import { TeacherDetailModal } from './components/TeacherDetailModal';
 import { AdminLoginModal } from './components/AdminLoginModal';
+import { RecentReviewPopup } from './components/RecentReviewPopup';
 import {
   Search,
   X,
@@ -66,6 +69,7 @@ export default function App() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [featuredVideos, setFeaturedVideos] = useState<FeaturedVideo[]>([]);
+  const [recentReview, setRecentReview] = useState<RecentReviewSummary | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
 
@@ -94,6 +98,12 @@ export default function App() {
             if (!cancelled) setFeaturedVideos(videos);
           })
           .catch((e) => console.error('Failed to load featured videos', e));
+
+        fetchMostRecentReview()
+          .then((review) => {
+            if (!cancelled && review) setRecentReview(review);
+          })
+          .catch((e) => console.error('Failed to load most recent review', e));
       } catch (e) {
         console.error('Failed to load data from Supabase', e);
         if (!cancelled) setLoadError(true);
@@ -131,6 +141,13 @@ export default function App() {
     });
     return () => sub.subscription.unsubscribe();
   }, []);
+
+  // Auto-hide the recent-review popup a while after it loads
+  useEffect(() => {
+    if (!recentReview) return;
+    const hideTimer = setTimeout(() => setRecentReview(null), 15000);
+    return () => clearTimeout(hideTimer);
+  }, [recentReview]);
 
   const t = TRANSLATIONS[currentLang];
 
@@ -335,6 +352,19 @@ export default function App() {
           <CheckCircle className="w-5 h-5 text-emerald-400 shrink-0" />
           <span className="text-xs sm:text-sm font-medium">{toastMessage}</span>
         </div>
+      )}
+
+      {/* Recent Review Popup */}
+      {recentReview && (
+        <RecentReviewPopup
+          review={recentReview}
+          currentLang={currentLang}
+          onDismiss={() => setRecentReview(null)}
+          onClick={() => {
+            setRecentReview(null);
+            document.getElementById('teachers-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }}
+        />
       )}
 
       {/* Header */}

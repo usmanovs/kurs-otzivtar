@@ -30,6 +30,39 @@ function mapReviewRow(row: any): Review {
   };
 }
 
+export interface RecentReviewSummary {
+  reviewId: string;
+  teacherId: string;
+  teacherName: string;
+  teacherPhotoUrl?: string;
+  authorName: string;
+  isAnonymous: boolean;
+  overallRating: number;
+  title: string;
+}
+
+export async function fetchMostRecentReview(): Promise<RecentReviewSummary | null> {
+  const { data, error } = await supabase
+    .from('reviews')
+    .select('id, teacher_id, author_name, is_anonymous, overall_rating, title, teachers(name, photo_url)')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+  const teacher = Array.isArray(data.teachers) ? data.teachers[0] : data.teachers;
+  return {
+    reviewId: data.id,
+    teacherId: data.teacher_id,
+    teacherName: teacher?.name ?? '',
+    teacherPhotoUrl: teacher?.photo_url ?? undefined,
+    authorName: data.author_name,
+    isAnonymous: data.is_anonymous,
+    overallRating: Number(data.overall_rating),
+    title: data.title,
+  };
+}
+
 function mapTeacherRow(row: any): Teacher {
   const reviews = (row.reviews ?? [])
     .map(mapReviewRow)
