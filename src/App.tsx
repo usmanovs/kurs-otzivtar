@@ -29,7 +29,6 @@ import { AdminLoginModal } from './components/AdminLoginModal';
 import {
   ShieldAlert,
   Search,
-  Sparkles,
   CheckCircle,
   AlertTriangle,
   Loader2,
@@ -187,6 +186,32 @@ export default function App() {
   const totalReviewsCount = useMemo(() => {
     return teachers.reduce((acc, tch) => acc + tch.reviews.length, 0);
   }, [teachers]);
+
+  const verifiedReviewsPercent = useMemo(() => {
+    let verified = 0;
+    let total = 0;
+    teachers.forEach((tch) => {
+      tch.reviews.forEach((r) => {
+        total += 1;
+        if (r.isVerified) verified += 1;
+      });
+    });
+    return total > 0 ? Math.round((verified / total) * 100) : 0;
+  }, [teachers]);
+
+  const scrollToResults = () => {
+    document.getElementById('course-results-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const handleHeroSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    scrollToResults();
+  };
+
+  const handlePopularTagClick = (tag: string) => {
+    setSearchQuery(tag);
+    scrollToResults();
+  };
 
   // Filtered and sorted courses
   const filteredCourses = useMemo(() => {
@@ -394,19 +419,72 @@ export default function App() {
       {/* Main Content */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         {/* Hero Section */}
-        <section className="text-center py-6 sm:py-12 max-w-3xl mx-auto space-y-5">
+        <section className="text-center py-10 sm:py-16 max-w-2xl mx-auto space-y-6">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium bg-white text-slate-700 border border-slate-200 shadow-2xs">
-            <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
-            <span>Кыргызстандагы биринчи көз карандысыз курс порталы</span>
+            <ShieldCheck className="w-3.5 h-3.5 text-indigo-600" />
+            <span>{t.hero.badge}</span>
           </div>
 
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-slate-900 leading-tight">
-            Мугалимдердин чынчыл сын-пикирлери
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-slate-900 leading-[1.1]">
+            {t.hero.headline}
           </h1>
 
-          <p className="text-base sm:text-lg text-slate-600 leading-relaxed font-normal max-w-2xl mx-auto">
-            Курстар тез-тез өзгөрүп турат, бирок мугалимдин сапаты калат. Сын-пикириңизди мугалимге калтырыңыз — студенттердин чыныгы тажрыйбасын окуп, туура тандоо жасаңыз.
+          <p className="text-base sm:text-lg text-slate-600 leading-relaxed font-normal max-w-xl mx-auto">
+            {t.hero.subtitle}
           </p>
+
+          <form
+            onSubmit={handleHeroSearchSubmit}
+            className="max-w-xl mx-auto flex flex-col sm:flex-row gap-2 pt-2"
+          >
+            <div className="relative flex-1">
+              <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+              <input
+                type="text"
+                id="hero-search-input"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={t.hero.searchPlaceholder}
+                className="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-full text-sm shadow-xs focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-slate-900 placeholder:text-slate-400"
+              />
+            </div>
+            <button
+              type="submit"
+              id="hero-search-btn"
+              className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm rounded-full transition-all shadow-xs cursor-pointer shrink-0"
+            >
+              {t.hero.searchBtn}
+            </button>
+          </form>
+
+          <div className="flex flex-wrap items-center justify-center gap-2 text-xs">
+            <span className="text-slate-400">{t.hero.popularLabel}</span>
+            {t.hero.popularTags.map((tag) => (
+              <button
+                key={tag}
+                type="button"
+                onClick={() => handlePopularTagClick(tag)}
+                className="px-3 py-1 bg-white border border-slate-200 rounded-full text-slate-600 hover:border-indigo-300 hover:text-indigo-600 transition-colors cursor-pointer"
+              >
+                {tag}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex items-center justify-center gap-8 sm:gap-12 pt-4">
+            <div>
+              <div className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">{totalReviewsCount}+</div>
+              <div className="text-xs text-slate-500 font-medium mt-0.5">{t.hero.statsReviews}</div>
+            </div>
+            <div>
+              <div className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">{courses.length}+</div>
+              <div className="text-xs text-slate-500 font-medium mt-0.5">{t.hero.statsCourses}</div>
+            </div>
+            <div>
+              <div className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">{verifiedReviewsPercent}%</div>
+              <div className="text-xs text-slate-500 font-medium mt-0.5">{t.hero.statsVerified}</div>
+            </div>
+          </div>
 
           <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
             <button
@@ -418,7 +496,7 @@ export default function App() {
               }}
               className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-sm rounded-full transition-all shadow-xs cursor-pointer"
             >
-              Сын-пикир калтыруу
+              {t.submitReviewBtn}
             </button>
 
             <button
@@ -428,7 +506,7 @@ export default function App() {
               className="px-6 py-2.5 bg-white hover:bg-red-50 text-red-700 border border-red-200 font-medium text-sm rounded-full transition-all shadow-2xs cursor-pointer flex items-center gap-2"
             >
               <ShieldAlert className="w-4 h-4 text-red-600" />
-              <span>Шектүү курстарды көрүү ({warningCoursesCount})</span>
+              <span>{t.hero.warningsBtn} ({warningCoursesCount})</span>
             </button>
           </div>
         </section>
@@ -491,7 +569,7 @@ export default function App() {
         />
 
         {/* Course Grid Results */}
-        <section className="mt-8">
+        <section id="course-results-section" className="mt-8 scroll-mt-20">
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2.5">
               <span>{t.categories[selectedCategory]}</span>
