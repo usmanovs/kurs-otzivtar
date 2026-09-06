@@ -167,7 +167,10 @@ export const TRANSLATIONS = {
       addBtn: 'Мугалим кошуу',
       noReviewsYet: 'Азырынча бул мугалим боюнча сын-пикир жок',
       reviewsCount: 'сын-пикир',
-      emptyState: 'Азырынча мугалимдер тизмеде жок. Биринчи болуп кошуңуз!'
+      emptyState: 'Азырынча мугалимдер тизмеде жок. Биринчи болуп кошуңуз!',
+      noSearchResults: 'Издөөгө дал келген мугалим табылган жок.',
+      filteredCount: 'мугалим табылды',
+      clearSearch: 'Издөөнү тазалоо'
     },
     addTeacherModal: {
       title: 'Жаңы мугалим же ментор кошуу',
@@ -363,7 +366,10 @@ export const TRANSLATIONS = {
       addBtn: 'Добавить преподавателя',
       noReviewsYet: 'Пока нет отзывов об этом преподавателе',
       reviewsCount: 'отзывов',
-      emptyState: 'Пока преподавателей нет. Добавьте первым!'
+      emptyState: 'Пока преподавателей нет. Добавьте первым!',
+      noSearchResults: 'По вашему запросу преподавателей не найдено.',
+      filteredCount: 'преподавателей найдено',
+      clearSearch: 'Очистить поиск'
     },
     addTeacherModal: {
       title: 'Добавить преподавателя или ментора',

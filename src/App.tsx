@@ -26,6 +26,7 @@ import { TeacherDetailModal } from './components/TeacherDetailModal';
 import { AdminLoginModal } from './components/AdminLoginModal';
 import {
   Search,
+  X,
   CheckCircle,
   AlertTriangle,
   Loader2,
@@ -375,8 +376,19 @@ export default function App() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={t.hero.searchPlaceholder}
-                className="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-full text-sm shadow-xs focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-slate-900 placeholder:text-slate-400"
+                className="w-full pl-11 pr-10 py-3 bg-white border border-slate-200 rounded-full text-sm shadow-xs focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-slate-900 placeholder:text-slate-400"
               />
+              {searchQuery && (
+                <button
+                  type="button"
+                  id="hero-search-clear-btn"
+                  onClick={() => setSearchQuery('')}
+                  aria-label="Тазалоо"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
             </div>
             <button
               type="submit"
@@ -435,6 +447,9 @@ export default function App() {
         {/* Teachers & Mentors Directory */}
         <TeachersSection
           teachers={filteredTeachers}
+          totalCount={teachers.length}
+          searchQuery={searchQuery}
+          onClearSearch={() => setSearchQuery('')}
           currentLang={currentLang}
           isAdmin={isAdmin}
           onAddTeacher={() => {

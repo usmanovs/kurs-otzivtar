@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import { Teacher } from '../types';
 import { SupportedLang, TRANSLATIONS } from '../translations';
-import { GraduationCap, Star, PlusCircle, Building2, Pencil, Instagram, Youtube, MessageSquarePlus } from 'lucide-react';
+import { GraduationCap, Star, PlusCircle, Building2, Pencil, Instagram, Youtube, MessageSquarePlus, X } from 'lucide-react';
 
 interface TeachersSectionProps {
   teachers: Teacher[];
+  totalCount: number;
+  searchQuery: string;
+  onClearSearch: () => void;
   currentLang: SupportedLang;
   isAdmin: boolean;
   onAddTeacher: () => void;
@@ -36,6 +39,9 @@ const TeacherAvatar: React.FC<{ teacher: Teacher }> = ({ teacher }) => {
 
 export const TeachersSection: React.FC<TeachersSectionProps> = ({
   teachers,
+  totalCount,
+  searchQuery,
+  onClearSearch,
   currentLang,
   isAdmin,
   onAddTeacher,
@@ -44,6 +50,7 @@ export const TeachersSection: React.FC<TeachersSectionProps> = ({
   onOpenAddReview,
 }) => {
   const t = TRANSLATIONS[currentLang];
+  const isFiltered = searchQuery.trim().length > 0;
 
   return (
     <section id="teachers-section" className="mt-10 scroll-mt-20">
@@ -68,9 +75,26 @@ export const TeachersSection: React.FC<TeachersSectionProps> = ({
         </button>
       </div>
 
+      {isFiltered && (
+        <div className="flex items-center gap-2 mb-5 -mt-2">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium text-indigo-700 bg-indigo-50 border border-indigo-100 rounded-full">
+            {teachers.length} / {totalCount} {t.teachersSection.filteredCount}
+          </span>
+          <button
+            type="button"
+            id="clear-teacher-search-btn"
+            onClick={onClearSearch}
+            className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-indigo-600 cursor-pointer"
+          >
+            <X className="w-3.5 h-3.5" />
+            {t.teachersSection.clearSearch}
+          </button>
+        </div>
+      )}
+
       {teachers.length === 0 ? (
         <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center text-sm text-slate-500">
-          {t.teachersSection.emptyState}
+          {isFiltered ? t.teachersSection.noSearchResults : t.teachersSection.emptyState}
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
