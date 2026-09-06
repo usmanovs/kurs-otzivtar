@@ -9,6 +9,8 @@ import {
   Send,
   ThumbsUp,
   ThumbsDown,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 
 interface AddReviewModalProps {
@@ -54,6 +56,7 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
   const [hasJobScamReport, setHasJobScamReport] = useState(false);
   const [isVerified, setIsVerified] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
+  const [showMore, setShowMore] = useState(false);
 
   // Existing teacher/mentor names, for lookup-or-create autocomplete
   const knownTeacherNames = useMemo(() => {
@@ -261,17 +264,6 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
             </div>
           </div>
 
-          {/* Sub-criteria Ratings */}
-          <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2">
-            <div className="text-xs font-bold text-slate-900 mb-2">
-              Сапаттык критерийлер боюнча баалоо:
-            </div>
-            {handleStarPicker(t.addReviewModal.teacherRating, teacherRating, setTeacherRating)}
-            {handleStarPicker(t.addReviewModal.practiceRating, practiceRating, setPracticeRating)}
-            {handleStarPicker(t.addReviewModal.jobSupportRating, jobSupportRating, setJobSupportRating)}
-            {handleStarPicker(t.addReviewModal.valueRating, valueRating, setValueRating)}
-          </div>
-
           {/* Would Recommend Radio */}
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1.5">
@@ -308,108 +300,6 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
             </div>
           </div>
 
-          {/* Author Details */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                {t.addReviewModal.authorName}
-              </label>
-              <input
-                type="text"
-                id="author-name-input"
-                disabled={isAnonymous}
-                value={authorName}
-                onChange={(e) => setAuthorName(e.target.value)}
-                placeholder="Мис: Азамат же Айпери"
-                className="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 disabled:bg-slate-100 disabled:text-slate-400"
-              />
-              <label className="inline-flex items-center gap-2 mt-1.5 cursor-pointer text-xs text-slate-600">
-                <input
-                  type="checkbox"
-                  id="anonymous-checkbox"
-                  checked={isAnonymous}
-                  onChange={(e) => setIsAnonymous(e.target.checked)}
-                  className="rounded text-indigo-600 focus:ring-indigo-500"
-                />
-                <span>Анонимдүү калтыруу</span>
-              </label>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                {t.addReviewModal.authorStatus}
-              </label>
-              <select
-                id="author-status-select"
-                value={authorStatus}
-                onChange={(e) => setAuthorStatus(e.target.value as StudentStatus)}
-                className="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-              >
-                <option value="graduate">{t.addReviewModal.statusGraduate}</option>
-                <option value="current_student">{t.addReviewModal.statusCurrent}</option>
-                <option value="dropped_out">{t.addReviewModal.statusDropped}</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Pricing and Cohort Info */}
-          <div className="grid grid-cols-3 gap-3">
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Төлөнгөн сумма (сом)
-              </label>
-              <input
-                type="number"
-                id="price-paid-input"
-                value={pricePaidKGS}
-                onChange={(e) => setPricePaidKGS(e.target.value)}
-                placeholder="45000"
-                className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Окуу мөөнөтү (ай)
-              </label>
-              <input
-                type="number"
-                id="duration-months-input"
-                value={durationMonths}
-                onChange={(e) => setDurationMonths(e.target.value)}
-                placeholder="6"
-                className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Окуган жылы
-              </label>
-              <input
-                type="text"
-                id="cohort-year-input"
-                value={cohortYear}
-                onChange={(e) => setCohortYear(e.target.value)}
-                placeholder="2024"
-                className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-              />
-            </div>
-          </div>
-
-          {/* Review Title */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
-              {t.addReviewModal.reviewTitle}
-            </label>
-            <input
-              type="text"
-              id="review-title-input"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Мис: Жакшы түшүндүрөт, бирок дедлайндар өтө катуу"
-              className="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-            />
-          </div>
-
           {/* Full Review Text */}
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1">
@@ -426,96 +316,224 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
             />
           </div>
 
-          {/* Pros & Cons */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-semibold text-emerald-700 mb-1">
-                {t.addReviewModal.prosLabel}
-              </label>
-              <textarea
-                id="review-pros-textarea"
-                rows={3}
-                value={prosText}
-                onChange={(e) => setProsText(e.target.value)}
-                placeholder="Мис: Түшүндүрүшү жеңил, жооптор так, ыраазымын"
-                className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
-              />
+          {/* Show more details toggle */}
+          <button
+            type="button"
+            id="toggle-show-more-details-btn"
+            onClick={() => setShowMore(!showMore)}
+            className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-indigo-600 hover:text-indigo-700 cursor-pointer"
+          >
+            <span>{showMore ? t.addReviewModal.showLessDetails : t.addReviewModal.showMoreDetails}</span>
+            {showMore ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          </button>
+
+          {showMore && (
+            <div className="space-y-5 pt-1 border-t border-slate-100">
+              {/* Sub-criteria Ratings */}
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2 mt-5">
+                <div className="text-xs font-bold text-slate-900 mb-2">
+                  Сапаттык критерийлер боюнча баалоо:
+                </div>
+                {handleStarPicker(t.addReviewModal.teacherRating, teacherRating, setTeacherRating)}
+                {handleStarPicker(t.addReviewModal.practiceRating, practiceRating, setPracticeRating)}
+                {handleStarPicker(t.addReviewModal.jobSupportRating, jobSupportRating, setJobSupportRating)}
+                {handleStarPicker(t.addReviewModal.valueRating, valueRating, setValueRating)}
+              </div>
+
+              {/* Author Details */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    {t.addReviewModal.authorName}
+                  </label>
+                  <input
+                    type="text"
+                    id="author-name-input"
+                    disabled={isAnonymous}
+                    value={authorName}
+                    onChange={(e) => setAuthorName(e.target.value)}
+                    placeholder="Мис: Азамат же Айпери"
+                    className="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 disabled:bg-slate-100 disabled:text-slate-400"
+                  />
+                  <label className="inline-flex items-center gap-2 mt-1.5 cursor-pointer text-xs text-slate-600">
+                    <input
+                      type="checkbox"
+                      id="anonymous-checkbox"
+                      checked={isAnonymous}
+                      onChange={(e) => setIsAnonymous(e.target.checked)}
+                      className="rounded text-indigo-600 focus:ring-indigo-500"
+                    />
+                    <span>Анонимдүү калтыруу</span>
+                  </label>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    {t.addReviewModal.authorStatus}
+                  </label>
+                  <select
+                    id="author-status-select"
+                    value={authorStatus}
+                    onChange={(e) => setAuthorStatus(e.target.value as StudentStatus)}
+                    className="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                  >
+                    <option value="graduate">{t.addReviewModal.statusGraduate}</option>
+                    <option value="current_student">{t.addReviewModal.statusCurrent}</option>
+                    <option value="dropped_out">{t.addReviewModal.statusDropped}</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Pricing and Cohort Info */}
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Төлөнгөн сумма (сом)
+                  </label>
+                  <input
+                    type="number"
+                    id="price-paid-input"
+                    value={pricePaidKGS}
+                    onChange={(e) => setPricePaidKGS(e.target.value)}
+                    placeholder="45000"
+                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Окуу мөөнөтү (ай)
+                  </label>
+                  <input
+                    type="number"
+                    id="duration-months-input"
+                    value={durationMonths}
+                    onChange={(e) => setDurationMonths(e.target.value)}
+                    placeholder="6"
+                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Окуган жылы
+                  </label>
+                  <input
+                    type="text"
+                    id="cohort-year-input"
+                    value={cohortYear}
+                    onChange={(e) => setCohortYear(e.target.value)}
+                    placeholder="2024"
+                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                  />
+                </div>
+              </div>
+
+              {/* Review Title */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  {t.addReviewModal.reviewTitle}
+                </label>
+                <input
+                  type="text"
+                  id="review-title-input"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Мис: Жакшы түшүндүрөт, бирок дедлайндар өтө катуу"
+                  className="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                />
+              </div>
+
+              {/* Pros & Cons */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-emerald-700 mb-1">
+                    {t.addReviewModal.prosLabel}
+                  </label>
+                  <textarea
+                    id="review-pros-textarea"
+                    rows={3}
+                    value={prosText}
+                    onChange={(e) => setProsText(e.target.value)}
+                    placeholder="Мис: Түшүндүрүшү жеңил, жооптор так, ыраазымын"
+                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-red-700 mb-1">
+                    {t.addReviewModal.consLabel}
+                  </label>
+                  <textarea
+                    id="review-cons-textarea"
+                    rows={3}
+                    value={consText}
+                    onChange={(e) => setConsText(e.target.value)}
+                    placeholder="Мис: Баасы кымбат, кеч жооп берет"
+                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
+                  />
+                </div>
+              </div>
+
+              {/* Advice for newcomers */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  {t.addReviewModal.adviceLabel}
+                </label>
+                <input
+                  type="text"
+                  id="review-advice-input"
+                  value={adviceForNewcomers}
+                  onChange={(e) => setAdviceForNewcomers(e.target.value)}
+                  placeholder="Мис: Курска чейин негиздерин кайра карап алыңыз"
+                  className="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                />
+              </div>
+
+              {/* WhatsApp — optional, private, never shown publicly */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  {t.addReviewModal.whatsappLabel}
+                </label>
+                <input
+                  type="tel"
+                  id="review-whatsapp-input"
+                  value={whatsappNumber}
+                  onChange={(e) => setWhatsappNumber(e.target.value)}
+                  placeholder="+996 700 000 000"
+                  className="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                />
+                <p className="text-2xs text-slate-400 mt-1">{t.addReviewModal.whatsappNote}</p>
+              </div>
+
+              {/* Warning Flag Checkbox & Verification Checkbox */}
+              <div className="space-y-2 pt-2 border-t border-slate-200">
+                <label className="flex items-start gap-2.5 p-3.5 rounded-xl bg-red-50 border border-red-200 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    id="scam-warning-checkbox"
+                    checked={hasJobScamReport}
+                    onChange={(e) => setHasJobScamReport(e.target.checked)}
+                    className="mt-0.5 rounded text-red-600 focus:ring-red-500"
+                  />
+                  <span className="text-xs text-red-800 font-medium">
+                    {t.addReviewModal.scamWarningCheckbox}
+                  </span>
+                </label>
+
+                <label className="flex items-start gap-2.5 p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    id="verified-student-checkbox"
+                    checked={isVerified}
+                    onChange={(e) => setIsVerified(e.target.checked)}
+                    className="mt-0.5 rounded text-emerald-600 focus:ring-emerald-500"
+                  />
+                  <span className="text-xs text-emerald-800 font-medium">
+                    {t.addReviewModal.verifiedCheckbox}
+                  </span>
+                </label>
+              </div>
             </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-red-700 mb-1">
-                {t.addReviewModal.consLabel}
-              </label>
-              <textarea
-                id="review-cons-textarea"
-                rows={3}
-                value={consText}
-                onChange={(e) => setConsText(e.target.value)}
-                placeholder="Мис: Баасы кымбат, кеч жооп берет"
-                className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
-              />
-            </div>
-          </div>
-
-          {/* Advice for newcomers */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
-              {t.addReviewModal.adviceLabel}
-            </label>
-            <input
-              type="text"
-              id="review-advice-input"
-              value={adviceForNewcomers}
-              onChange={(e) => setAdviceForNewcomers(e.target.value)}
-              placeholder="Мис: Курска чейин негиздерин кайра карап алыңыз"
-              className="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-            />
-          </div>
-
-          {/* WhatsApp — optional, private, never shown publicly */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
-              {t.addReviewModal.whatsappLabel}
-            </label>
-            <input
-              type="tel"
-              id="review-whatsapp-input"
-              value={whatsappNumber}
-              onChange={(e) => setWhatsappNumber(e.target.value)}
-              placeholder="+996 700 000 000"
-              className="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-            />
-            <p className="text-2xs text-slate-400 mt-1">{t.addReviewModal.whatsappNote}</p>
-          </div>
-
-          {/* Warning Flag Checkbox & Verification Checkbox */}
-          <div className="space-y-2 pt-2 border-t border-slate-200">
-            <label className="flex items-start gap-2.5 p-3.5 rounded-xl bg-red-50 border border-red-200 cursor-pointer">
-              <input
-                type="checkbox"
-                id="scam-warning-checkbox"
-                checked={hasJobScamReport}
-                onChange={(e) => setHasJobScamReport(e.target.checked)}
-                className="mt-0.5 rounded text-red-600 focus:ring-red-500"
-              />
-              <span className="text-xs text-red-800 font-medium">
-                {t.addReviewModal.scamWarningCheckbox}
-              </span>
-            </label>
-
-            <label className="flex items-start gap-2.5 p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 cursor-pointer">
-              <input
-                type="checkbox"
-                id="verified-student-checkbox"
-                checked={isVerified}
-                onChange={(e) => setIsVerified(e.target.checked)}
-                className="mt-0.5 rounded text-emerald-600 focus:ring-emerald-500"
-              />
-              <span className="text-xs text-emerald-800 font-medium">
-                {t.addReviewModal.verifiedCheckbox}
-              </span>
-            </label>
-          </div>
+          )}
 
           {/* Actions */}
           <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200">
