@@ -5,13 +5,11 @@ import { AlertTriangle, ChevronDown, ChevronUp, CheckCircle2, FileText, UserX, S
 interface TransparencyBannerProps {
   currentLang: SupportedLang;
   warningCoursesCount: number;
-  onFilterWarningCourses: () => void;
 }
 
 export const TransparencyBanner: React.FC<TransparencyBannerProps> = ({
   currentLang,
   warningCoursesCount,
-  onFilterWarningCourses,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const t = TRANSLATIONS[currentLang];
@@ -29,15 +27,10 @@ export const TransparencyBanner: React.FC<TransparencyBannerProps> = ({
                 {t.warningBannerTitle}
               </h2>
               {warningCoursesCount > 0 && (
-                <button
-                  type="button"
-                  id="view-flagged-courses-btn"
-                  onClick={onFilterWarningCourses}
-                  className="inline-flex items-center gap-1 px-3 py-1 text-xs font-semibold text-red-700 bg-red-50 hover:bg-red-100 rounded-full transition-colors cursor-pointer border border-red-200"
-                >
+                <span className="inline-flex items-center gap-1 px-3 py-1 text-xs font-semibold text-red-700 bg-red-50 rounded-full border border-red-200">
                   <AlertTriangle className="w-3.5 h-3.5" />
                   {warningCoursesCount} шектүү курс белгиленген
-                </button>
+                </span>
               )}
             </div>
             <p className="text-sm text-slate-500 mt-0.5">

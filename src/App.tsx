@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import type { Session } from '@supabase/supabase-js';
-import { Course, Review, CourseCategory, CourseFormat, Teacher, FeaturedVideo } from './types';
+import { Course, Review, Teacher, FeaturedVideo } from './types';
 import { calculateTeacherMetrics } from './data/teachers';
 import { supabase } from './lib/supabaseClient';
 import { ADMIN_EMAIL, signOutAdmin } from './lib/auth';
@@ -19,15 +19,12 @@ import { TransparencyBanner } from './components/TransparencyBanner';
 import { FeaturedVideosSection } from './components/FeaturedVideosSection';
 import { ReportScamSection } from './components/ReportScamSection';
 import { StatsBar } from './components/StatsBar';
-import { CategoryFilter } from './components/CategoryFilter';
-import { CourseCard } from './components/CourseCard';
 import { AddReviewModal } from './components/AddReviewModal';
 import { TeachersSection } from './components/TeachersSection';
 import { AddTeacherModal } from './components/AddTeacherModal';
 import { TeacherDetailModal } from './components/TeacherDetailModal';
 import { AdminLoginModal } from './components/AdminLoginModal';
 import {
-  ShieldAlert,
   Search,
   CheckCircle,
   AlertTriangle,
@@ -109,11 +106,8 @@ export default function App() {
     };
   }, []);
 
-  // Filters state
-  const [selectedCategory, setSelectedCategory] = useState<CourseCategory>('all');
+  // Teacher search
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedFormat, setSelectedFormat] = useState<CourseFormat | 'all'>('all');
-  const [sortBy, setSortBy] = useState<'default' | 'price_asc' | 'price_desc'>('default');
 
   // Modals state
   const [selectedTeacherForDetail, setSelectedTeacherForDetail] = useState<Teacher | null>(null);
@@ -152,33 +146,6 @@ export default function App() {
     }, 4500);
   };
 
-  // Category counts
-  const categoryCounts = useMemo(() => {
-    const counts: Record<CourseCategory, number> = {
-      all: courses.length,
-      it_programming: 0,
-      design_uiux: 0,
-      languages: 0,
-      marketing_smm: 0,
-      business_trading: 0,
-      data_analytics: 0,
-      psychology: 0,
-      beauty_cosmetology: 0,
-      driving_school: 0,
-      cooking_culinary: 0,
-      finance_accounting: 0,
-      kids_development: 0,
-      arts_music: 0,
-      ort_school: 0,
-    };
-    courses.forEach((c) => {
-      if (counts[c.category] !== undefined) {
-        counts[c.category] += 1;
-      }
-    });
-    return counts;
-  }, [courses]);
-
   const warningCoursesCount = useMemo(() => {
     return courses.filter((c) => c.isWarningCourse).length;
   }, [courses]);
@@ -199,69 +166,32 @@ export default function App() {
     return total > 0 ? Math.round((verified / total) * 100) : 0;
   }, [teachers]);
 
-  const scrollToResults = () => {
-    document.getElementById('course-results-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const scrollToTeachers = () => {
+    document.getElementById('teachers-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   const handleHeroSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    scrollToResults();
+    scrollToTeachers();
   };
 
   const handlePopularTagClick = (tag: string) => {
     setSearchQuery(tag);
-    scrollToResults();
+    scrollToTeachers();
   };
 
-  // Filtered and sorted courses
-  const filteredCourses = useMemo(() => {
-    return courses
-      .filter((course) => {
-        if (selectedCategory !== 'all' && course.category !== selectedCategory) {
-          return false;
-        }
-        if (selectedFormat !== 'all' && course.format !== selectedFormat) {
-          return false;
-        }
-        if (searchQuery.trim()) {
-          const q = searchQuery.toLowerCase();
-          const matchName = course.name.toLowerCase().includes(q);
-          const matchAcademy = course.academyName.toLowerCase().includes(q);
-          const matchDesc = course.description.toLowerCase().includes(q);
-          if (!matchName && !matchAcademy && !matchDesc) {
-            return false;
-          }
-        }
-        return true;
-      })
-      .sort((a, b) => {
-        if (sortBy === 'price_asc' || sortBy === 'price_desc') {
-          const aHasPrice = typeof a.priceKGS === 'number';
-          const bHasPrice = typeof b.priceKGS === 'number';
-          if (aHasPrice && !bHasPrice) return -1;
-          if (!aHasPrice && bHasPrice) return 1;
-          if (!aHasPrice && !bHasPrice) return 0;
-          return sortBy === 'price_asc' ? a.priceKGS! - b.priceKGS! : b.priceKGS! - a.priceKGS!;
-        }
-        return 0;
-      });
-  }, [courses, selectedCategory, selectedFormat, searchQuery, sortBy]);
-
-  const hasActiveFilters =
-    selectedCategory !== 'all' ||
-    selectedFormat !== 'all' ||
-    searchQuery.trim().length > 0;
-
-  const handleResetFilters = () => {
-    setSelectedCategory('all');
-    setSelectedFormat('all');
-    setSearchQuery('');
-    setSortBy('default');
-  };
-
-  const handleFilterWarningCourses = () => {
-    setSelectedCategory('all');
-  };
+  // Filtered teachers — searched by name, academy, bio, or specialty category
+  const filteredTeachers = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return teachers;
+    return teachers.filter((tch) => {
+      const matchName = tch.name.toLowerCase().includes(q);
+      const matchAcademy = tch.academyName?.toLowerCase().includes(q) ?? false;
+      const matchBio = tch.bio?.toLowerCase().includes(q) ?? false;
+      const matchCategory = tch.category ? t.categories[tch.category].toLowerCase().includes(q) : false;
+      return matchName || matchAcademy || matchBio || matchCategory;
+    });
+  }, [teachers, searchQuery, t]);
 
   // Voting on a teacher review — optimistic local update, persisted to Supabase
   const handleVoteReview = async (teacherId: string, reviewId: string, type: 'helpful' | 'unhelpful') => {
@@ -499,21 +429,12 @@ export default function App() {
               {t.submitReviewBtn}
             </button>
 
-            <button
-              type="button"
-              id="hero-filter-warnings-btn"
-              onClick={handleFilterWarningCourses}
-              className="px-6 py-2.5 bg-white hover:bg-red-50 text-red-700 border border-red-200 font-medium text-sm rounded-full transition-all shadow-2xs cursor-pointer flex items-center gap-2"
-            >
-              <ShieldAlert className="w-4 h-4 text-red-600" />
-              <span>{t.hero.warningsBtn} ({warningCoursesCount})</span>
-            </button>
           </div>
         </section>
 
         {/* Teachers & Mentors Directory */}
         <TeachersSection
-          teachers={teachers}
+          teachers={filteredTeachers}
           currentLang={currentLang}
           isAdmin={isAdmin}
           onAddTeacher={() => {
@@ -535,7 +456,6 @@ export default function App() {
         <TransparencyBanner
           currentLang={currentLang}
           warningCoursesCount={warningCoursesCount}
-          onFilterWarningCourses={handleFilterWarningCourses}
         />
 
         {/* Featured Videos about bad courses */}
@@ -552,76 +472,6 @@ export default function App() {
           warningCoursesCount={warningCoursesCount}
         />
 
-        {/* Category & Search Filter */}
-        <CategoryFilter
-          currentLang={currentLang}
-          selectedCategory={selectedCategory}
-          onSelectCategory={setSelectedCategory}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          selectedFormat={selectedFormat}
-          onSelectFormat={setSelectedFormat}
-          sortBy={sortBy}
-          onSortChange={setSortBy}
-          categoryCounts={categoryCounts}
-          onResetFilters={handleResetFilters}
-          hasActiveFilters={hasActiveFilters}
-        />
-
-        {/* Course Grid Results */}
-        <section id="course-results-section" className="mt-8 scroll-mt-20">
-          <div className="flex items-center justify-between mb-5">
-            <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2.5">
-              <span>{t.categories[selectedCategory]}</span>
-              <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
-                {filteredCourses.length} курс табылды
-              </span>
-            </h2>
-
-            {hasActiveFilters && (
-              <button
-                type="button"
-                onClick={handleResetFilters}
-                className="text-xs font-medium text-indigo-600 hover:text-indigo-700 underline cursor-pointer"
-              >
-                Бардык фильтрлерди тазалоо
-              </button>
-            )}
-          </div>
-
-          {filteredCourses.length === 0 ? (
-            <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center max-w-md mx-auto my-8">
-              <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3 text-slate-400">
-                <Search className="w-6 h-6" />
-              </div>
-              <h3 className="text-base font-semibold text-slate-900 mb-1">
-                Курс табылган жок
-              </h3>
-              <p className="text-xs sm:text-sm text-slate-500 mb-5">
-                Сиз издеген суроо-талап боюнча эч кандай курс табылган жок. Издөө сөзүн өзгөртүп көрүңүз.
-              </p>
-              <div className="flex justify-center gap-3">
-                <button
-                  type="button"
-                  onClick={handleResetFilters}
-                  className="px-5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-full transition-colors cursor-pointer"
-                >
-                  Фильтрлерди тазалоо
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredCourses.map((course) => (
-                <CourseCard
-                  key={course.id}
-                  course={course}
-                  currentLang={currentLang}
-                />
-              ))}
-            </div>
-          )}
-        </section>
       </main>
 
       {/* Footer */}

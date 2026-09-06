@@ -46,7 +46,7 @@ export const TeachersSection: React.FC<TeachersSectionProps> = ({
   const t = TRANSLATIONS[currentLang];
 
   return (
-    <section className="mt-10">
+    <section id="teachers-section" className="mt-10 scroll-mt-20">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
         <div className="flex items-center gap-3 min-w-0">
           <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
