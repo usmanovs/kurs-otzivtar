@@ -25,12 +25,21 @@ export const Navbar: React.FC<NavbarProps> = ({
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-sm border-b border-slate-200 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-8">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 py-3 sm:py-0 sm:h-20">
           {/* Logo & Brand */}
-          <div className="flex items-center gap-3 min-w-0">
+          <button
+            type="button"
+            id="logo-scroll-top-btn"
+            onClick={scrollToTop}
+            className="flex items-center gap-3 min-w-0 text-left cursor-pointer"
+          >
             <div className="w-9 h-9 bg-gradient-to-br from-indigo-500 to-indigo-700 rounded-xl flex items-center justify-center text-white font-bold shadow-md ring-1 ring-indigo-600/20 shrink-0">
               <span>K</span>
             </div>
@@ -48,7 +57,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 {t.siteSubtitle}
               </p>
             </div>
-          </div>
+          </button>
 
           {/* Section Nav Links */}
           <nav className="flex items-center gap-1 overflow-x-auto no-scrollbar">

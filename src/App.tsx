@@ -101,7 +101,12 @@ export default function App() {
 
         fetchMostRecentReview()
           .then((review) => {
-            if (!cancelled && review) setRecentReview(review);
+            if (!cancelled && review) {
+              setRecentReview(review);
+              setTimeout(() => {
+                if (!cancelled) setRecentReview(null);
+              }, 8000);
+            }
           })
           .catch((e) => console.error('Failed to load most recent review', e));
       } catch (e) {
