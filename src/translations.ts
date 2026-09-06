@@ -70,7 +70,8 @@ export const TRANSLATIONS = {
       finance_accounting: 'Финансы жана Бухгалтерия',
       kids_development: 'Балдарды өнүктүрүү',
       arts_music: 'Искусство жана Музыка',
-      ort_school: 'ЖРТ жана Мектеп'
+      ort_school: 'ЖРТ жана Мектеп',
+      public_speaking: 'Чечендик өнөр / Ораторлук'
     },
     format: {
       all: 'Бардык форматтар',
@@ -286,7 +287,8 @@ export const TRANSLATIONS = {
       finance_accounting: 'Финансы и Бухгалтерия',
       kids_development: 'Развитие детей',
       arts_music: 'Искусство и Музыка',
-      ort_school: 'ОРТ и Школьные'
+      ort_school: 'ОРТ и Школьные',
+      public_speaking: 'Ораторское искусство'
     },
     format: {
       all: 'Все форматы',

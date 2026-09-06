@@ -13,7 +13,8 @@ export type CourseCategory =
   | 'finance_accounting'
   | 'kids_development'
   | 'arts_music'
-  | 'ort_school';
+  | 'ort_school'
+  | 'public_speaking';
 
 export type CourseFormat = 'online' | 'offline' | 'hybrid';
 
