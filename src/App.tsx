@@ -182,6 +182,13 @@ export default function App() {
     return total > 0 ? Math.round((verified / total) * 100) : 0;
   }, [teachers]);
 
+  const featuredTeacherAvatars = useMemo(() => {
+    return [...teachers]
+      .filter((tch) => tch.photoUrl)
+      .sort((a, b) => b.reviewCount - a.reviewCount)
+      .slice(0, 5);
+  }, [teachers]);
+
   const scrollToTeachers = () => {
     document.getElementById('teachers-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
@@ -441,20 +448,36 @@ export default function App() {
             ))}
           </div>
 
-          <div className="flex items-center justify-center gap-8 sm:gap-12 pt-4">
-            <div>
-              <div className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">{totalReviewsCount}+</div>
-              <div className="text-xs text-slate-500 font-medium mt-0.5">{t.hero.statsReviews}</div>
-            </div>
-            <div>
-              <div className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">{courses.length}+</div>
-              <div className="text-xs text-slate-500 font-medium mt-0.5">{t.hero.statsCourses}</div>
-            </div>
-            <div>
-              <div className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">{verifiedReviewsPercent}%</div>
-              <div className="text-xs text-slate-500 font-medium mt-0.5">{t.hero.statsVerified}</div>
-            </div>
-          </div>
+          {featuredTeacherAvatars.length > 0 && (
+            <button
+              type="button"
+              onClick={scrollToTeachers}
+              className="flex flex-col items-center gap-2 pt-4 cursor-pointer group"
+            >
+              <div className="flex items-center">
+                {featuredTeacherAvatars.map((tch, i) => (
+                  <img
+                    key={tch.id}
+                    src={tch.photoUrl}
+                    alt={tch.name}
+                    className="w-10 h-10 rounded-full object-cover ring-2 ring-white shadow-sm transition-transform group-hover:scale-105"
+                    style={{ marginLeft: i === 0 ? 0 : -12, zIndex: featuredTeacherAvatars.length - i }}
+                  />
+                ))}
+                {teachers.length > featuredTeacherAvatars.length && (
+                  <div
+                    className="w-10 h-10 rounded-full bg-slate-100 text-slate-600 text-2xs font-bold flex items-center justify-center ring-2 ring-white shadow-sm"
+                    style={{ marginLeft: -12 }}
+                  >
+                    +{teachers.length - featuredTeacherAvatars.length}
+                  </div>
+                )}
+              </div>
+              <span className="text-xs text-slate-500 font-medium group-hover:text-indigo-600 transition-colors">
+                {t.hero.socialProofLabel}
+              </span>
+            </button>
+          )}
 
           <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
             <button
