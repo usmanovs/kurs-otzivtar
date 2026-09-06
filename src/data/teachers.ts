@@ -84,6 +84,48 @@ const INITIAL_TEACHERS_RAW: Omit<Teacher, 'averageRating' | 'reviewCount' | 'rec
     instagramUrl: 'https://www.instagram.com/samara_keneshova_official/',
     reviews: [],
   },
+  {
+    id: 'teacher-yzatkan-jusupova',
+    name: 'Ызаткан Жусупова',
+    photoUrl: '/teachers/yzatkan-jusupova.webp',
+    instagramUrl: 'https://www.instagram.com/yzatkan_jusupova/',
+    reviews: [],
+  },
+  {
+    id: 'teacher-aijan-ishenbek',
+    name: 'Айжан Ишенбек кызы',
+    photoUrl: '/teachers/aijan-ishenbek.webp',
+    instagramUrl: 'https://www.instagram.com/aijan_ishenbek/',
+    reviews: [],
+  },
+  {
+    id: 'teacher-milana-mirlanova',
+    name: 'Милана Мирланова',
+    photoUrl: '/teachers/milana-mirlanova.png',
+    instagramUrl: 'https://www.instagram.com/milana_mirlanovna/',
+    reviews: [],
+  },
+  {
+    id: 'teacher-nuraa-tuleeva',
+    name: 'Нураа Тулеева',
+    photoUrl: '/teachers/nuraa-tuleeva.png',
+    instagramUrl: 'https://www.instagram.com/nuraa.tuleeva/',
+    reviews: [],
+  },
+  {
+    id: 'teacher-anara-akylbekova',
+    name: 'Анара Акылбекова',
+    photoUrl: '/teachers/anara-akylbekova.webp',
+    instagramUrl: 'https://www.instagram.com/anara_akylbekovna_/',
+    reviews: [],
+  },
+  {
+    id: 'teacher-kunduz-tashtanova',
+    name: 'Кундуз Таштанова',
+    photoUrl: '/teachers/kunduz-tashtanova.webp',
+    instagramUrl: 'https://www.instagram.com/kunduz_tashtanova/',
+    reviews: [],
+  },
 ];
 
 export const INITIAL_TEACHERS: Teacher[] = INITIAL_TEACHERS_RAW.map((t) => calculateTeacherMetrics(t));
