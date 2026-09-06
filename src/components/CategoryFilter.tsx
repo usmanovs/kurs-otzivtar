@@ -30,10 +30,8 @@ interface CategoryFilterProps {
   onSearchChange: (query: string) => void;
   selectedFormat: CourseFormat | 'all';
   onSelectFormat: (format: CourseFormat | 'all') => void;
-  selectedRatingFilter: 'all' | 'high' | 'medium' | 'low';
-  onSelectRatingFilter: (filter: 'all' | 'high' | 'medium' | 'low') => void;
-  sortBy: 'most_reviewed' | 'highest_rated' | 'lowest_rated' | 'price_asc' | 'price_desc';
-  onSortChange: (sort: 'most_reviewed' | 'highest_rated' | 'lowest_rated' | 'price_asc' | 'price_desc') => void;
+  sortBy: 'default' | 'price_asc' | 'price_desc';
+  onSortChange: (sort: 'default' | 'price_asc' | 'price_desc') => void;
   categoryCounts: Record<CourseCategory, number>;
   onResetFilters: () => void;
   hasActiveFilters: boolean;
@@ -47,8 +45,6 @@ export const CategoryFilter: React.FC<CategoryFilterProps> = ({
   onSearchChange,
   selectedFormat,
   onSelectFormat,
-  selectedRatingFilter,
-  onSelectRatingFilter,
   sortBy,
   onSortChange,
   categoryCounts,
@@ -117,19 +113,6 @@ export const CategoryFilter: React.FC<CategoryFilterProps> = ({
             <option value="offline">{t.format.offline}</option>
           </select>
 
-          {/* Rating filter selector */}
-          <select
-            id="rating-filter-select"
-            value={selectedRatingFilter}
-            onChange={(e) => onSelectRatingFilter(e.target.value as 'all' | 'high' | 'medium' | 'low')}
-            className="px-3.5 py-2 bg-white border border-slate-200 rounded-full text-xs sm:text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 shadow-2xs cursor-pointer"
-          >
-            <option value="all">{t.ratings.all}</option>
-            <option value="high">{t.ratings.high}</option>
-            <option value="medium">{t.ratings.medium}</option>
-            <option value="low" className="text-red-600 font-bold">{t.ratings.low}</option>
-          </select>
-
           {/* Sort selector */}
           <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-full px-3 py-1.5 shadow-2xs">
             <SlidersHorizontal className="w-3.5 h-3.5 text-slate-400 hidden sm:inline" />
@@ -140,9 +123,7 @@ export const CategoryFilter: React.FC<CategoryFilterProps> = ({
               aria-label={t.sorting.label}
               className="bg-transparent text-xs sm:text-sm font-medium text-slate-700 focus:outline-none cursor-pointer"
             >
-              <option value="most_reviewed">{t.sorting.most_reviewed}</option>
-              <option value="highest_rated">{t.sorting.highest_rated}</option>
-              <option value="lowest_rated">{t.sorting.lowest_rated}</option>
+              <option value="default">{t.sorting.default}</option>
               <option value="price_asc">{t.sorting.price_asc}</option>
               <option value="price_desc">{t.sorting.price_desc}</option>
             </select>

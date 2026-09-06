@@ -1,19 +1,17 @@
 import React from 'react';
 import { SupportedLang, TRANSLATIONS } from '../translations';
-import { ShieldCheck, PlusCircle, PenLine, Globe } from 'lucide-react';
+import { ShieldCheck, PenLine, Globe } from 'lucide-react';
 
 interface NavbarProps {
   currentLang: SupportedLang;
   onSelectLang: (lang: SupportedLang) => void;
   onOpenAddReview: () => void;
-  onOpenAddCourse: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
   currentLang,
   onSelectLang,
   onOpenAddReview,
-  onOpenAddCourse,
 }) => {
   const t = TRANSLATIONS[currentLang];
 
@@ -65,18 +63,6 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
 
             <div className="flex items-center gap-2 shrink-0">
-              {/* Add Course Button */}
-              <button
-                type="button"
-                id="add-course-btn"
-                onClick={onOpenAddCourse}
-                className="inline-flex items-center gap-1.5 px-3.5 sm:px-4 py-2 text-xs sm:text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-full hover:bg-slate-50 hover:border-slate-300 transition-colors shadow-2xs whitespace-nowrap cursor-pointer"
-              >
-                <PlusCircle className="w-4 h-4 text-slate-500 shrink-0" />
-                <span className="hidden sm:inline">{t.addCourseBtn}</span>
-                <span className="sm:hidden">Курс</span>
-              </button>
-
               {/* Submit Review Primary Button */}
               <button
                 type="button"

@@ -24,10 +24,12 @@ export type StudentStatus =
 
 export interface Review {
   id: string;
-  courseId: string;
-  teacherName?: string;
   authorName: string;
   isAnonymous?: boolean;
+  // Private contact info — never rendered in any public review view.
+  // Collected only so the reviewer can optionally be reached (e.g. by a journalist)
+  // about their experience. Not sent anywhere automatically (no backend yet).
+  whatsappNumber?: string;
   authorStatus: StudentStatus;
   isVerified: boolean;
   date: string;
@@ -59,6 +61,15 @@ export interface Teacher {
   photoUrl?: string;
   instagramUrl?: string;
   youtubeUrl?: string;
+  reviews: Review[];
+  // Calculated metrics
+  averageRating: number;
+  reviewCount: number;
+  recommendPercent: number;
+  teacherRatingAvg: number;
+  practiceRatingAvg: number;
+  jobSupportRatingAvg: number;
+  valueRatingAvg: number;
 }
 
 export interface Course {
@@ -73,13 +84,4 @@ export interface Course {
   description: string;
   isWarningCourse?: boolean;
   warningNotice?: string;
-  reviews: Review[];
-  // Calculated metrics
-  averageRating: number;
-  reviewCount: number;
-  recommendPercent: number;
-  teacherRatingAvg: number;
-  practiceRatingAvg: number;
-  jobSupportRatingAvg: number;
-  valueRatingAvg: number;
 }

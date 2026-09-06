@@ -7,7 +7,10 @@ interface AddTeacherModalProps {
   currentLang: SupportedLang;
   editingTeacher?: Teacher | null;
   onClose: () => void;
-  onSubmit: (teacherData: Omit<Teacher, 'id'>, editingId?: string) => void;
+  onSubmit: (
+    teacherData: Omit<Teacher, 'id' | 'reviews' | 'averageRating' | 'reviewCount' | 'recommendPercent' | 'teacherRatingAvg' | 'practiceRatingAvg' | 'jobSupportRatingAvg' | 'valueRatingAvg'>,
+    editingId?: string
+  ) => void;
 }
 
 export const AddTeacherModal: React.FC<AddTeacherModalProps> = ({

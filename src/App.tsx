@@ -1,30 +1,59 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import type { Session } from '@supabase/supabase-js';
 import { Course, Review, CourseCategory, CourseFormat, Teacher } from './types';
-import { INITIAL_COURSES, calculateCourseMetrics } from './data/initialCourses';
-import { INITIAL_TEACHERS } from './data/teachers';
+import { calculateTeacherMetrics } from './data/teachers';
+import { supabase } from './lib/supabaseClient';
+import { ADMIN_EMAIL, signOutAdmin } from './lib/auth';
+import {
+  fetchCourses,
+  fetchTeachers,
+  insertTeacher,
+  updateTeacher,
+  submitReview,
+  updateReviewVoteCounts,
+} from './lib/api';
 import { SupportedLang, TRANSLATIONS } from './translations';
 import { Navbar } from './components/Navbar';
 import { TransparencyBanner } from './components/TransparencyBanner';
 import { StatsBar } from './components/StatsBar';
 import { CategoryFilter } from './components/CategoryFilter';
 import { CourseCard } from './components/CourseCard';
-import { CourseDetailModal } from './components/CourseDetailModal';
 import { AddReviewModal } from './components/AddReviewModal';
-import { AddCourseModal } from './components/AddCourseModal';
 import { TeachersSection } from './components/TeachersSection';
 import { AddTeacherModal } from './components/AddTeacherModal';
+import { TeacherDetailModal } from './components/TeacherDetailModal';
+import { AdminLoginModal } from './components/AdminLoginModal';
 import {
   ShieldAlert,
   Search,
   Sparkles,
   CheckCircle,
-  HelpCircle,
-  AlertCircle
+  AlertTriangle,
+  Loader2,
+  ShieldCheck,
+  LogOut,
 } from 'lucide-react';
 
-const STORAGE_KEY = 'kursotzivtar_courses_v3';
-const TEACHERS_STORAGE_KEY = 'kursotzivtar_teachers_v6';
 const LANG_STORAGE_KEY = 'kursotzivtar_lang';
+const VOTED_REVIEWS_KEY = 'kursotzivtar_voted_reviews_v1';
+
+type VoteMap = Record<string, 'helpful' | 'unhelpful'>;
+
+function loadVotedReviews(): VoteMap {
+  try {
+    const saved = localStorage.getItem(VOTED_REVIEWS_KEY);
+    return saved ? JSON.parse(saved) : {};
+  } catch {
+    return {};
+  }
+}
+
+function applyVoteOverlay(teachers: Teacher[], votes: VoteMap): Teacher[] {
+  return teachers.map((tch) => ({
+    ...tch,
+    reviews: tch.reviews.map((r) => ({ ...r, userVoted: votes[r.id] })),
+  }));
+}
 
 export default function App() {
   // Language state
@@ -33,73 +62,73 @@ export default function App() {
     return (saved === 'ru' || saved === 'ky') ? saved : 'ky';
   });
 
-  // Courses state
-  const [courses, setCourses] = useState<Course[]>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed.map((c: any) => calculateCourseMetrics(c));
-        }
-      }
-    } catch (e) {
-      console.error('Error loading courses from localStorage', e);
-    }
-    return INITIAL_COURSES;
-  });
+  // Courses & Teachers — loaded from Supabase (shared, persistent data)
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
 
-  // Teachers state
-  const [teachers, setTeachers] = useState<Teacher[]>(() => {
+  // Per-browser record of which reviews this visitor already voted on
+  const [votedReviews, setVotedReviews] = useState<VoteMap>(() => loadVotedReviews());
+
+  useEffect(() => {
     try {
-      const saved = localStorage.getItem(TEACHERS_STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed;
-        }
-      }
+      localStorage.setItem(VOTED_REVIEWS_KEY, JSON.stringify(votedReviews));
     } catch (e) {
-      console.error('Error loading teachers from localStorage', e);
+      console.error('Failed to save voted reviews to localStorage', e);
     }
-    return INITIAL_TEACHERS;
-  });
+  }, [votedReviews]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const [fetchedCourses, fetchedTeachers] = await Promise.all([fetchCourses(), fetchTeachers()]);
+        if (cancelled) return;
+        setCourses(fetchedCourses);
+        setTeachers(applyVoteOverlay(fetchedTeachers, votedReviews));
+      } catch (e) {
+        console.error('Failed to load data from Supabase', e);
+        if (!cancelled) setLoadError(true);
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Filters state
   const [selectedCategory, setSelectedCategory] = useState<CourseCategory>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFormat, setSelectedFormat] = useState<CourseFormat | 'all'>('all');
-  const [selectedRatingFilter, setSelectedRatingFilter] = useState<'all' | 'high' | 'medium' | 'low'>('all');
-  const [sortBy, setSortBy] = useState<'most_reviewed' | 'highest_rated' | 'lowest_rated' | 'price_asc' | 'price_desc'>('most_reviewed');
+  const [sortBy, setSortBy] = useState<'default' | 'price_asc' | 'price_desc'>('default');
 
   // Modals state
-  const [selectedCourseForDetail, setSelectedCourseForDetail] = useState<Course | null>(null);
+  const [selectedTeacherForDetail, setSelectedTeacherForDetail] = useState<Teacher | null>(null);
   const [isAddReviewOpen, setIsAddReviewOpen] = useState(false);
-  const [reviewPreselectedCourse, setReviewPreselectedCourse] = useState<Course | null>(null);
-  const [isAddCourseOpen, setIsAddCourseOpen] = useState(false);
+  const [reviewPreselectedTeacher, setReviewPreselectedTeacher] = useState<Teacher | null>(null);
   const [isAddTeacherOpen, setIsAddTeacherOpen] = useState(false);
   const [editingTeacher, setEditingTeacher] = useState<Teacher | null>(null);
+  const [isAdminLoginOpen, setIsAdminLoginOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  // Admin session — only ADMIN_EMAIL can edit existing teacher profiles,
+  // enforced server-side by Supabase RLS. This just controls what the UI offers.
+  const [session, setSession] = useState<Session | null>(null);
+  const isAdmin = session?.user?.email === ADMIN_EMAIL;
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setSession(data.session));
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      setSession(newSession);
+    });
+    return () => sub.subscription.unsubscribe();
+  }, []);
+
   const t = TRANSLATIONS[currentLang];
-
-  // Save courses to localStorage whenever updated
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(courses));
-    } catch (e) {
-      console.error('Failed to save to localStorage', e);
-    }
-  }, [courses]);
-
-  // Save teachers to localStorage whenever updated
-  useEffect(() => {
-    try {
-      localStorage.setItem(TEACHERS_STORAGE_KEY, JSON.stringify(teachers));
-    } catch (e) {
-      console.error('Failed to save teachers to localStorage', e);
-    }
-  }, [teachers]);
 
   // Save lang to localStorage
   const handleSelectLang = (lang: SupportedLang) => {
@@ -146,60 +175,31 @@ export default function App() {
   }, [courses]);
 
   const totalReviewsCount = useMemo(() => {
-    return courses.reduce((acc, c) => acc + c.reviews.length, 0);
-  }, [courses]);
+    return teachers.reduce((acc, tch) => acc + tch.reviews.length, 0);
+  }, [teachers]);
 
   // Filtered and sorted courses
   const filteredCourses = useMemo(() => {
     return courses
       .filter((course) => {
-        // Category filter
         if (selectedCategory !== 'all' && course.category !== selectedCategory) {
           return false;
         }
-
-        // Format filter
         if (selectedFormat !== 'all' && course.format !== selectedFormat) {
           return false;
         }
-
-        // Rating filter
-        if (selectedRatingFilter === 'high' && course.averageRating < 4.0) {
-          return false;
-        }
-        if (selectedRatingFilter === 'medium' && (course.averageRating < 3.0 || course.averageRating >= 4.0)) {
-          return false;
-        }
-        if (selectedRatingFilter === 'low' && course.averageRating >= 3.0) {
-          return false;
-        }
-
-        // Search query
         if (searchQuery.trim()) {
           const q = searchQuery.toLowerCase();
           const matchName = course.name.toLowerCase().includes(q);
           const matchAcademy = course.academyName.toLowerCase().includes(q);
           const matchDesc = course.description.toLowerCase().includes(q);
-          const matchReviews = course.reviews.some((r) =>
-            r.fullReview.toLowerCase().includes(q) || r.title.toLowerCase().includes(q)
-          );
-          if (!matchName && !matchAcademy && !matchDesc && !matchReviews) {
+          if (!matchName && !matchAcademy && !matchDesc) {
             return false;
           }
         }
-
         return true;
       })
       .sort((a, b) => {
-        if (sortBy === 'most_reviewed') {
-          return b.reviewCount - a.reviewCount;
-        }
-        if (sortBy === 'highest_rated') {
-          return b.averageRating - a.averageRating;
-        }
-        if (sortBy === 'lowest_rated') {
-          return a.averageRating - b.averageRating;
-        }
         if (sortBy === 'price_asc' || sortBy === 'price_desc') {
           const aHasPrice = typeof a.priceKGS === 'number';
           const bHasPrice = typeof b.priceKGS === 'number';
@@ -210,158 +210,156 @@ export default function App() {
         }
         return 0;
       });
-  }, [courses, selectedCategory, selectedFormat, selectedRatingFilter, searchQuery, sortBy]);
+  }, [courses, selectedCategory, selectedFormat, searchQuery, sortBy]);
 
   const hasActiveFilters =
     selectedCategory !== 'all' ||
     selectedFormat !== 'all' ||
-    selectedRatingFilter !== 'all' ||
     searchQuery.trim().length > 0;
 
   const handleResetFilters = () => {
     setSelectedCategory('all');
     setSelectedFormat('all');
-    setSelectedRatingFilter('all');
     setSearchQuery('');
-    setSortBy('most_reviewed');
+    setSortBy('default');
   };
 
   const handleFilterWarningCourses = () => {
     setSelectedCategory('all');
-    setSelectedRatingFilter('low');
-    setSortBy('lowest_rated');
   };
 
-  // Voting on review
-  const handleVoteReview = (courseId: string, reviewId: string, type: 'helpful' | 'unhelpful') => {
-    setCourses((prevCourses) =>
-      prevCourses.map((c) => {
-        if (c.id !== courseId) return c;
+  // Voting on a teacher review — optimistic local update, persisted to Supabase
+  const handleVoteReview = async (teacherId: string, reviewId: string, type: 'helpful' | 'unhelpful') => {
+    const teacher = teachers.find((tch) => tch.id === teacherId);
+    const review = teacher?.reviews.find((r) => r.id === reviewId);
+    if (!teacher || !review) return;
 
-        const updatedReviews = c.reviews.map((r) => {
-          if (r.id !== reviewId) return r;
+    const prevVote = review.userVoted;
+    let helpfulCount = review.helpfulCount;
+    let unhelpfulCount = review.unhelpfulCount;
+    let newVote: 'helpful' | 'unhelpful' | undefined;
 
-          const prevVote = r.userVoted;
-          let helpfulCount = r.helpfulCount;
-          let unhelpfulCount = r.unhelpfulCount;
+    if (prevVote === type) {
+      if (type === 'helpful') helpfulCount = Math.max(0, helpfulCount - 1);
+      else unhelpfulCount = Math.max(0, unhelpfulCount - 1);
+      newVote = undefined;
+    } else {
+      if (prevVote === 'helpful') helpfulCount = Math.max(0, helpfulCount - 1);
+      if (prevVote === 'unhelpful') unhelpfulCount = Math.max(0, unhelpfulCount - 1);
+      if (type === 'helpful') helpfulCount += 1;
+      else unhelpfulCount += 1;
+      newVote = type;
+    }
 
-          if (prevVote === type) {
-            // Unvote
-            if (type === 'helpful') helpfulCount = Math.max(0, helpfulCount - 1);
-            if (type === 'unhelpful') unhelpfulCount = Math.max(0, unhelpfulCount - 1);
-            return {
-              ...r,
-              helpfulCount,
-              unhelpfulCount,
-              userVoted: undefined,
-            };
-          } else {
-            // Changing or setting vote
-            if (prevVote === 'helpful') helpfulCount = Math.max(0, helpfulCount - 1);
-            if (prevVote === 'unhelpful') unhelpfulCount = Math.max(0, unhelpfulCount - 1);
-
-            if (type === 'helpful') helpfulCount += 1;
-            if (type === 'unhelpful') unhelpfulCount += 1;
-
-            return {
-              ...r,
-              helpfulCount,
-              unhelpfulCount,
-              userVoted: type,
-            };
-          }
+    setTeachers((prev) =>
+      prev.map((tch) => {
+        if (tch.id !== teacherId) return tch;
+        const updated = calculateTeacherMetrics({
+          ...tch,
+          reviews: tch.reviews.map((r) =>
+            r.id === reviewId ? { ...r, helpfulCount, unhelpfulCount, userVoted: newVote } : r
+          ),
         });
-
-        const updatedCourse = calculateCourseMetrics({
-          ...c,
-          reviews: updatedReviews,
-        });
-
-        // If currently viewed in detail modal, update selectedCourseForDetail as well
-        if (selectedCourseForDetail && selectedCourseForDetail.id === courseId) {
-          setSelectedCourseForDetail(updatedCourse);
+        if (selectedTeacherForDetail && selectedTeacherForDetail.id === teacherId) {
+          setSelectedTeacherForDetail(updated);
         }
-
-        return updatedCourse;
-      })
-    );
-  };
-
-  // Submit new review
-  const handleSubmitReview = (
-    reviewData: Omit<Review, 'id' | 'date' | 'helpfulCount' | 'unhelpfulCount'>
-  ) => {
-    const newReview: Review = {
-      ...reviewData,
-      id: `rev-${Date.now()}`,
-      date: new Date().toISOString().split('T')[0],
-      helpfulCount: 0,
-      unhelpfulCount: 0,
-    };
-
-    setCourses((prevCourses) =>
-      prevCourses.map((c) => {
-        if (c.id !== reviewData.courseId) return c;
-
-        const updatedReviews = [newReview, ...c.reviews];
-        const updatedCourse = calculateCourseMetrics({
-          ...c,
-          reviews: updatedReviews,
-        });
-
-        if (selectedCourseForDetail && selectedCourseForDetail.id === c.id) {
-          setSelectedCourseForDetail(updatedCourse);
-        }
-
-        return updatedCourse;
+        return updated;
       })
     );
 
-    showToast('Сын-пикириңиз ийгиликтүү кошулду! Чынчыл пикириңиз үчүн чоң рахмат.');
-  };
-
-  // Add new course
-  const handleAddCourse = (
-    newCourseData: Omit<
-      Course,
-      | 'id'
-      | 'reviews'
-      | 'averageRating'
-      | 'reviewCount'
-      | 'recommendPercent'
-      | 'teacherRatingAvg'
-      | 'practiceRatingAvg'
-      | 'jobSupportRatingAvg'
-      | 'valueRatingAvg'
-    >
-  ) => {
-    const newCourse = calculateCourseMetrics({
-      ...newCourseData,
-      id: `course-${Date.now()}`,
-      reviews: [],
+    setVotedReviews((prev) => {
+      const next = { ...prev };
+      if (newVote) next[reviewId] = newVote;
+      else delete next[reviewId];
+      return next;
     });
 
-    setCourses((prev) => [newCourse, ...prev]);
-    showToast(`"${newCourse.name}" курсу тизмеге кошулду! Эми ага сын-пикир калтырсаңыз болот.`);
-    setSelectedCourseForDetail(newCourse);
+    try {
+      await updateReviewVoteCounts(reviewId, helpfulCount, unhelpfulCount);
+    } catch (e) {
+      console.error('Failed to persist vote', e);
+    }
+  };
+
+  // Submit new review — resolves to an existing teacher by name, or creates a new one
+  const handleSubmitReview = async (
+    teacherName: string,
+    reviewData: Omit<Review, 'id' | 'date' | 'helpfulCount' | 'unhelpfulCount'>
+  ) => {
+    const { whatsappNumber, ...reviewFields } = reviewData;
+    try {
+      const result = await submitReview(teacherName, teachers, reviewFields, whatsappNumber);
+
+      setTeachers((prev) => {
+        if (result.isNewTeacher && result.newTeacher) {
+          const withReview = calculateTeacherMetrics({
+            ...result.newTeacher,
+            reviews: [result.review],
+          });
+          return [withReview, ...prev];
+        }
+        return prev.map((tch) => {
+          if (tch.id !== result.teacherId) return tch;
+          const updated = calculateTeacherMetrics({
+            ...tch,
+            reviews: [result.review, ...tch.reviews],
+          });
+          if (selectedTeacherForDetail && selectedTeacherForDetail.id === tch.id) {
+            setSelectedTeacherForDetail(updated);
+          }
+          return updated;
+        });
+      });
+
+      showToast('Сын-пикириңиз ийгиликтүү кошулду! Чынчыл пикириңиз үчүн чоң рахмат.');
+    } catch (e) {
+      console.error('Failed to submit review', e);
+      showToast('Ката кетти. Сын-пикирди сактай алган жокпуз, интернетиңизди текшерип кайра аракет кылыңыз.');
+    }
   };
 
   // Add or update a teacher
-  const handleSubmitTeacher = (teacherData: Omit<Teacher, 'id'>, editingId?: string) => {
-    if (editingId) {
-      setTeachers((prev) =>
-        prev.map((t) => (t.id === editingId ? { ...t, ...teacherData } : t))
-      );
-      showToast(`"${teacherData.name}" мугалимдин маалыматы жаңырды!`);
-    } else {
-      const newTeacher: Teacher = {
-        ...teacherData,
-        id: `teacher-${Date.now()}`,
-      };
-      setTeachers((prev) => [newTeacher, ...prev]);
-      showToast(`"${newTeacher.name}" мугалимдер тизмесине кошулду!`);
+  const handleSubmitTeacher = async (
+    teacherData: Omit<Teacher, 'id' | 'reviews' | 'averageRating' | 'reviewCount' | 'recommendPercent' | 'teacherRatingAvg' | 'practiceRatingAvg' | 'jobSupportRatingAvg' | 'valueRatingAvg'>,
+    editingId?: string
+  ) => {
+    try {
+      if (editingId) {
+        await updateTeacher(editingId, teacherData);
+        setTeachers((prev) =>
+          prev.map((tch) => (tch.id === editingId ? { ...tch, ...teacherData } : tch))
+        );
+        showToast(`"${teacherData.name}" мугалимдин маалыматы жаңырды!`);
+      } else {
+        const newTeacher = await insertTeacher(teacherData);
+        setTeachers((prev) => [newTeacher, ...prev]);
+        showToast(`"${newTeacher.name}" мугалимдер тизмесине кошулду!`);
+      }
+    } catch (e) {
+      console.error('Failed to save teacher', e);
+      showToast('Ката кетти. Маалыматты сактай алган жокпуз.');
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-3 bg-slate-50 text-slate-500">
+        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+        <span className="text-sm font-medium">Жүктөлүүдө...</span>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-3 bg-slate-50 text-center px-6">
+        <AlertTriangle className="w-8 h-8 text-red-500" />
+        <p className="text-sm font-medium text-slate-700 max-w-sm">
+          Маалыматтарды жүктөө учурунда ката кетти. Интернет байланышыңызды текшерип, баракты жаңыртып көрүңүз.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 selection:bg-indigo-100 selection:text-indigo-900">
@@ -378,10 +376,9 @@ export default function App() {
         currentLang={currentLang}
         onSelectLang={handleSelectLang}
         onOpenAddReview={() => {
-          setReviewPreselectedCourse(null);
+          setReviewPreselectedTeacher(null);
           setIsAddReviewOpen(true);
         }}
-        onOpenAddCourse={() => setIsAddCourseOpen(true)}
       />
 
       {/* Main Content */}
@@ -394,11 +391,11 @@ export default function App() {
           </div>
 
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-slate-900 leading-tight">
-            Курстардын чынчыл сын-пикирлери
+            Мугалимдердин чынчыл сын-пикирлери
           </h1>
 
           <p className="text-base sm:text-lg text-slate-600 leading-relaxed font-normal max-w-2xl mx-auto">
-            Сапатсыз окутууга, инфобизнес тузактарына жана бош убадаларга алданбаңыз. Студенттердин чыныгы тажрыйбасын окуп, туура билимди тандаңыз.
+            Курстар тез-тез өзгөрүп турат, бирок мугалимдин сапаты калат. Сын-пикириңизди мугалимге калтырыңыз — студенттердин чыныгы тажрыйбасын окуп, туура тандоо жасаңыз.
           </p>
 
           <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
@@ -406,7 +403,7 @@ export default function App() {
               type="button"
               id="hero-add-review-btn"
               onClick={() => {
-                setReviewPreselectedCourse(null);
+                setReviewPreselectedTeacher(null);
                 setIsAddReviewOpen(true);
               }}
               className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-sm rounded-full transition-all shadow-xs cursor-pointer"
@@ -429,8 +426,8 @@ export default function App() {
         {/* Teachers & Mentors Directory */}
         <TeachersSection
           teachers={teachers}
-          courses={courses}
           currentLang={currentLang}
+          isAdmin={isAdmin}
           onAddTeacher={() => {
             setEditingTeacher(null);
             setIsAddTeacherOpen(true);
@@ -438,6 +435,11 @@ export default function App() {
           onEditTeacher={(teacher) => {
             setEditingTeacher(teacher);
             setIsAddTeacherOpen(true);
+          }}
+          onViewTeacher={(teacher) => setSelectedTeacherForDetail(teacher)}
+          onOpenAddReview={(teacher) => {
+            setReviewPreselectedTeacher(teacher);
+            setIsAddReviewOpen(true);
           }}
         />
 
@@ -465,8 +467,6 @@ export default function App() {
           onSearchChange={setSearchQuery}
           selectedFormat={selectedFormat}
           onSelectFormat={setSelectedFormat}
-          selectedRatingFilter={selectedRatingFilter}
-          onSelectRatingFilter={setSelectedRatingFilter}
           sortBy={sortBy}
           onSortChange={setSortBy}
           categoryCounts={categoryCounts}
@@ -504,7 +504,7 @@ export default function App() {
                 Курс табылган жок
               </h3>
               <p className="text-xs sm:text-sm text-slate-500 mb-5">
-                Сиз издеген суроо-талап боюнча эч кандай курс табылган жок. Издөө сөзүн өзгөртүп көрүңүз же жаңы курс кошуңуз.
+                Сиз издеген суроо-талап боюнча эч кандай курс табылган жок. Издөө сөзүн өзгөртүп көрүңүз.
               </p>
               <div className="flex justify-center gap-3">
                 <button
@@ -513,13 +513,6 @@ export default function App() {
                   className="px-5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-full transition-colors cursor-pointer"
                 >
                   Фильтрлерди тазалоо
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsAddCourseOpen(true)}
-                  className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-full transition-colors cursor-pointer shadow-xs"
-                >
-                  Курсту кошуу
                 </button>
               </div>
             </div>
@@ -530,11 +523,6 @@ export default function App() {
                   key={course.id}
                   course={course}
                   currentLang={currentLang}
-                  onViewDetails={(c) => setSelectedCourseForDetail(c)}
-                  onAddReviewForCourse={(c) => {
-                    setReviewPreselectedCourse(c);
-                    setIsAddReviewOpen(true);
-                  }}
                 />
               ))}
             </div>
@@ -563,19 +551,47 @@ export default function App() {
               <div className="mt-1">
                 Эгер шектүү курска же алдамчылыкка туш болсоңуз, сын-пикир калтырып элге эскертиңиз!
               </div>
+              <div className="mt-2">
+                {isAdmin ? (
+                  <button
+                    type="button"
+                    onClick={() => signOutAdmin()}
+                    className="inline-flex items-center gap-1 text-slate-400 hover:text-red-600 transition-colors cursor-pointer"
+                  >
+                    <LogOut className="w-3 h-3" />
+                    <span>Admin чыгуу</span>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setIsAdminLoginOpen(true)}
+                    className="inline-flex items-center gap-1 text-slate-300 hover:text-slate-500 transition-colors cursor-pointer"
+                  >
+                    <ShieldCheck className="w-3 h-3" />
+                    <span>Admin кирүү</span>
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>
       </footer>
 
       {/* Modals */}
-      {selectedCourseForDetail && (
-        <CourseDetailModal
-          course={selectedCourseForDetail}
+      {isAdminLoginOpen && (
+        <AdminLoginModal
+          onClose={() => setIsAdminLoginOpen(false)}
+          onSuccess={() => showToast('Admin катары ийгиликтүү кирдиңиз.')}
+        />
+      )}
+
+      {selectedTeacherForDetail && (
+        <TeacherDetailModal
+          teacher={selectedTeacherForDetail}
           currentLang={currentLang}
-          onClose={() => setSelectedCourseForDetail(null)}
-          onOpenAddReview={(c) => {
-            setReviewPreselectedCourse(c);
+          onClose={() => setSelectedTeacherForDetail(null)}
+          onOpenAddReview={(teacher) => {
+            setReviewPreselectedTeacher(teacher);
             setIsAddReviewOpen(true);
           }}
           onVoteReview={handleVoteReview}
@@ -584,13 +600,12 @@ export default function App() {
 
       {isAddReviewOpen && (
         <AddReviewModal
-          courses={courses}
           teachers={teachers}
-          preSelectedCourse={reviewPreselectedCourse}
+          preSelectedTeacher={reviewPreselectedTeacher}
           currentLang={currentLang}
           onClose={() => {
             setIsAddReviewOpen(false);
-            setReviewPreselectedCourse(null);
+            setReviewPreselectedTeacher(null);
           }}
           onSubmitReview={handleSubmitReview}
         />
@@ -605,14 +620,6 @@ export default function App() {
             setEditingTeacher(null);
           }}
           onSubmit={handleSubmitTeacher}
-        />
-      )}
-
-      {isAddCourseOpen && (
-        <AddCourseModal
-          currentLang={currentLang}
-          onClose={() => setIsAddCourseOpen(false)}
-          onAddCourse={handleAddCourse}
         />
       )}
     </div>

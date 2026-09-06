@@ -1,35 +1,31 @@
 import React, { useState } from 'react';
-import { Course, Review } from '../types';
+import { Teacher } from '../types';
 import { SupportedLang, TRANSLATIONS } from '../translations';
 import {
   X,
   Star,
-  ShieldAlert,
   CheckCircle,
   ThumbsUp,
   ThumbsDown,
   Building2,
-  Clock,
-  Coins,
-  ExternalLink,
   PlusCircle,
   AlertTriangle,
   Lightbulb,
-  Award,
   Check,
-  Filter
+  Instagram,
+  Youtube,
 } from 'lucide-react';
 
-interface CourseDetailModalProps {
-  course: Course | null;
+interface TeacherDetailModalProps {
+  teacher: Teacher | null;
   currentLang: SupportedLang;
   onClose: () => void;
-  onOpenAddReview: (course: Course) => void;
-  onVoteReview: (courseId: string, reviewId: string, type: 'helpful' | 'unhelpful') => void;
+  onOpenAddReview: (teacher: Teacher) => void;
+  onVoteReview: (teacherId: string, reviewId: string, type: 'helpful' | 'unhelpful') => void;
 }
 
-export const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
-  course,
+export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
+  teacher,
   currentLang,
   onClose,
   onOpenAddReview,
@@ -37,20 +33,18 @@ export const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
 }) => {
   const [reviewTab, setReviewTab] = useState<'all' | 'positive' | 'negative' | 'verified'>('all');
 
-  if (!course) return null;
+  if (!teacher) return null;
 
   const t = TRANSLATIONS[currentLang];
 
-  // Distribution calculation
-  const totalReviews = course.reviews.length;
+  const totalReviews = teacher.reviews.length;
   const ratingCounts: Record<number, number> = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
-  course.reviews.forEach((r) => {
+  teacher.reviews.forEach((r) => {
     const star = Math.min(5, Math.max(1, Math.round(r.overallRating)));
     ratingCounts[star] = (ratingCounts[star] || 0) + 1;
   });
 
-  // Filtered reviews
-  const filteredReviews = course.reviews.filter((r) => {
+  const filteredReviews = teacher.reviews.filter((r) => {
     if (reviewTab === 'positive') return r.overallRating >= 4;
     if (reviewTab === 'negative') return r.overallRating <= 2;
     if (reviewTab === 'verified') return r.isVerified;
@@ -93,42 +87,60 @@ export const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
       >
         {/* Modal Header */}
         <div className="p-6 bg-slate-900 text-white flex items-start justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 text-xs font-semibold text-indigo-300 uppercase tracking-wider mb-1">
-              <Building2 className="w-3.5 h-3.5" />
-              <span>{course.academyName}</span>
-            </div>
-            <h2 className="text-xl sm:text-2xl font-bold leading-tight tracking-tight">
-              {course.name}
-            </h2>
-            <div className="flex flex-wrap items-center gap-4 mt-2 text-xs text-slate-300">
-              <span className="flex items-center gap-1">
-                <Clock className="w-3.5 h-3.5 text-slate-400" />
-                {course.durationText}
-              </span>
-              <span className="flex items-center gap-1">
-                <Coins className="w-3.5 h-3.5 text-slate-400" />
-                {typeof course.priceKGS === 'number'
-                  ? `${course.priceKGS.toLocaleString('ru-RU')} сом`
-                  : t.courseCard.priceNotSpecified}
-              </span>
-              {course.websiteOrInstagram && (
-                <a
-                  href={course.websiteOrInstagram}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-indigo-300 hover:text-indigo-200 underline font-medium"
-                >
-                  <span>Шилтеме</span>
-                  <ExternalLink className="w-3 h-3" />
-                </a>
+          <div className="flex items-center gap-4">
+            {teacher.photoUrl ? (
+              <img
+                src={teacher.photoUrl}
+                alt={teacher.name}
+                className="w-16 h-16 rounded-full object-cover ring-2 ring-white/20 shrink-0"
+              />
+            ) : (
+              <div className="w-16 h-16 rounded-full bg-indigo-500/30 text-white font-bold flex items-center justify-center text-xl shrink-0">
+                {teacher.name.charAt(0).toUpperCase()}
+              </div>
+            )}
+            <div>
+              <h2 className="text-xl sm:text-2xl font-bold leading-tight tracking-tight">
+                {teacher.name}
+              </h2>
+              {teacher.academyName && (
+                <div className="flex items-center gap-1 text-xs font-semibold text-indigo-300 mt-1">
+                  <Building2 className="w-3.5 h-3.5" />
+                  <span>{teacher.academyName}</span>
+                </div>
+              )}
+              {(teacher.instagramUrl || teacher.youtubeUrl) && (
+                <div className="flex items-center gap-2 mt-2">
+                  {teacher.instagramUrl && (
+                    <a
+                      href={teacher.instagramUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label="Instagram"
+                      className="text-slate-300 hover:text-pink-400 transition-colors"
+                    >
+                      <Instagram className="w-4 h-4" />
+                    </a>
+                  )}
+                  {teacher.youtubeUrl && (
+                    <a
+                      href={teacher.youtubeUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label="YouTube"
+                      className="text-slate-300 hover:text-red-400 transition-colors"
+                    >
+                      <Youtube className="w-4 h-4" />
+                    </a>
+                  )}
+                </div>
               )}
             </div>
           </div>
 
           <button
             type="button"
-            id="close-detail-modal-btn"
+            id="close-teacher-detail-modal-btn"
             onClick={onClose}
             className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer shrink-0"
             aria-label={t.detailModal.close}
@@ -139,28 +151,11 @@ export const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
 
         {/* Modal Scrollable Body */}
         <div className="overflow-y-auto p-5 sm:p-7 space-y-6">
-          {/* Warning banner if flagged */}
-          {course.isWarningCourse && (
-            <div className="bg-red-50 border border-red-200 rounded-2xl p-4 sm:p-5 flex items-start gap-3.5">
-              <div className="p-2 bg-red-100 text-red-600 rounded-xl shrink-0">
-                <ShieldAlert className="w-6 h-6" />
-              </div>
-              <div className="space-y-1">
-                <h3 className="text-sm font-bold text-red-900 flex items-center gap-2">
-                  <span>{t.courseCard.warningBadge}</span>
-                </h3>
-                <p className="text-xs sm:text-sm text-red-800 leading-relaxed font-medium">
-                  {course.warningNotice ||
-                    'Бул курс боюнча студенттерден жалган убадалар, төлөмдү кайтарып бербөө же сапатсыз окутуу боюнча даттануулар келип түшкөн. Төлөм кылуудан мурун сын-пикирлерди толук окуп чыгыңыз!'}
-                </p>
-              </div>
+          {teacher.bio && (
+            <div className="text-sm text-slate-600 leading-relaxed bg-slate-50 p-4 rounded-xl border border-slate-200">
+              {teacher.bio}
             </div>
           )}
-
-          {/* Description */}
-          <div className="text-sm text-slate-600 leading-relaxed bg-slate-50 p-4 rounded-xl border border-slate-200">
-            {course.description}
-          </div>
 
           {/* Overall Ratings & Sub-metrics Grid */}
           <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-stretch">
@@ -168,37 +163,38 @@ export const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
             <div className="md:col-span-4 bg-slate-50 border border-slate-200 p-5 rounded-2xl flex flex-col items-center justify-center text-center">
               <div
                 className={`text-4xl sm:text-5xl font-bold mb-2 ${
-                  course.averageRating >= 4
+                  teacher.averageRating >= 4
                     ? 'text-emerald-600'
-                    : course.averageRating >= 3
+                    : teacher.averageRating >= 3
                     ? 'text-amber-600'
                     : 'text-red-600'
                 }`}
               >
-                {course.averageRating.toFixed(1)}
+                {teacher.averageRating.toFixed(1)}
               </div>
-              {renderStars(course.averageRating, 'w-5 h-5')}
+              {renderStars(teacher.averageRating, 'w-5 h-5')}
               <div className="text-xs text-slate-500 font-semibold mt-1">
-                {course.reviewCount} {t.courseCard.reviewsCount} негизинде
+                {teacher.reviewCount} {t.courseCard.reviewsCount} негизинде
               </div>
 
-              {/* Recommendation rate */}
-              <div className="mt-4 pt-3 border-t border-slate-200 w-full text-center">
-                <span
-                  className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${
-                    course.recommendPercent >= 70
-                      ? 'bg-emerald-100 text-emerald-800'
-                      : 'bg-red-100 text-red-800'
-                  }`}
-                >
-                  {course.recommendPercent >= 70 ? (
-                    <ThumbsUp className="w-3.5 h-3.5" />
-                  ) : (
-                    <ThumbsDown className="w-3.5 h-3.5" />
-                  )}
-                  {course.recommendPercent}% {t.courseCard.recommendRate}
-                </span>
-              </div>
+              {teacher.reviewCount > 0 && (
+                <div className="mt-4 pt-3 border-t border-slate-200 w-full text-center">
+                  <span
+                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${
+                      teacher.recommendPercent >= 70
+                        ? 'bg-emerald-100 text-emerald-800'
+                        : 'bg-red-100 text-red-800'
+                    }`}
+                  >
+                    {teacher.recommendPercent >= 70 ? (
+                      <ThumbsUp className="w-3.5 h-3.5" />
+                    ) : (
+                      <ThumbsDown className="w-3.5 h-3.5" />
+                    )}
+                    {teacher.recommendPercent}% {t.courseCard.recommendRate}
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* Sub-scores breakdown */}
@@ -207,9 +203,9 @@ export const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
                 <div className="text-xs text-slate-500 font-medium mb-1">{t.courseCard.teachers}</div>
                 <div className="flex items-center justify-between">
                   <span className="text-lg font-bold text-slate-900">
-                    {course.teacherRatingAvg.toFixed(1)} / 5
+                    {teacher.teacherRatingAvg.toFixed(1)} / 5
                   </span>
-                  {renderStars(course.teacherRatingAvg)}
+                  {renderStars(teacher.teacherRatingAvg)}
                 </div>
               </div>
 
@@ -217,9 +213,9 @@ export const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
                 <div className="text-xs text-slate-500 font-medium mb-1">{t.courseCard.practice}</div>
                 <div className="flex items-center justify-between">
                   <span className="text-lg font-bold text-slate-900">
-                    {course.practiceRatingAvg.toFixed(1)} / 5
+                    {teacher.practiceRatingAvg.toFixed(1)} / 5
                   </span>
-                  {renderStars(course.practiceRatingAvg)}
+                  {renderStars(teacher.practiceRatingAvg)}
                 </div>
               </div>
 
@@ -227,9 +223,9 @@ export const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
                 <div className="text-xs text-slate-500 font-medium mb-1">{t.courseCard.jobSupport}</div>
                 <div className="flex items-center justify-between">
                   <span className="text-lg font-bold text-slate-900">
-                    {course.jobSupportRatingAvg.toFixed(1)} / 5
+                    {teacher.jobSupportRatingAvg.toFixed(1)} / 5
                   </span>
-                  {renderStars(course.jobSupportRatingAvg)}
+                  {renderStars(teacher.jobSupportRatingAvg)}
                 </div>
               </div>
 
@@ -237,9 +233,9 @@ export const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
                 <div className="text-xs text-slate-500 font-medium mb-1">{t.courseCard.value}</div>
                 <div className="flex items-center justify-between">
                   <span className="text-lg font-bold text-slate-900">
-                    {course.valueRatingAvg.toFixed(1)} / 5
+                    {teacher.valueRatingAvg.toFixed(1)} / 5
                   </span>
-                  {renderStars(course.valueRatingAvg)}
+                  {renderStars(teacher.valueRatingAvg)}
                 </div>
               </div>
 
@@ -276,11 +272,11 @@ export const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
             </div>
           </div>
 
-          {/* Action to write review - Clean Minimalism callout */}
+          {/* Action to write review */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-5 bg-indigo-50 rounded-2xl border border-indigo-100">
             <div>
               <h4 className="text-sm font-bold text-indigo-950">
-                Сиз дагы бул курста окудуңуз беле?
+                Бул мугалим менен окуган элеңизби?
               </h4>
               <p className="text-xs text-indigo-800/80 mt-0.5">
                 Сиздин чынчыл сын-пикириңиз башка студенттерди алдануудан сактайт.
@@ -291,7 +287,7 @@ export const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
               id="detail-modal-add-review-btn"
               onClick={() => {
                 onClose();
-                onOpenAddReview(course);
+                onOpenAddReview(teacher);
               }}
               className="inline-flex items-center gap-2 px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs sm:text-sm rounded-full transition-colors shadow-xs shrink-0 cursor-pointer"
             >
@@ -310,7 +306,6 @@ export const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
                 </span>
               </h3>
 
-              {/* Review Filter Tabs */}
               <div className="flex items-center gap-1.5 overflow-x-auto text-xs font-medium">
                 <button
                   type="button"
@@ -433,12 +428,6 @@ export const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
                       )}
                     </div>
 
-                    {/* Review Title & Content */}
-                    {review.teacherName && (
-                      <div className="inline-flex items-center gap-1 text-2xs font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100 mb-2">
-                        <span>Ментор: {review.teacherName}</span>
-                      </div>
-                    )}
                     <h4 className="text-base font-bold text-slate-900 mb-1">
                       {review.title}
                     </h4>
@@ -449,7 +438,6 @@ export const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
                     {/* Pros & Cons Section */}
                     {(review.pros.length > 0 || review.cons.length > 0) && (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4 pt-3 border-t border-slate-100 text-xs">
-                        {/* Pros */}
                         {review.pros.length > 0 && (
                           <div className="bg-emerald-50/70 p-3 rounded-xl border border-emerald-100">
                             <span className="font-bold text-emerald-800 block mb-1.5 flex items-center gap-1">
@@ -467,7 +455,6 @@ export const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
                           </div>
                         )}
 
-                        {/* Cons */}
                         {review.cons.length > 0 && (
                           <div className="bg-red-50/70 p-3 rounded-xl border border-red-100">
                             <span className="font-bold text-red-800 block mb-1.5 flex items-center gap-1">
@@ -487,7 +474,6 @@ export const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
                       </div>
                     )}
 
-                    {/* Advice for newcomers */}
                     {review.adviceForNewcomers && (
                       <div className="mt-3 p-3 bg-amber-50/70 rounded-xl border border-amber-200/60 text-xs text-slate-800 flex items-start gap-2">
                         <Lightbulb className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
@@ -507,7 +493,7 @@ export const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
                         <button
                           type="button"
                           id={`vote-helpful-${review.id}`}
-                          onClick={() => onVoteReview(course.id, review.id, 'helpful')}
+                          onClick={() => onVoteReview(teacher.id, review.id, 'helpful')}
                           className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border text-xs font-semibold transition-colors cursor-pointer ${
                             review.userVoted === 'helpful'
                               ? 'bg-emerald-50 text-emerald-700 border-emerald-300'
@@ -521,7 +507,7 @@ export const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
                         <button
                           type="button"
                           id={`vote-unhelpful-${review.id}`}
-                          onClick={() => onVoteReview(course.id, review.id, 'unhelpful')}
+                          onClick={() => onVoteReview(teacher.id, review.id, 'unhelpful')}
                           className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border text-xs font-semibold transition-colors cursor-pointer ${
                             review.userVoted === 'unhelpful'
                               ? 'bg-red-50 text-red-700 border-red-300'

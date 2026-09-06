@@ -1,14 +1,16 @@
-import React, { useMemo, useState } from 'react';
-import { Course, Teacher } from '../types';
+import React, { useState } from 'react';
+import { Teacher } from '../types';
 import { SupportedLang, TRANSLATIONS } from '../translations';
-import { GraduationCap, Star, PlusCircle, Building2, Pencil, Instagram, Youtube } from 'lucide-react';
+import { GraduationCap, Star, PlusCircle, Building2, Pencil, Instagram, Youtube, MessageSquarePlus } from 'lucide-react';
 
 interface TeachersSectionProps {
   teachers: Teacher[];
-  courses: Course[];
   currentLang: SupportedLang;
+  isAdmin: boolean;
   onAddTeacher: () => void;
   onEditTeacher: (teacher: Teacher) => void;
+  onViewTeacher: (teacher: Teacher) => void;
+  onOpenAddReview: (teacher: Teacher) => void;
 }
 
 const TeacherAvatar: React.FC<{ teacher: Teacher }> = ({ teacher }) => {
@@ -34,26 +36,14 @@ const TeacherAvatar: React.FC<{ teacher: Teacher }> = ({ teacher }) => {
 
 export const TeachersSection: React.FC<TeachersSectionProps> = ({
   teachers,
-  courses,
   currentLang,
+  isAdmin,
   onAddTeacher,
   onEditTeacher,
+  onViewTeacher,
+  onOpenAddReview,
 }) => {
   const t = TRANSLATIONS[currentLang];
-
-  const teacherStats = useMemo(() => {
-    const allReviews = courses.flatMap((c) => c.reviews);
-    return teachers.map((teacher) => {
-      const matchingReviews = allReviews.filter(
-        (r) => r.teacherName && r.teacherName.trim().toLowerCase() === teacher.name.trim().toLowerCase()
-      );
-      const avgRating =
-        matchingReviews.length > 0
-          ? matchingReviews.reduce((sum, r) => sum + r.overallRating, 0) / matchingReviews.length
-          : 0;
-      return { teacher, reviewCount: matchingReviews.length, avgRating };
-    });
-  }, [teachers, courses]);
 
   return (
     <section className="mt-10">
@@ -78,39 +68,49 @@ export const TeachersSection: React.FC<TeachersSectionProps> = ({
         </button>
       </div>
 
-      {teacherStats.length === 0 ? (
+      {teachers.length === 0 ? (
         <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center text-sm text-slate-500">
           {t.teachersSection.emptyState}
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {teacherStats.map(({ teacher, reviewCount, avgRating }) => (
+          {teachers.map((teacher) => (
             <div
               key={teacher.id}
               id={`teacher-card-${teacher.id}`}
               className="group relative bg-white rounded-2xl border border-slate-200 shadow-2xs hover:shadow-lg hover:-translate-y-0.5 hover:border-indigo-200 transition-all duration-200 flex flex-col items-center text-center p-6 pt-8"
             >
+              {isAdmin && (
+                <button
+                  type="button"
+                  id={`edit-teacher-btn-${teacher.id}`}
+                  onClick={() => onEditTeacher(teacher)}
+                  aria-label="Edit"
+                  className="absolute top-3 right-3 p-1.5 rounded-full text-slate-300 hover:text-indigo-600 hover:bg-indigo-50 transition-colors cursor-pointer opacity-0 group-hover:opacity-100 focus:opacity-100"
+                >
+                  <Pencil className="w-3.5 h-3.5" />
+                </button>
+              )}
+
               <button
                 type="button"
-                id={`edit-teacher-btn-${teacher.id}`}
-                onClick={() => onEditTeacher(teacher)}
-                aria-label="Edit"
-                className="absolute top-3 right-3 p-1.5 rounded-full text-slate-300 hover:text-indigo-600 hover:bg-indigo-50 transition-colors cursor-pointer opacity-0 group-hover:opacity-100 focus:opacity-100"
+                onClick={() => onViewTeacher(teacher)}
+                className="flex flex-col items-center text-center cursor-pointer"
               >
-                <Pencil className="w-3.5 h-3.5" />
+                <div className="relative">
+                  <TeacherAvatar teacher={teacher} />
+                  {teacher.reviewCount > 0 && (
+                    <div className="absolute -bottom-1.5 -right-1.5 flex items-center gap-0.5 text-2xs font-bold text-white bg-amber-500 px-1.5 py-0.5 rounded-full shadow-sm border-2 border-white">
+                      <Star className="w-2.5 h-2.5 fill-white" />
+                      {teacher.averageRating.toFixed(1)}
+                    </div>
+                  )}
+                </div>
+
+                <h3 className="font-bold text-slate-900 text-sm mt-3 group-hover:text-indigo-600 transition-colors">
+                  {teacher.name}
+                </h3>
               </button>
-
-              <div className="relative">
-                <TeacherAvatar teacher={teacher} />
-                {reviewCount > 0 && (
-                  <div className="absolute -bottom-1.5 -right-1.5 flex items-center gap-0.5 text-2xs font-bold text-white bg-amber-500 px-1.5 py-0.5 rounded-full shadow-sm border-2 border-white">
-                    <Star className="w-2.5 h-2.5 fill-white" />
-                    {avgRating.toFixed(1)}
-                  </div>
-                )}
-              </div>
-
-              <h3 className="font-bold text-slate-900 text-sm mt-3">{teacher.name}</h3>
 
               {teacher.academyName && (
                 <div className="flex items-center justify-center gap-1 text-xs text-slate-500 mt-1">
@@ -124,17 +124,29 @@ export const TeachersSection: React.FC<TeachersSectionProps> = ({
               )}
 
               <div className="w-full flex flex-col items-center gap-3 mt-4 pt-4 border-t border-slate-100">
-                <span
-                  className={`text-2xs font-semibold px-2.5 py-1 rounded-full ${
-                    reviewCount > 0
-                      ? 'bg-emerald-50 text-emerald-700'
-                      : 'bg-slate-100 text-slate-500'
+                <button
+                  type="button"
+                  onClick={() => onViewTeacher(teacher)}
+                  className={`text-2xs font-semibold px-2.5 py-1 rounded-full transition-colors cursor-pointer ${
+                    teacher.reviewCount > 0
+                      ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+                      : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
                   }`}
                 >
-                  {reviewCount > 0
-                    ? `${reviewCount} ${t.teachersSection.reviewsCount}`
+                  {teacher.reviewCount > 0
+                    ? `${teacher.reviewCount} ${t.teachersSection.reviewsCount}`
                     : t.teachersSection.noReviewsYet}
-                </span>
+                </button>
+
+                <button
+                  type="button"
+                  id={`quick-review-btn-${teacher.id}`}
+                  onClick={() => onOpenAddReview(teacher)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-indigo-600 hover:text-white hover:bg-indigo-600 rounded-full border border-indigo-200 transition-all cursor-pointer"
+                >
+                  <MessageSquarePlus className="w-3.5 h-3.5" />
+                  <span>{t.courseCard.addReview}</span>
+                </button>
 
                 {(teacher.instagramUrl || teacher.youtubeUrl) && (
                   <div className="flex items-center gap-2">

@@ -1,41 +1,36 @@
 import React, { useState, useMemo } from 'react';
-import { Course, Review, StudentStatus, Teacher } from '../types';
+import { Review, StudentStatus, Teacher } from '../types';
 import { SupportedLang, TRANSLATIONS } from '../translations';
 import {
   X,
   Star,
-  ShieldAlert,
-  CheckCircle,
   AlertTriangle,
   Send,
   ThumbsUp,
   ThumbsDown,
-  UserCheck
 } from 'lucide-react';
 
 interface AddReviewModalProps {
-  courses: Course[];
   teachers: Teacher[];
-  preSelectedCourse: Course | null;
+  preSelectedTeacher: Teacher | null;
   currentLang: SupportedLang;
   onClose: () => void;
-  onSubmitReview: (reviewData: Omit<Review, 'id' | 'date' | 'helpfulCount' | 'unhelpfulCount'>) => void;
+  onSubmitReview: (
+    teacherName: string,
+    reviewData: Omit<Review, 'id' | 'date' | 'helpfulCount' | 'unhelpfulCount'>
+  ) => void;
 }
 
 export const AddReviewModal: React.FC<AddReviewModalProps> = ({
-  courses,
   teachers,
-  preSelectedCourse,
+  preSelectedTeacher,
   currentLang,
   onClose,
   onSubmitReview,
 }) => {
   const t = TRANSLATIONS[currentLang];
 
-  const [teacherName, setTeacherName] = useState('');
-  const [selectedCourseId, setSelectedCourseId] = useState<string>(
-    preSelectedCourse ? preSelectedCourse.id : courses[0]?.id || ''
-  );
+  const [teacherName, setTeacherName] = useState(preSelectedTeacher?.name || '');
   const [authorName, setAuthorName] = useState('');
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [authorStatus, setAuthorStatus] = useState<StudentStatus>('graduate');
@@ -53,27 +48,18 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
   const [prosText, setProsText] = useState('');
   const [consText, setConsText] = useState('');
   const [adviceForNewcomers, setAdviceForNewcomers] = useState('');
+  const [whatsappNumber, setWhatsappNumber] = useState('');
   const [hasJobScamReport, setHasJobScamReport] = useState(false);
   const [isVerified, setIsVerified] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
 
-  // Existing teacher/mentor names — from the teacher directory and from prior reviews — for lookup-or-create autocomplete
+  // Existing teacher/mentor names, for lookup-or-create autocomplete
   const knownTeacherNames = useMemo(() => {
-    const seen = new Map<string, string>();
-    teachers.forEach((teacher) => {
-      const key = teacher.name.trim().toLowerCase();
-      if (key && !seen.has(key)) seen.set(key, teacher.name.trim());
-    });
-    courses.forEach((c) => {
-      c.reviews.forEach((r) => {
-        if (r.teacherName && r.teacherName.trim()) {
-          const key = r.teacherName.trim().toLowerCase();
-          if (!seen.has(key)) seen.set(key, r.teacherName.trim());
-        }
-      });
-    });
-    return Array.from(seen.values()).sort((a, b) => a.localeCompare(b));
-  }, [courses, teachers]);
+    return teachers
+      .map((teacher) => teacher.name.trim())
+      .filter(Boolean)
+      .sort((a, b) => a.localeCompare(b));
+  }, [teachers]);
 
   const getRatingDesc = (val: number) => {
     switch (val) {
@@ -133,10 +119,6 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
       setErrorMsg('Мугалимдин же ментордун атын жазыңыз!');
       return;
     }
-    if (!selectedCourseId) {
-      setErrorMsg('Курсту тандаңыз!');
-      return;
-    }
     if (!fullReview.trim() || fullReview.trim().length < 20) {
       setErrorMsg('Сын-пикириңизди толугураак жазыңыз (кеминде 20 белги)');
       return;
@@ -156,9 +138,7 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
 
     const displayName = isAnonymous ? 'Анонимдүү бүтүрүүчү' : authorName.trim() || 'Студент';
 
-    onSubmitReview({
-      courseId: selectedCourseId,
-      teacherName: teacherName.trim(),
+    onSubmitReview(teacherName.trim(), {
       authorName: displayName,
       isAnonymous,
       authorStatus,
@@ -172,11 +152,12 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
       pricePaidKGS: pricePaidKGS ? parseInt(pricePaidKGS, 10) : undefined,
       durationMonths: durationMonths ? parseInt(durationMonths, 10) : undefined,
       cohortYear,
-      title: title.trim() || (wouldRecommend ? 'Жакшы тажрыйба болду' : 'Курс көңүлдү калтырды'),
+      title: title.trim() || (wouldRecommend ? 'Жакшы тажрыйба болду' : 'Көңүл калтырган тажрыйба'),
       fullReview: fullReview.trim(),
       pros,
       cons,
       adviceForNewcomers: adviceForNewcomers.trim() || undefined,
+      whatsappNumber: whatsappNumber.trim() || undefined,
       hasJobScamReport,
     });
 
@@ -220,7 +201,7 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
             </div>
           )}
 
-          {/* Teacher / Mentor Name - asked first, before picking the course */}
+          {/* Teacher / Mentor Name */}
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1">
               {t.addReviewModal.teacherName} *
@@ -231,7 +212,7 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
               list="known-teacher-names"
               value={teacherName}
               onChange={(e) => setTeacherName(e.target.value)}
-              placeholder="Мис: Динара Асанова"
+              placeholder="Мис: Азиретали Барпиев"
               className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
               required
             />
@@ -242,29 +223,9 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
             </datalist>
             {knownTeacherNames.length > 0 && (
               <p className="text-2xs text-slate-400 mt-1">
-                Мурда башка студенттер пикир калтырган мугалимдер сунушталат. Эгер мугалим тизмеде жок болсо, жөн эле атын жазыңыз — ал автоматтык түрдө кошулат.
+                Мурда кошулган мугалимдер сунушталат. Эгер мугалим тизмеде жок болсо, жөн эле атын жазыңыз — ал автоматтык түрдө кошулат.
               </p>
             )}
-          </div>
-
-          {/* Select Course */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
-              {t.addReviewModal.selectCourse} *
-            </label>
-            <select
-              id="review-course-select"
-              value={selectedCourseId}
-              onChange={(e) => setSelectedCourseId(e.target.value)}
-              className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-              required
-            >
-              {courses.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name} ({c.academyName})
-                </option>
-              ))}
-            </select>
           </div>
 
           {/* Overall Rating Selection */}
@@ -442,7 +403,7 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
               id="review-title-input"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Мис: Жакшы база берди, бирок дедлайндар өтө катуу"
+              placeholder="Мис: Жакшы түшүндүрөт, бирок дедлайндар өтө катуу"
               className="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
             />
           </div>
@@ -457,7 +418,7 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
               rows={4}
               value={fullReview}
               onChange={(e) => setFullReview(e.target.value)}
-              placeholder="Курс тууралуу кененирээк жазыңыз: менторлор кандай сабак өттү, үй тапшырмалар текшерилдиби, убада кылынган жумушка же стажировкага жардам берилдиби..."
+              placeholder="Мугалим тууралуу кененирээк жазыңыз: кандай сабак өттү, үй тапшырмалар текшерилдиби, убада кылынган жумушка же стажировкага жардам берилдиби..."
               className="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
               required
             />
@@ -474,7 +435,7 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
                 rows={3}
                 value={prosText}
                 onChange={(e) => setProsText(e.target.value)}
-                placeholder="Мис: Күчтүү менторлор, коворкинг, пайдалуу долбоорлор"
+                placeholder="Мис: Түшүндүрүшү жеңил, жооптор так, ыраазымын"
                 className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
               />
             </div>
@@ -488,7 +449,7 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
                 rows={3}
                 value={consText}
                 onChange={(e) => setConsText(e.target.value)}
-                placeholder="Мис: Баасы кымбат, группалар чоң, кураторлор кеч жооп берет"
+                placeholder="Мис: Баасы кымбат, кеч жооп берет"
                 className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
               />
             </div>
@@ -504,9 +465,25 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
               id="review-advice-input"
               value={adviceForNewcomers}
               onChange={(e) => setAdviceForNewcomers(e.target.value)}
-              placeholder="Мис: Англис тилиңизди курска чейин жакшыртып алыңыз"
+              placeholder="Мис: Курска чейин негиздерин кайра карап алыңыз"
               className="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
             />
+          </div>
+
+          {/* WhatsApp — optional, private, never shown publicly */}
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">
+              {t.addReviewModal.whatsappLabel}
+            </label>
+            <input
+              type="tel"
+              id="review-whatsapp-input"
+              value={whatsappNumber}
+              onChange={(e) => setWhatsappNumber(e.target.value)}
+              placeholder="+996 700 000 000"
+              className="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+            />
+            <p className="text-2xs text-slate-400 mt-1">{t.addReviewModal.whatsappNote}</p>
           </div>
 
           {/* Warning Flag Checkbox & Verification Checkbox */}
