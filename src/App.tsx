@@ -142,13 +142,6 @@ export default function App() {
     return () => sub.subscription.unsubscribe();
   }, []);
 
-  // Auto-hide the recent-review popup a while after it loads
-  useEffect(() => {
-    if (!recentReview) return;
-    const hideTimer = setTimeout(() => setRecentReview(null), 15000);
-    return () => clearTimeout(hideTimer);
-  }, [recentReview]);
-
   const t = TRANSLATIONS[currentLang];
 
   // Save lang to localStorage
