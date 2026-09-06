@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, ShieldCheck, Send, KeyRound } from 'lucide-react';
 import { ADMIN_EMAIL, sendAdminLoginCode, verifyAdminLoginCode } from '../lib/auth';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 
 interface AdminLoginModalProps {
   onClose: () => void;
@@ -8,6 +9,7 @@ interface AdminLoginModalProps {
 }
 
 export const AdminLoginModal: React.FC<AdminLoginModalProps> = ({ onClose, onSuccess }) => {
+  useEscapeKey(onClose);
   const [step, setStep] = useState<'request' | 'verify'>('request');
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);

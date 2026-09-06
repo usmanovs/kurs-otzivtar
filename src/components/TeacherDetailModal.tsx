@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Teacher } from '../types';
 import { SupportedLang, TRANSLATIONS } from '../translations';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 import {
   X,
   Star,
@@ -31,6 +32,7 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
   onOpenAddReview,
   onVoteReview,
 }) => {
+  useEscapeKey(onClose);
   const [reviewTab, setReviewTab] = useState<'all' | 'positive' | 'negative' | 'verified'>('all');
 
   if (!teacher) return null;

@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Review, StudentStatus, Teacher } from '../types';
 import { SupportedLang, TRANSLATIONS } from '../translations';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 import {
   X,
   Star,
@@ -28,6 +29,7 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
   onClose,
   onSubmitReview,
 }) => {
+  useEscapeKey(onClose);
   const t = TRANSLATIONS[currentLang];
 
   const [teacherName, setTeacherName] = useState(preSelectedTeacher?.name || '');

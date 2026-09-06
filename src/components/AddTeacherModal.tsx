@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { CourseCategory, Teacher } from '../types';
 import { SupportedLang, TRANSLATIONS } from '../translations';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 import { X, UserPlus, Upload, Trash2, Instagram, Youtube } from 'lucide-react';
 
 interface AddTeacherModalProps {
@@ -19,6 +20,7 @@ export const AddTeacherModal: React.FC<AddTeacherModalProps> = ({
   onClose,
   onSubmit,
 }) => {
+  useEscapeKey(onClose);
   const t = TRANSLATIONS[currentLang];
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isEditing = !!editingTeacher;
