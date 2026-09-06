@@ -17,6 +17,7 @@ import { SupportedLang, TRANSLATIONS } from './translations';
 import { Navbar } from './components/Navbar';
 import { TransparencyBanner } from './components/TransparencyBanner';
 import { FeaturedVideosSection } from './components/FeaturedVideosSection';
+import { ReportScamSection } from './components/ReportScamSection';
 import { StatsBar } from './components/StatsBar';
 import { CategoryFilter } from './components/CategoryFilter';
 import { CourseCard } from './components/CourseCard';
@@ -461,6 +462,9 @@ export default function App() {
 
         {/* Featured Videos about bad courses */}
         <FeaturedVideosSection videos={featuredVideos} currentLang={currentLang} />
+
+        {/* How to report a scam course to the police */}
+        <ReportScamSection currentLang={currentLang} />
 
         {/* Stats bar */}
         <StatsBar
