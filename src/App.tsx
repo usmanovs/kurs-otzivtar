@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import type { Session } from '@supabase/supabase-js';
 import { Course, Review, Teacher, FeaturedVideo } from './types';
 import { calculateTeacherMetrics } from './data/teachers';
@@ -59,6 +60,9 @@ function applyVoteOverlay(teachers: Teacher[], votes: VoteMap): Teacher[] {
 }
 
 export default function App() {
+  const { teacherId: urlTeacherId } = useParams<{ teacherId?: string }>();
+  const navigate = useNavigate();
+
   // Language state
   const [currentLang, setCurrentLang] = useState<SupportedLang>(() => {
     const saved = localStorage.getItem(LANG_STORAGE_KEY);
@@ -126,7 +130,7 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
 
   // Modals state
-  const [selectedTeacherForDetail, setSelectedTeacherForDetail] = useState<Teacher | null>(null);
+  const selectedTeacherForDetail = urlTeacherId ? teachers.find((tch) => tch.id === urlTeacherId) ?? null : null;
   const [isAddReviewOpen, setIsAddReviewOpen] = useState(false);
   const [reviewPreselectedTeacher, setReviewPreselectedTeacher] = useState<Teacher | null>(null);
   const [isAddTeacherOpen, setIsAddTeacherOpen] = useState(false);
@@ -148,6 +152,15 @@ export default function App() {
   }, []);
 
   const t = TRANSLATIONS[currentLang];
+
+  // Update the page title/description when viewing an individual teacher page
+  useEffect(() => {
+    if (selectedTeacherForDetail) {
+      document.title = `${selectedTeacherForDetail.name} — ${t.siteTitle}`;
+    } else {
+      document.title = `${t.siteTitle} - ${t.siteSubtitle}`;
+    }
+  }, [selectedTeacherForDetail, t]);
 
   // Save lang to localStorage
   const handleSelectLang = (lang: SupportedLang) => {
@@ -248,9 +261,6 @@ export default function App() {
             r.id === reviewId ? { ...r, helpfulCount, unhelpfulCount, userVoted: newVote } : r
           ),
         });
-        if (selectedTeacherForDetail && selectedTeacherForDetail.id === teacherId) {
-          setSelectedTeacherForDetail(updated);
-        }
         return updated;
       })
     );
@@ -292,9 +302,6 @@ export default function App() {
             ...tch,
             reviews: [result.review, ...tch.reviews],
           });
-          if (selectedTeacherForDetail && selectedTeacherForDetail.id === tch.id) {
-            setSelectedTeacherForDetail(updated);
-          }
           return updated;
         });
       });
@@ -513,7 +520,7 @@ export default function App() {
             setEditingTeacher(teacher);
             setIsAddTeacherOpen(true);
           }}
-          onViewTeacher={(teacher) => setSelectedTeacherForDetail(teacher)}
+          onViewTeacher={(teacher) => navigate(`/teacher/${teacher.id}`)}
           onOpenAddReview={(teacher) => {
             setReviewPreselectedTeacher(teacher);
             setIsAddReviewOpen(true);
@@ -601,7 +608,7 @@ export default function App() {
         <TeacherDetailModal
           teacher={selectedTeacherForDetail}
           currentLang={currentLang}
-          onClose={() => setSelectedTeacherForDetail(null)}
+          onClose={() => navigate('/')}
           onOpenAddReview={(teacher) => {
             setReviewPreselectedTeacher(teacher);
             setIsAddReviewOpen(true);
