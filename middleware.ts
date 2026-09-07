@@ -1,16 +1,20 @@
-// Vercel Routing Middleware: serves proper per-teacher Open Graph tags to
-// social-media link-preview crawlers (WhatsApp, Telegram, Facebook, etc.),
-// which don't execute JavaScript and would otherwise only ever see the
-// site's generic index.html meta tags. Regular browser visits are left
-// untouched and fall through to the normal single-page app.
+// Vercel Routing Middleware: serves proper per-teacher and per-category Open
+// Graph tags to social-media link-preview crawlers (WhatsApp, Telegram,
+// Facebook, etc.), which don't execute JavaScript and would otherwise only
+// ever see the site's generic index.html meta tags. Regular browser visits
+// are left untouched and fall through to the normal single-page app.
 //
 // Deliberately excludes real search-engine crawlers (Googlebot, Bingbot,
 // Applebot) — those render JavaScript and index the full app (reviews,
 // ratings, JSON-LD structured data included), so serving them this
 // stripped-down meta-only page would hurt indexing rather than help it.
 
+import { TRANSLATIONS } from './src/translations';
+
 const BOT_USER_AGENT_PATTERN =
   /facebookexternalhit|facebot|twitterbot|whatsapp|telegrambot|linkedinbot|slackbot|discordbot|skypeuripreview|vkshare|pinterest|redditbot|embedly|quora link preview/i;
+
+const CATEGORY_NAMES: Record<string, string> = TRANSLATIONS.ky.categories;
 
 function escapeHtml(value: string): string {
   return value
@@ -21,6 +25,28 @@ function escapeHtml(value: string): string {
 }
 
 const SITE_URL = 'https://kursotzyv.org';
+
+function buildPreviewHtml(opts: { title: string; description: string; image: string; url: string; ogType: string }): string {
+  const { title, description, image, url, ogType } = opts;
+  return `<!doctype html>
+<html lang="ky">
+  <head>
+    <meta charset="UTF-8" />
+    <title>${escapeHtml(title)}</title>
+    <meta name="description" content="${escapeHtml(description)}" />
+    <meta property="og:title" content="${escapeHtml(title)}" />
+    <meta property="og:description" content="${escapeHtml(description)}" />
+    <meta property="og:type" content="${escapeHtml(ogType)}" />
+    <meta property="og:url" content="${escapeHtml(url)}" />
+    <meta property="og:image" content="${escapeHtml(image)}" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="${escapeHtml(title)}" />
+    <meta name="twitter:description" content="${escapeHtml(description)}" />
+    <meta name="twitter:image" content="${escapeHtml(image)}" />
+  </head>
+  <body></body>
+</html>`;
+}
 
 async function handleSitemap(): Promise<Response> {
   const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -46,8 +72,14 @@ async function handleSitemap(): Promise<Response> {
     }
   }
 
+  const categorySlugs = Object.keys(CATEGORY_NAMES).filter((slug) => slug !== 'all');
+
   const urls = [
     `  <url><loc>${SITE_URL}/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>`,
+    ...categorySlugs.map(
+      (slug) =>
+        `  <url><loc>${SITE_URL}/category/${slug}</loc><changefreq>weekly</changefreq><priority>0.6</priority></url>`
+    ),
     ...teacherIds.map(
       (id) =>
         `  <url><loc>${SITE_URL}/teacher/${encodeURIComponent(id)}</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>`
@@ -76,6 +108,26 @@ export default async function middleware(request: Request) {
     return; // Not a known crawler — let the request through as normal.
   }
 
+  const siteUrl = SITE_URL;
+  const fallbackImage = `${siteUrl}/og-image.png`;
+
+  const categoryMatch = url.pathname.match(/^\/category\/([^/]+)\/?$/);
+  if (categoryMatch) {
+    const slug = decodeURIComponent(categoryMatch[1]);
+    const categoryName = slug !== 'all' ? CATEGORY_NAMES[slug] : undefined;
+    if (!categoryName) {
+      return; // Unknown category slug — fall through to the normal SPA.
+    }
+
+    const title = `${categoryName} — Kursotzyv.org`;
+    const description = `${categoryName} тармагындагы мугалимдер жөнүндө студенттердин чыныгы сын-пикирлерин окуңуз — Kursotzyv.org.`;
+
+    const html = buildPreviewHtml({ title, description, image: fallbackImage, url: url.toString(), ogType: 'website' });
+    return new Response(html, {
+      headers: { 'content-type': 'text/html; charset=utf-8' },
+    });
+  }
+
   const match = url.pathname.match(/^\/teacher\/([^/]+)\/?$/);
   if (!match) {
     return;
@@ -84,9 +136,6 @@ export default async function middleware(request: Request) {
   const teacherId = decodeURIComponent(match[1]);
   const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  const siteUrl = SITE_URL;
-  const fallbackImage = `${siteUrl}/og-image.png`;
 
   let title = 'Kursotzyv.org';
   let description = 'Кыргызстандагы онлайн курстардын жана мугалимдердин чынчыл сын-пикирлери.';
@@ -123,24 +172,7 @@ export default async function middleware(request: Request) {
     }
   }
 
-  const html = `<!doctype html>
-<html lang="ky">
-  <head>
-    <meta charset="UTF-8" />
-    <title>${escapeHtml(title)}</title>
-    <meta name="description" content="${escapeHtml(description)}" />
-    <meta property="og:title" content="${escapeHtml(title)}" />
-    <meta property="og:description" content="${escapeHtml(description)}" />
-    <meta property="og:type" content="profile" />
-    <meta property="og:url" content="${escapeHtml(url.toString())}" />
-    <meta property="og:image" content="${escapeHtml(image)}" />
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="${escapeHtml(title)}" />
-    <meta name="twitter:description" content="${escapeHtml(description)}" />
-    <meta name="twitter:image" content="${escapeHtml(image)}" />
-  </head>
-  <body></body>
-</html>`;
+  const html = buildPreviewHtml({ title, description, image, url: url.toString(), ogType: 'profile' });
 
   return new Response(html, {
     headers: { 'content-type': 'text/html; charset=utf-8' },
@@ -148,6 +180,6 @@ export default async function middleware(request: Request) {
 }
 
 export const config = {
-  matcher: ['/teacher/:path*', '/sitemap.xml'],
+  matcher: ['/teacher/:path*', '/category/:path*', '/sitemap.xml'],
   runtime: 'edge',
 };

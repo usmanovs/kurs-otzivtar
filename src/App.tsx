@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, lazy, Suspense } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import type { Session } from '@supabase/supabase-js';
-import { Course, Review, Teacher, FeaturedVideo } from './types';
+import { Course, CourseCategory, Review, Teacher, FeaturedVideo } from './types';
 import { calculateTeacherMetrics } from './data/teachers';
 import { supabase } from './lib/supabaseClient';
 import { ADMIN_EMAIL, signOutAdmin } from './lib/auth';
@@ -44,6 +44,12 @@ import {
 const LANG_STORAGE_KEY = 'kursotzivtar_lang';
 const VOTED_REVIEWS_KEY = 'kursotzivtar_voted_reviews_v1';
 
+const CATEGORY_SLUGS = new Set<string>([
+  'it_programming', 'design_uiux', 'languages', 'marketing_smm', 'business_trading',
+  'data_analytics', 'psychology', 'beauty_cosmetology', 'driving_school', 'cooking_culinary',
+  'finance_accounting', 'kids_development', 'arts_music', 'ort_school', 'public_speaking',
+]);
+
 type VoteMap = Record<string, 'helpful' | 'unhelpful'>;
 
 function loadVotedReviews(): VoteMap {
@@ -63,7 +69,7 @@ function applyVoteOverlay(teachers: Teacher[], votes: VoteMap): Teacher[] {
 }
 
 export default function App() {
-  const { teacherId: urlTeacherId } = useParams<{ teacherId?: string }>();
+  const { teacherId: urlTeacherId, categorySlug: urlCategorySlug } = useParams<{ teacherId?: string; categorySlug?: string }>();
   const navigate = useNavigate();
 
   // Language state
@@ -135,6 +141,11 @@ export default function App() {
   // Modals state
   const selectedTeacherForDetail = urlTeacherId ? teachers.find((tch) => tch.id === urlTeacherId) ?? null : null;
   const teacherNotFound = !isLoading && !!urlTeacherId && !selectedTeacherForDetail;
+  const selectedCategory: CourseCategory | 'all' =
+    urlCategorySlug && CATEGORY_SLUGS.has(urlCategorySlug) ? (urlCategorySlug as CourseCategory) : 'all';
+  const handleSelectCategory = (category: CourseCategory | 'all') => {
+    navigate(category === 'all' ? '/' : `/category/${category}`);
+  };
   const [isAddReviewOpen, setIsAddReviewOpen] = useState(false);
   const [reviewPreselectedTeacher, setReviewPreselectedTeacher] = useState<Teacher | null>(null);
   const [isAddTeacherOpen, setIsAddTeacherOpen] = useState(false);
@@ -157,14 +168,38 @@ export default function App() {
 
   const t = TRANSLATIONS[currentLang];
 
-  // Update the page title/description when viewing an individual teacher page
+  // Update the page title/description when viewing an individual teacher or category page
   useEffect(() => {
     if (selectedTeacherForDetail) {
       document.title = `${selectedTeacherForDetail.name} — ${t.siteTitle}`;
+    } else if (selectedCategory !== 'all') {
+      document.title = `${t.categories[selectedCategory]} — ${t.siteTitle}`;
     } else {
       document.title = `${t.siteTitle} - ${t.siteSubtitle}`;
     }
-  }, [selectedTeacherForDetail, t]);
+  }, [selectedTeacherForDetail, selectedCategory, t]);
+
+  // Keep the meta description and canonical link in sync so shared teacher/category
+  // links and search results show content-specific text instead of the generic homepage copy.
+  useEffect(() => {
+    const descriptionTag = document.querySelector('meta[name="description"]');
+    const canonicalTag = document.querySelector('link[rel="canonical"]');
+    const origin = window.location.origin;
+
+    let description = `${t.siteSubtitle}.`;
+    let canonicalUrl = `${origin}/`;
+
+    if (selectedTeacherForDetail) {
+      description = selectedTeacherForDetail.bio || description;
+      canonicalUrl = `${origin}/teacher/${selectedTeacherForDetail.id}`;
+    } else if (selectedCategory !== 'all') {
+      description = t.categoryPage.metaDescription.replace('{category}', t.categories[selectedCategory]);
+      canonicalUrl = `${origin}/category/${selectedCategory}`;
+    }
+
+    descriptionTag?.setAttribute('content', description);
+    canonicalTag?.setAttribute('href', canonicalUrl);
+  }, [selectedTeacherForDetail, selectedCategory, t]);
 
   // Inject Person/AggregateRating JSON-LD structured data for the currently
   // viewed teacher, so search engines can show star-rating rich snippets.
@@ -214,6 +249,44 @@ export default function App() {
       document.getElementById(scriptId)?.remove();
     };
   }, [selectedTeacherForDetail]);
+
+  // Inject CollectionPage/ItemList JSON-LD for category pages, so search engines
+  // can understand and index each category as a distinct, listable page.
+  useEffect(() => {
+    const scriptId = 'category-structured-data';
+    const existing = document.getElementById(scriptId);
+    if (existing) existing.remove();
+
+    if (selectedCategory === 'all') return;
+
+    const categoryTeachers = teachers.filter((tch) => tch.category === selectedCategory);
+    const categoryName = t.categories[selectedCategory];
+    const structuredData = {
+      '@context': 'https://schema.org',
+      '@type': 'CollectionPage',
+      name: `${categoryName} — ${t.siteTitle}`,
+      url: `${window.location.origin}/category/${selectedCategory}`,
+      mainEntity: {
+        '@type': 'ItemList',
+        itemListElement: categoryTeachers.slice(0, 30).map((tch, i) => ({
+          '@type': 'ListItem',
+          position: i + 1,
+          url: `${window.location.origin}/teacher/${tch.id}`,
+          name: tch.name,
+        })),
+      },
+    };
+
+    const script = document.createElement('script');
+    script.id = scriptId;
+    script.type = 'application/ld+json';
+    script.textContent = JSON.stringify(structuredData);
+    document.head.appendChild(script);
+
+    return () => {
+      document.getElementById(scriptId)?.remove();
+    };
+  }, [selectedCategory, teachers, t]);
 
   // Save lang to localStorage
   const handleSelectLang = (lang: SupportedLang) => {
@@ -565,6 +638,8 @@ export default function App() {
           totalCount={teachers.length}
           searchQuery={searchQuery}
           onClearSearch={() => setSearchQuery('')}
+          selectedCategory={selectedCategory}
+          onSelectCategory={handleSelectCategory}
           currentLang={currentLang}
           isAdmin={isAdmin}
           onAddTeacher={() => {

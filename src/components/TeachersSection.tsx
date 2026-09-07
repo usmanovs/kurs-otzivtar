@@ -8,6 +8,8 @@ interface TeachersSectionProps {
   totalCount: number;
   searchQuery: string;
   onClearSearch: () => void;
+  selectedCategory: CourseCategory | 'all';
+  onSelectCategory: (category: CourseCategory | 'all') => void;
   currentLang: SupportedLang;
   isAdmin: boolean;
   onAddTeacher: () => void;
@@ -45,6 +47,8 @@ export const TeachersSection: React.FC<TeachersSectionProps> = ({
   totalCount,
   searchQuery,
   onClearSearch,
+  selectedCategory,
+  onSelectCategory,
   currentLang,
   isAdmin,
   onAddTeacher,
@@ -56,7 +60,6 @@ export const TeachersSection: React.FC<TeachersSectionProps> = ({
 
   const [selectedLetter, setSelectedLetter] = useState<string>('all');
   const [selectedGender, setSelectedGender] = useState<TeacherGender | 'all'>('all');
-  const [selectedCategory, setSelectedCategory] = useState<CourseCategory | 'all'>('all');
 
   const availableLetters = useMemo(() => {
     const letters = new Set<string>();
@@ -85,7 +88,7 @@ export const TeachersSection: React.FC<TeachersSectionProps> = ({
   const handleClearAll = () => {
     setSelectedLetter('all');
     setSelectedGender('all');
-    setSelectedCategory('all');
+    onSelectCategory('all');
     onClearSearch();
   };
 
@@ -97,7 +100,11 @@ export const TeachersSection: React.FC<TeachersSectionProps> = ({
             <GraduationCap className="w-5 h-5" />
           </div>
           <div className="min-w-0">
-            <h2 className="text-lg font-bold text-slate-900 whitespace-nowrap">{t.teachersSection.title}</h2>
+            <h2 className="text-lg font-bold text-slate-900 whitespace-nowrap">
+              {selectedCategory === 'all'
+                ? t.teachersSection.title
+                : `${t.categories[selectedCategory]}: ${t.categoryPage.headingSuffix}`}
+            </h2>
             <p className="text-xs text-slate-500">{t.teachersSection.subtitle}</p>
           </div>
         </div>
@@ -117,7 +124,7 @@ export const TeachersSection: React.FC<TeachersSectionProps> = ({
           <select
             id="teacher-category-filter"
             value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value as CourseCategory | 'all')}
+            onChange={(e) => onSelectCategory(e.target.value as CourseCategory | 'all')}
             className="px-3 py-2 bg-white border border-slate-200 rounded-full text-xs sm:text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 shadow-2xs cursor-pointer"
           >
             <option value="all">{t.categories.all}</option>
