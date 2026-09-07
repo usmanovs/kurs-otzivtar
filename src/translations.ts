@@ -108,6 +108,9 @@ export const TRANSLATIONS = {
     },
     detailModal: {
       close: 'Жабуу',
+      share: 'Бөлүшүү',
+      linkCopied: 'Шилтеме көчүрүлдү!',
+      shareText: '{name} тууралуу студенттердин чыныгы сын-пикирлерин окуп көрүңүз — Kursotzyv.org',
       subScoresTitle: 'Критерийлер боюнча баалар',
       ratingDistribution: 'Баалоо шкаласы',
       reviewsTab: 'Студенттердин пикирлери',
@@ -327,6 +330,9 @@ export const TRANSLATIONS = {
     },
     detailModal: {
       close: 'Закрыть',
+      share: 'Поделиться',
+      linkCopied: 'Ссылка скопирована!',
+      shareText: 'Почитайте честные отзывы студентов о {name} — Kursotzyv.org',
       subScoresTitle: 'Оценки по критериям',
       ratingDistribution: 'Шкала оценок',
       reviewsTab: 'Отзывы студентов',

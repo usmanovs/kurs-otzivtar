@@ -15,13 +15,62 @@ function escapeHtml(value: string): string {
     .replace(/"/g, '&quot;');
 }
 
+const SITE_URL = 'https://kursotzyv.org';
+
+async function handleSitemap(): Promise<Response> {
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  let teacherIds: string[] = [];
+  if (supabaseUrl && supabaseAnonKey) {
+    try {
+      const res = await fetch(`${supabaseUrl}/rest/v1/teachers?select=id`, {
+        headers: {
+          apikey: supabaseAnonKey,
+          Authorization: `Bearer ${supabaseAnonKey}`,
+        },
+      });
+      if (res.ok) {
+        const rows = await res.json();
+        if (Array.isArray(rows)) {
+          teacherIds = rows.map((r) => r.id).filter(Boolean);
+        }
+      }
+    } catch {
+      // Ship a sitemap with just the homepage if the teacher lookup fails.
+    }
+  }
+
+  const urls = [
+    `  <url><loc>${SITE_URL}/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>`,
+    ...teacherIds.map(
+      (id) =>
+        `  <url><loc>${SITE_URL}/teacher/${encodeURIComponent(id)}</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>`
+    ),
+  ];
+
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${urls.join('\n')}
+</urlset>`;
+
+  return new Response(xml, {
+    headers: { 'content-type': 'application/xml; charset=utf-8' },
+  });
+}
+
 export default async function middleware(request: Request) {
+  const url = new URL(request.url);
+
+  if (url.pathname === '/sitemap.xml') {
+    return handleSitemap();
+  }
+
   const userAgent = request.headers.get('user-agent') || '';
   if (!BOT_USER_AGENT_PATTERN.test(userAgent)) {
     return; // Not a known crawler — let the request through as normal.
   }
 
-  const url = new URL(request.url);
   const match = url.pathname.match(/^\/teacher\/([^/]+)\/?$/);
   if (!match) {
     return;
@@ -31,7 +80,7 @@ export default async function middleware(request: Request) {
   const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  const siteUrl = 'https://kursotzyv.org';
+  const siteUrl = SITE_URL;
   const fallbackImage = `${siteUrl}/og-image.png`;
 
   let title = 'Kursotzyv.org';
@@ -94,6 +143,6 @@ export default async function middleware(request: Request) {
 }
 
 export const config = {
-  matcher: '/teacher/:path*',
+  matcher: ['/teacher/:path*', '/sitemap.xml'],
   runtime: 'edge',
 };

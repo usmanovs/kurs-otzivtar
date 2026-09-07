@@ -15,6 +15,7 @@ import {
   Check,
   Instagram,
   Youtube,
+  Share2,
 } from 'lucide-react';
 
 interface TeacherDetailModalProps {
@@ -34,10 +35,35 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
 }) => {
   useEscapeKey(onClose);
   const [reviewTab, setReviewTab] = useState<'all' | 'positive' | 'negative' | 'verified'>('all');
+  const [copied, setCopied] = useState(false);
 
   if (!teacher) return null;
 
   const t = TRANSLATIONS[currentLang];
+
+  const handleShare = async () => {
+    const shareUrl = `${window.location.origin}/teacher/${teacher.id}`;
+    const shareData = {
+      title: `${teacher.name} — Kursotzyv.org`,
+      text: t.detailModal.shareText.replace('{name}', teacher.name),
+      url: shareUrl,
+    };
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch {
+        // User cancelled the native share sheet — no action needed.
+      }
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard access denied — nothing more we can do here.
+    }
+  };
 
   const totalReviews = teacher.reviews.length;
   const ratingCounts: Record<number, number> = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
@@ -140,15 +166,27 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
             </div>
           </div>
 
-          <button
-            type="button"
-            id="close-teacher-detail-modal-btn"
-            onClick={onClose}
-            className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer shrink-0"
-            aria-label={t.detailModal.close}
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              id="share-teacher-btn"
+              onClick={handleShare}
+              className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"
+              aria-label={t.detailModal.share}
+              title={copied ? t.detailModal.linkCopied : t.detailModal.share}
+            >
+              {copied ? <Check className="w-5 h-5 text-emerald-400" /> : <Share2 className="w-5 h-5" />}
+            </button>
+            <button
+              type="button"
+              id="close-teacher-detail-modal-btn"
+              onClick={onClose}
+              className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"
+              aria-label={t.detailModal.close}
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* Modal Scrollable Body */}
