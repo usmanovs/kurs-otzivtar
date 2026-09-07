@@ -37,6 +37,8 @@ export const RecentReviewPopup: React.FC<RecentReviewPopupProps> = ({
               <img
                 src={review.teacherPhotoUrl}
                 alt={review.teacherName}
+                width={40}
+                height={40}
                 className="w-10 h-10 rounded-full object-cover ring-2 ring-white shadow-sm"
               />
             ) : (

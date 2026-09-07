@@ -25,6 +25,9 @@ const TeacherAvatar: React.FC<{ teacher: Teacher }> = ({ teacher }) => {
         src={teacher.photoUrl}
         alt={teacher.name}
         onError={() => setImgError(true)}
+        loading="lazy"
+        width={80}
+        height={80}
         className="w-20 h-20 rounded-full object-cover shrink-0 ring-4 ring-white shadow-md"
       />
     );

@@ -521,6 +521,8 @@ export default function App() {
                     key={tch.id}
                     src={tch.photoUrl}
                     alt={tch.name}
+                    width={40}
+                    height={40}
                     className="w-10 h-10 rounded-full object-cover ring-2 ring-white shadow-sm transition-transform group-hover:scale-105"
                     style={{ marginLeft: i === 0 ? 0 : -12, zIndex: featuredTeacherAvatars.length - i }}
                   />
