@@ -3,9 +3,14 @@
 // which don't execute JavaScript and would otherwise only ever see the
 // site's generic index.html meta tags. Regular browser visits are left
 // untouched and fall through to the normal single-page app.
+//
+// Deliberately excludes real search-engine crawlers (Googlebot, Bingbot,
+// Applebot) — those render JavaScript and index the full app (reviews,
+// ratings, JSON-LD structured data included), so serving them this
+// stripped-down meta-only page would hurt indexing rather than help it.
 
 const BOT_USER_AGENT_PATTERN =
-  /facebookexternalhit|facebot|twitterbot|whatsapp|telegrambot|linkedinbot|slackbot|discordbot|googlebot|bingbot|applebot|skypeuripreview|vkshare|pinterest|redditbot|embedly|quora link preview|w3c_validator/i;
+  /facebookexternalhit|facebot|twitterbot|whatsapp|telegrambot|linkedinbot|slackbot|discordbot|skypeuripreview|vkshare|pinterest|redditbot|embedly|quora link preview/i;
 
 function escapeHtml(value: string): string {
   return value

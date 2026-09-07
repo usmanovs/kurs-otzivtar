@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, lazy, Suspense } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import type { Session } from '@supabase/supabase-js';
 import { Course, Review, Teacher, FeaturedVideo } from './types';
@@ -22,12 +22,15 @@ import { TransparencyBanner } from './components/TransparencyBanner';
 import { FeaturedVideosSection } from './components/FeaturedVideosSection';
 import { ReportScamSection } from './components/ReportScamSection';
 import { StatsBar } from './components/StatsBar';
-import { AddReviewModal } from './components/AddReviewModal';
 import { TeachersSection } from './components/TeachersSection';
-import { AddTeacherModal } from './components/AddTeacherModal';
-import { TeacherDetailModal } from './components/TeacherDetailModal';
-import { AdminLoginModal } from './components/AdminLoginModal';
 import { RecentReviewPopup } from './components/RecentReviewPopup';
+
+// Lazy-loaded: only needed once a user opens one of these modals, so keeping
+// them out of the initial bundle shrinks first-load JS meaningfully.
+const AddReviewModal = lazy(() => import('./components/AddReviewModal').then((m) => ({ default: m.AddReviewModal })));
+const AddTeacherModal = lazy(() => import('./components/AddTeacherModal').then((m) => ({ default: m.AddTeacherModal })));
+const TeacherDetailModal = lazy(() => import('./components/TeacherDetailModal').then((m) => ({ default: m.TeacherDetailModal })));
+const AdminLoginModal = lazy(() => import('./components/AdminLoginModal').then((m) => ({ default: m.AdminLoginModal })));
 import {
   Search,
   X,
@@ -161,6 +164,55 @@ export default function App() {
       document.title = `${t.siteTitle} - ${t.siteSubtitle}`;
     }
   }, [selectedTeacherForDetail, t]);
+
+  // Inject Person/AggregateRating JSON-LD structured data for the currently
+  // viewed teacher, so search engines can show star-rating rich snippets.
+  useEffect(() => {
+    const scriptId = 'teacher-structured-data';
+    const existing = document.getElementById(scriptId);
+    if (existing) existing.remove();
+
+    if (!selectedTeacherForDetail || selectedTeacherForDetail.reviewCount === 0) return;
+
+    const teacher = selectedTeacherForDetail;
+    const structuredData = {
+      '@context': 'https://schema.org',
+      '@type': 'Person',
+      name: teacher.name,
+      ...(teacher.photoUrl && { image: teacher.photoUrl }),
+      ...(teacher.bio && { description: teacher.bio }),
+      url: `${window.location.origin}/teacher/${teacher.id}`,
+      aggregateRating: {
+        '@type': 'AggregateRating',
+        ratingValue: teacher.averageRating,
+        reviewCount: teacher.reviewCount,
+        bestRating: 5,
+        worstRating: 1,
+      },
+      review: teacher.reviews.slice(0, 10).map((r) => ({
+        '@type': 'Review',
+        author: { '@type': 'Person', name: r.authorName },
+        datePublished: r.date,
+        reviewRating: {
+          '@type': 'Rating',
+          ratingValue: r.overallRating,
+          bestRating: 5,
+          worstRating: 1,
+        },
+        reviewBody: r.fullReview,
+      })),
+    };
+
+    const script = document.createElement('script');
+    script.id = scriptId;
+    script.type = 'application/ld+json';
+    script.textContent = JSON.stringify(structuredData);
+    document.head.appendChild(script);
+
+    return () => {
+      document.getElementById(scriptId)?.remove();
+    };
+  }, [selectedTeacherForDetail]);
 
   // Save lang to localStorage
   const handleSelectLang = (lang: SupportedLang) => {
@@ -597,50 +649,52 @@ export default function App() {
       </footer>
 
       {/* Modals */}
-      {isAdminLoginOpen && (
-        <AdminLoginModal
-          onClose={() => setIsAdminLoginOpen(false)}
-          onSuccess={() => showToast('Admin катары ийгиликтүү кирдиңиз.')}
-        />
-      )}
+      <Suspense fallback={null}>
+        {isAdminLoginOpen && (
+          <AdminLoginModal
+            onClose={() => setIsAdminLoginOpen(false)}
+            onSuccess={() => showToast('Admin катары ийгиликтүү кирдиңиз.')}
+          />
+        )}
 
-      {selectedTeacherForDetail && (
-        <TeacherDetailModal
-          teacher={selectedTeacherForDetail}
-          currentLang={currentLang}
-          onClose={() => navigate('/')}
-          onOpenAddReview={(teacher) => {
-            setReviewPreselectedTeacher(teacher);
-            setIsAddReviewOpen(true);
-          }}
-          onVoteReview={handleVoteReview}
-        />
-      )}
+        {selectedTeacherForDetail && (
+          <TeacherDetailModal
+            teacher={selectedTeacherForDetail}
+            currentLang={currentLang}
+            onClose={() => navigate('/')}
+            onOpenAddReview={(teacher) => {
+              setReviewPreselectedTeacher(teacher);
+              setIsAddReviewOpen(true);
+            }}
+            onVoteReview={handleVoteReview}
+          />
+        )}
 
-      {isAddReviewOpen && (
-        <AddReviewModal
-          teachers={teachers}
-          preSelectedTeacher={reviewPreselectedTeacher}
-          currentLang={currentLang}
-          onClose={() => {
-            setIsAddReviewOpen(false);
-            setReviewPreselectedTeacher(null);
-          }}
-          onSubmitReview={handleSubmitReview}
-        />
-      )}
+        {isAddReviewOpen && (
+          <AddReviewModal
+            teachers={teachers}
+            preSelectedTeacher={reviewPreselectedTeacher}
+            currentLang={currentLang}
+            onClose={() => {
+              setIsAddReviewOpen(false);
+              setReviewPreselectedTeacher(null);
+            }}
+            onSubmitReview={handleSubmitReview}
+          />
+        )}
 
-      {isAddTeacherOpen && (
-        <AddTeacherModal
-          currentLang={currentLang}
-          editingTeacher={editingTeacher}
-          onClose={() => {
-            setIsAddTeacherOpen(false);
-            setEditingTeacher(null);
-          }}
-          onSubmit={handleSubmitTeacher}
-        />
-      )}
+        {isAddTeacherOpen && (
+          <AddTeacherModal
+            currentLang={currentLang}
+            editingTeacher={editingTeacher}
+            onClose={() => {
+              setIsAddTeacherOpen(false);
+              setEditingTeacher(null);
+            }}
+            onSubmit={handleSubmitTeacher}
+          />
+        )}
+      </Suspense>
     </div>
   );
 }
