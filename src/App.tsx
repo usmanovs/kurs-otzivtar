@@ -508,6 +508,7 @@ export default function App() {
       {/* Header */}
       <Navbar
         currentLang={currentLang}
+        totalReviewsCount={totalReviewsCount}
         onSelectLang={handleSelectLang}
         onOpenAddReview={() => {
           setReviewPreselectedTeacher(null);
