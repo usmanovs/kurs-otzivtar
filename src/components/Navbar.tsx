@@ -1,17 +1,15 @@
 import React from 'react';
 import { SupportedLang, TRANSLATIONS } from '../translations';
-import { ShieldCheck, MessageSquare, PenLine, Globe } from 'lucide-react';
+import { ShieldCheck, PenLine, Globe } from 'lucide-react';
 
 interface NavbarProps {
   currentLang: SupportedLang;
-  totalReviewsCount: number;
   onSelectLang: (lang: SupportedLang) => void;
   onOpenAddReview: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
   currentLang,
-  totalReviewsCount,
   onSelectLang,
   onOpenAddReview,
 }) => {
@@ -74,12 +72,6 @@ export const Navbar: React.FC<NavbarProps> = ({
                 {link.label}
               </button>
             ))}
-            {totalReviewsCount > 0 && (
-              <span className="hidden lg:inline-flex items-center gap-1 ml-2 px-2.5 py-0.5 text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100 rounded-full shrink-0 whitespace-nowrap">
-                <MessageSquare className="w-3.5 h-3.5" />
-                <span>{totalReviewsCount} {t.stats.reviewsCount}</span>
-              </span>
-            )}
           </nav>
 
           {/* Action buttons & Language Switcher */}
