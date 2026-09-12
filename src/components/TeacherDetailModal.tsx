@@ -399,34 +399,22 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
               ) : (
                 filteredReviews.map((review) => {
                   const tone = ratingTone(review.overallRating);
-                  const cardBorderClass = {
-                    danger: 'border-red-200',
-                    warning: 'border-slate-200',
-                    success: 'border-emerald-200',
-                  }[tone];
-                  const accentBarClass = {
-                    danger: 'bg-red-500',
-                    warning: 'bg-amber-400',
-                    success: 'bg-emerald-500',
-                  }[tone];
-                  const scoreBadgeClass = {
-                    danger: 'bg-red-50 text-red-700 border-red-200',
-                    warning: 'bg-amber-50 text-amber-700 border-amber-200',
-                    success: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                  const scoreTextClass = {
+                    danger: 'text-red-600',
+                    warning: 'text-amber-600',
+                    success: 'text-emerald-600',
                   }[tone];
 
                   return (
                   <div
                     key={review.id}
                     id={`review-item-${review.id}`}
-                    className={`relative overflow-hidden rounded-2xl border bg-white shadow-2xs transition-all ${cardBorderClass}`}
+                    className="rounded-2xl border border-slate-200 bg-white p-5"
                   >
-                    <span className={`absolute inset-y-0 left-0 w-1.5 ${accentBarClass}`} />
-                    <div className="p-5 pl-6">
                     {/* Reviewer Header */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+                    <div className="flex items-start justify-between gap-3">
                       <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-100 to-indigo-50 text-indigo-700 font-bold flex items-center justify-center text-sm shrink-0">
+                        <div className="w-9 h-9 rounded-full bg-slate-100 text-slate-600 font-bold flex items-center justify-center text-sm shrink-0">
                           {review.authorName.charAt(0).toUpperCase()}
                         </div>
                         <div className="min-w-0">
@@ -435,55 +423,31 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
                               {review.authorName}
                             </span>
                             {review.isVerified && (
-                              <span className="inline-flex items-center gap-1 text-2xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                                <CheckCircle className="w-3 h-3 text-emerald-600" />
-                                {t.courseCard.verifiedGraduate}
-                              </span>
+                              <CheckCircle
+                                className="w-3.5 h-3.5 text-slate-400"
+                                aria-label={t.courseCard.verifiedGraduate}
+                              />
                             )}
                           </div>
-                          <div className="text-2xs text-slate-500 font-medium">
+                          <div className="text-2xs text-slate-500">
                             <span>{getStatusLabel(review.authorStatus)}</span>
                             {review.cohortYear && <span> • {review.cohortYear}</span>}
                             {review.durationMonths && <span> • {review.durationMonths} ай окуган</span>}
                             {review.pricePaidKGS && (
                               <span> • {review.pricePaidKGS.toLocaleString('ru-RU')} сом төлөгөн</span>
                             )}
+                            <span> • {review.date}</span>
                           </div>
                         </div>
                       </div>
 
-                      <div className="flex flex-col items-end gap-1 shrink-0">
-                        <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border font-bold text-sm ${scoreBadgeClass}`}>
-                          <span>{review.overallRating.toFixed(1)}</span>
-                          {renderStars(review.overallRating, 'w-3.5 h-3.5')}
-                        </div>
-                        <span className="text-2xs text-slate-400 font-medium">{review.date}</span>
+                      <div className={`flex items-center gap-1 font-bold text-sm shrink-0 ${scoreTextClass}`}>
+                        <span>{review.overallRating.toFixed(1)}</span>
+                        <Star className="w-4 h-4 fill-current" />
                       </div>
                     </div>
 
-                    {/* Recommendation & Warning Badges */}
-                    <div className="flex flex-wrap items-center gap-2 my-3">
-                      {review.wouldRecommend ? (
-                        <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-md border border-emerald-200">
-                          <ThumbsUp className="w-3.5 h-3.5" />
-                          {t.detailModal.recommendYes}
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 text-xs font-bold text-red-700 bg-red-50 px-2.5 py-0.5 rounded-md border border-red-200">
-                          <ThumbsDown className="w-3.5 h-3.5" />
-                          {t.detailModal.recommendNo}
-                        </span>
-                      )}
-
-                      {review.hasJobScamReport && (
-                        <span className="inline-flex items-center gap-1 text-xs font-bold text-red-800 bg-red-100 px-2.5 py-0.5 rounded-md">
-                          <AlertTriangle className="w-3.5 h-3.5" />
-                          {t.detailModal.scamWarningReported}
-                        </span>
-                      )}
-                    </div>
-
-                    <h4 className="text-base font-bold text-slate-900 mb-1">
+                    <h4 className="text-base font-bold text-slate-900 mt-3 mb-1">
                       {review.title}
                     </h4>
                     <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-line">
@@ -492,54 +456,50 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
 
                     {/* Pros & Cons Section */}
                     {(review.pros.length > 0 || review.cons.length > 0) && (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4 pt-3 border-t border-slate-100 text-xs">
-                        {review.pros.length > 0 && (
-                          <div className="bg-emerald-50/70 p-3 rounded-xl border border-emerald-100">
-                            <span className="font-bold text-emerald-800 block mb-1.5 flex items-center gap-1">
-                              <Check className="w-3.5 h-3.5 text-emerald-600" />
-                              {t.detailModal.pros}
-                            </span>
-                            <ul className="space-y-1 text-slate-700">
-                              {review.pros.map((p, idx) => (
-                                <li key={idx} className="flex items-start gap-1.5">
-                                  <span className="text-emerald-600 font-bold">•</span>
-                                  <span>{p}</span>
-                                </li>
-                              ))}
-                            </ul>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1 mt-3 text-sm text-slate-700">
+                        {review.pros.map((p, idx) => (
+                          <div key={`pro-${idx}`} className="flex items-start gap-1.5">
+                            <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                            <span>{p}</span>
                           </div>
-                        )}
-
-                        {review.cons.length > 0 && (
-                          <div className="bg-red-50/70 p-3 rounded-xl border border-red-100">
-                            <span className="font-bold text-red-800 block mb-1.5 flex items-center gap-1">
-                              <AlertTriangle className="w-3.5 h-3.5 text-red-600" />
-                              {t.detailModal.cons}
-                            </span>
-                            <ul className="space-y-1 text-slate-700">
-                              {review.cons.map((c, idx) => (
-                                <li key={idx} className="flex items-start gap-1.5">
-                                  <span className="text-red-600 font-bold">•</span>
-                                  <span>{c}</span>
-                                </li>
-                              ))}
-                            </ul>
+                        ))}
+                        {review.cons.map((c, idx) => (
+                          <div key={`con-${idx}`} className="flex items-start gap-1.5">
+                            <X className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+                            <span>{c}</span>
                           </div>
-                        )}
+                        ))}
                       </div>
                     )}
 
                     {review.adviceForNewcomers && (
-                      <div className="mt-3 p-3 bg-amber-50/70 rounded-xl border border-amber-200/60 text-xs text-slate-800 flex items-start gap-2">
-                        <Lightbulb className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-                        <div>
-                          <span className="font-bold text-amber-900 block">
-                            {t.detailModal.advice}
-                          </span>
-                          <span>{review.adviceForNewcomers}</span>
-                        </div>
-                      </div>
+                      <p className="mt-3 text-sm text-slate-600 flex items-start gap-1.5">
+                        <Lightbulb className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+                        <span>{review.adviceForNewcomers}</span>
+                      </p>
                     )}
+
+                    {/* Recommendation & scam flag — plain text, no colored boxes */}
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-3 text-xs text-slate-500">
+                      {review.wouldRecommend ? (
+                        <span className="inline-flex items-center gap-1">
+                          <ThumbsUp className="w-3.5 h-3.5" />
+                          {t.detailModal.recommendYes}
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1">
+                          <ThumbsDown className="w-3.5 h-3.5" />
+                          {t.detailModal.recommendNo}
+                        </span>
+                      )}
+
+                      {review.hasJobScamReport && (
+                        <span className="inline-flex items-center gap-1 font-semibold text-red-600">
+                          <AlertTriangle className="w-3.5 h-3.5" />
+                          {t.detailModal.scamWarningReported}
+                        </span>
+                      )}
+                    </div>
 
                     {/* Helpful votes footer */}
                     <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
@@ -573,7 +533,6 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
                           <span>Жок ({review.unhelpfulCount})</span>
                         </button>
                       </div>
-                    </div>
                     </div>
                   </div>
                   );
