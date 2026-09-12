@@ -194,7 +194,7 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
           )}
 
           {/* Overall Ratings & Sub-metrics Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-stretch">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-start">
             {/* Main Score Box */}
             <div className="md:col-span-4 bg-slate-50 border border-slate-200 p-5 rounded-2xl flex flex-col items-center justify-center text-center">
               <div
