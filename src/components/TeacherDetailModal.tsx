@@ -80,8 +80,8 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
     return true;
   });
 
-  const renderStars = (rating: number, size = 'w-4 h-4', neutral = false) => {
-    const filledClass = neutral ? 'fill-amber-400 text-amber-400' : RATING_STAR_CLASS[ratingTone(rating)];
+  const renderStars = (rating: number, size = 'w-4 h-4') => {
+    const filledClass = RATING_STAR_CLASS[ratingTone(rating)];
     return (
       <div className="flex items-center gap-0.5">
         {[1, 2, 3, 4, 5].map((star) => {
@@ -234,49 +234,33 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
             </div>
 
             {/* Sub-scores breakdown */}
-            <div className="md:col-span-8 grid grid-cols-2 gap-3">
-              <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs">
-                <div className="text-xs text-slate-500 font-medium mb-1">{t.courseCard.teachers}</div>
-                <div className="flex items-center justify-between">
-                  <span className="text-lg font-bold text-slate-900">
-                    {teacher.teacherRatingAvg.toFixed(1)} / 5
-                  </span>
-                  {renderStars(teacher.teacherRatingAvg, 'w-4 h-4', true)}
-                </div>
-              </div>
-
-              <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs">
-                <div className="text-xs text-slate-500 font-medium mb-1">{t.courseCard.practice}</div>
-                <div className="flex items-center justify-between">
-                  <span className="text-lg font-bold text-slate-900">
-                    {teacher.practiceRatingAvg.toFixed(1)} / 5
-                  </span>
-                  {renderStars(teacher.practiceRatingAvg, 'w-4 h-4', true)}
-                </div>
-              </div>
-
-              <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs">
-                <div className="text-xs text-slate-500 font-medium mb-1">{t.courseCard.jobSupport}</div>
-                <div className="flex items-center justify-between">
-                  <span className="text-lg font-bold text-slate-900">
-                    {teacher.jobSupportRatingAvg.toFixed(1)} / 5
-                  </span>
-                  {renderStars(teacher.jobSupportRatingAvg, 'w-4 h-4', true)}
-                </div>
-              </div>
-
-              <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs">
-                <div className="text-xs text-slate-500 font-medium mb-1">{t.courseCard.value}</div>
-                <div className="flex items-center justify-between">
-                  <span className="text-lg font-bold text-slate-900">
-                    {teacher.valueRatingAvg.toFixed(1)} / 5
-                  </span>
-                  {renderStars(teacher.valueRatingAvg, 'w-4 h-4', true)}
-                </div>
+            <div className="md:col-span-8 flex flex-col gap-3">
+              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs space-y-2.5">
+                {[
+                  { label: t.courseCard.teachers, value: teacher.teacherRatingAvg },
+                  { label: t.courseCard.practice, value: teacher.practiceRatingAvg },
+                  { label: t.courseCard.jobSupport, value: teacher.jobSupportRatingAvg },
+                  { label: t.courseCard.value, value: teacher.valueRatingAvg },
+                ].map((metric) => (
+                  <div key={metric.label} className="flex items-center gap-3">
+                    <span className="text-xs text-slate-500 w-28 sm:w-32 shrink-0 truncate">
+                      {metric.label}
+                    </span>
+                    <div className="flex-1 bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-amber-400 rounded-full"
+                        style={{ width: `${(metric.value / 5) * 100}%` }}
+                      />
+                    </div>
+                    <span className="text-xs font-bold text-slate-900 w-7 text-right shrink-0">
+                      {metric.value.toFixed(1)}
+                    </span>
+                  </div>
+                ))}
               </div>
 
               {/* Score Distribution Bars */}
-              <div className="col-span-2 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+              <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200">
                 <div className="text-xs font-semibold text-slate-700 mb-2">
                   {t.detailModal.ratingDistribution}
                 </div>
