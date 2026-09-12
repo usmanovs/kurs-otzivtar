@@ -193,100 +193,102 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
             </div>
           )}
 
-          {/* Overall Ratings & Sub-metrics Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-start">
-            {/* Main Score Box */}
-            <div className="md:col-span-4 bg-slate-50 border border-slate-200 p-5 rounded-2xl flex flex-col items-center justify-center text-center">
-              <div
-                className={`text-4xl sm:text-5xl font-bold mb-2 ${
-                  teacher.averageRating >= 4
-                    ? 'text-emerald-600'
-                    : teacher.averageRating >= 3
-                    ? 'text-amber-600'
-                    : 'text-red-600'
-                }`}
-              >
-                {teacher.averageRating.toFixed(1)}
-              </div>
-              {renderStars(teacher.averageRating, 'w-5 h-5')}
-              <div className="text-xs text-slate-500 font-semibold mt-1">
-                {teacher.reviewCount} {t.courseCard.reviewsCount} негизинде
-              </div>
-
-              {teacher.reviewCount > 0 && (
-                <div className="mt-4 pt-3 border-t border-slate-200 w-full text-center">
-                  <span
-                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${
-                      teacher.recommendPercent >= 70
-                        ? 'bg-emerald-100 text-emerald-800'
-                        : 'bg-red-100 text-red-800'
-                    }`}
-                  >
-                    {teacher.recommendPercent >= 70 ? (
-                      <ThumbsUp className="w-3.5 h-3.5" />
-                    ) : (
-                      <ThumbsDown className="w-3.5 h-3.5" />
-                    )}
-                    {teacher.recommendPercent}% {t.courseCard.recommendRate}
-                  </span>
+          {/* Overall Ratings — one unified panel instead of separate side-by-side cards */}
+          <div className="bg-white border border-slate-200 rounded-2xl shadow-2xs p-5 sm:p-6">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8">
+              {/* Main Score */}
+              <div className="md:col-span-4 flex flex-col items-center justify-center text-center md:border-r md:border-slate-100 md:pr-8">
+                <div
+                  className={`text-4xl sm:text-5xl font-bold mb-2 ${
+                    teacher.averageRating >= 4
+                      ? 'text-emerald-600'
+                      : teacher.averageRating >= 3
+                      ? 'text-amber-600'
+                      : 'text-red-600'
+                  }`}
+                >
+                  {teacher.averageRating.toFixed(1)}
                 </div>
-              )}
-            </div>
+                {renderStars(teacher.averageRating, 'w-5 h-5')}
+                <div className="text-xs text-slate-500 font-semibold mt-1">
+                  {teacher.reviewCount} {t.courseCard.reviewsCount} негизинде
+                </div>
 
-            {/* Sub-scores & rating distribution — one panel, two sections */}
-            <div className="md:col-span-8 bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
-              <div className="space-y-2.5">
-                {[
-                  { label: t.courseCard.teachers, value: teacher.teacherRatingAvg },
-                  { label: t.courseCard.practice, value: teacher.practiceRatingAvg },
-                  { label: t.courseCard.jobSupport, value: teacher.jobSupportRatingAvg },
-                  { label: t.courseCard.value, value: teacher.valueRatingAvg },
-                ].map((metric) => (
-                  <div key={metric.label} className="flex items-center gap-3">
-                    <span className="text-xs text-slate-500 w-28 sm:w-32 shrink-0 truncate">
-                      {metric.label}
-                    </span>
-                    <div className="flex-1 bg-slate-100 h-1.5 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-amber-400 rounded-full"
-                        style={{ width: `${(metric.value / 5) * 100}%` }}
-                      />
-                    </div>
-                    <span className="text-xs font-bold text-slate-900 w-7 text-right shrink-0">
-                      {metric.value.toFixed(1)}
+                {teacher.reviewCount > 0 && (
+                  <div className="mt-4 pt-3 border-t border-slate-100 w-full text-center">
+                    <span
+                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${
+                        teacher.recommendPercent >= 70
+                          ? 'bg-emerald-100 text-emerald-800'
+                          : 'bg-red-100 text-red-800'
+                      }`}
+                    >
+                      {teacher.recommendPercent >= 70 ? (
+                        <ThumbsUp className="w-3.5 h-3.5" />
+                      ) : (
+                        <ThumbsDown className="w-3.5 h-3.5" />
+                      )}
+                      {teacher.recommendPercent}% {t.courseCard.recommendRate}
                     </span>
                   </div>
-                ))}
+                )}
               </div>
 
-              {/* Score Distribution Bars */}
-              <div className="mt-4 pt-4 border-t border-slate-100">
-                <div className="text-xs font-semibold text-slate-700 mb-2">
-                  {t.detailModal.ratingDistribution}
-                </div>
-                <div className="space-y-1.5">
-                  {[5, 4, 3, 2, 1].map((score) => {
-                    const count = ratingCounts[score] || 0;
-                    const percent = totalReviews > 0 ? (count / totalReviews) * 100 : 0;
-                    return (
-                      <div key={score} className="flex items-center gap-2 text-xs">
-                        <span className="w-4 font-semibold text-slate-600">{score}★</span>
-                        <div className="flex-1 bg-slate-100 h-1.5 rounded-full overflow-hidden">
-                          <div
-                            className={`h-full rounded-full ${
-                              score >= 4
-                                ? 'bg-emerald-500'
-                                : score === 3
-                                ? 'bg-amber-500'
-                                : 'bg-red-500'
-                            }`}
-                            style={{ width: `${percent}%` }}
-                          />
-                        </div>
-                        <span className="w-8 text-right text-slate-500 font-medium">{count}</span>
+              {/* Sub-scores & rating distribution */}
+              <div className="md:col-span-8 flex flex-col justify-center gap-5">
+                <div className="space-y-3">
+                  {[
+                    { label: t.courseCard.teachers, value: teacher.teacherRatingAvg },
+                    { label: t.courseCard.practice, value: teacher.practiceRatingAvg },
+                    { label: t.courseCard.jobSupport, value: teacher.jobSupportRatingAvg },
+                    { label: t.courseCard.value, value: teacher.valueRatingAvg },
+                  ].map((metric) => (
+                    <div key={metric.label} className="flex items-center gap-3">
+                      <span className="text-sm text-slate-500 w-28 sm:w-32 shrink-0 truncate">
+                        {metric.label}
+                      </span>
+                      <div className="flex-1 bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-indigo-400 rounded-full"
+                          style={{ width: `${(metric.value / 5) * 100}%` }}
+                        />
                       </div>
-                    );
-                  })}
+                      <span className="text-sm font-bold text-slate-900 w-7 text-right shrink-0">
+                        {metric.value.toFixed(1)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Score Distribution Bars */}
+                <div className="pt-5 border-t border-slate-100">
+                  <div className="text-xs font-semibold text-slate-700 mb-2.5">
+                    {t.detailModal.ratingDistribution}
+                  </div>
+                  <div className="space-y-1.5">
+                    {[5, 4, 3, 2, 1].map((score) => {
+                      const count = ratingCounts[score] || 0;
+                      const percent = totalReviews > 0 ? (count / totalReviews) * 100 : 0;
+                      return (
+                        <div key={score} className="flex items-center gap-2 text-xs">
+                          <span className="w-4 font-semibold text-slate-600">{score}★</span>
+                          <div className="flex-1 bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                            <div
+                              className={`h-full rounded-full ${
+                                score >= 4
+                                  ? 'bg-emerald-500'
+                                  : score === 3
+                                  ? 'bg-amber-500'
+                                  : 'bg-red-500'
+                              }`}
+                              style={{ width: `${percent}%` }}
+                            />
+                          </div>
+                          <span className="w-8 text-right text-slate-500 font-medium">{count}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             </div>
