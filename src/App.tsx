@@ -23,6 +23,7 @@ import { FeaturedVideosSection } from './components/FeaturedVideosSection';
 import { ReportScamSection } from './components/ReportScamSection';
 import { StatsBar } from './components/StatsBar';
 import { TeachersSection } from './components/TeachersSection';
+import { TeacherLeaderboardSection } from './components/TeacherLeaderboardSection';
 import { RecentReviewPopup } from './components/RecentReviewPopup';
 
 // Lazy-loaded: only needed once a user opens one of these modals, so keeping
@@ -664,6 +665,13 @@ export default function App() {
             setReviewPreselectedTeacher(teacher);
             setIsAddReviewOpen(true);
           }}
+        />
+
+        {/* Best & lowest rated teachers, based on real review averages */}
+        <TeacherLeaderboardSection
+          teachers={teachers}
+          currentLang={currentLang}
+          onViewTeacher={(teacher) => navigate(`/teacher/${teacher.id}`)}
         />
 
         {/* Educational Safety Banner */}

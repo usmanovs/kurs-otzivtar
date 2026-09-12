@@ -11,7 +11,16 @@ export const TRANSLATIONS = {
     addCourseBtn: 'Жаңы курс кошуу',
     navTeachers: 'Мугалимдер',
     navVideos: 'Видеолор',
+    navLeaderboard: 'Рейтинг',
     navReportScam: 'Кайда кайрылуу',
+    leaderboard: {
+      title: 'Мугалимдер рейтинги',
+      subtitle: 'Сын-пикирлер боюнча эсептелген орточо баа',
+      topTitle: 'Эң жогорку баа алгандар',
+      flaggedTitle: 'Этияттык менен таанышыңыз',
+      reviewsSuffix: 'пикир',
+      lowReviewNotice: 'Аз сандагы пикирге негизделген — көбүрөөк пикир чогулгандан кийин өзгөрүшү мүмкүн.'
+    },
     teacherNotFound: {
       title: 'Мугалим табылган жок',
       message: 'Бул шилтеме туура эмес же мугалим тизмеден өчүрүлгөн болушу мүмкүн.',
@@ -242,7 +251,16 @@ export const TRANSLATIONS = {
     addCourseBtn: 'Добавить курс',
     navTeachers: 'Преподаватели',
     navVideos: 'Видео',
+    navLeaderboard: 'Рейтинг',
     navReportScam: 'Куда обращаться',
+    leaderboard: {
+      title: 'Рейтинг преподавателей',
+      subtitle: 'Средняя оценка на основе отзывов студентов',
+      topTitle: 'Самые высокие оценки',
+      flaggedTitle: 'Будьте внимательны',
+      reviewsSuffix: 'отзыв(ов)',
+      lowReviewNotice: 'Основано на небольшом числе отзывов — может измениться позже.'
+    },
     teacherNotFound: {
       title: 'Преподаватель не найден',
       message: 'Возможно, ссылка неверна или преподаватель был удалён из списка.',
