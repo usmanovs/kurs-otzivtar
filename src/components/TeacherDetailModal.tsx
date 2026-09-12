@@ -233,9 +233,9 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
               )}
             </div>
 
-            {/* Sub-scores breakdown */}
-            <div className="md:col-span-8 flex flex-col gap-3">
-              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs space-y-2.5">
+            {/* Sub-scores & rating distribution — one panel, two sections */}
+            <div className="md:col-span-8 bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
+              <div className="space-y-2.5">
                 {[
                   { label: t.courseCard.teachers, value: teacher.teacherRatingAvg },
                   { label: t.courseCard.practice, value: teacher.practiceRatingAvg },
@@ -260,7 +260,7 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
               </div>
 
               {/* Score Distribution Bars */}
-              <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+              <div className="mt-4 pt-4 border-t border-slate-100">
                 <div className="text-xs font-semibold text-slate-700 mb-2">
                   {t.detailModal.ratingDistribution}
                 </div>
@@ -271,7 +271,7 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
                     return (
                       <div key={score} className="flex items-center gap-2 text-xs">
                         <span className="w-4 font-semibold text-slate-600">{score}★</span>
-                        <div className="flex-1 bg-slate-200 h-2 rounded-full overflow-hidden">
+                        <div className="flex-1 bg-slate-100 h-1.5 rounded-full overflow-hidden">
                           <div
                             className={`h-full rounded-full ${
                               score >= 4
