@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Teacher } from '../types';
 import { SupportedLang, TRANSLATIONS } from '../translations';
 import { useEscapeKey } from '../hooks/useEscapeKey';
+import { ratingTone, RATING_STAR_CLASS } from '../lib/ratingTone';
 import {
   X,
   Star,
@@ -80,6 +81,7 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
   });
 
   const renderStars = (rating: number, size = 'w-4 h-4') => {
+    const tone = ratingTone(rating);
     return (
       <div className="flex items-center gap-0.5">
         {[1, 2, 3, 4, 5].map((star) => {
@@ -87,13 +89,7 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
           return (
             <Star
               key={star}
-              className={`${size} ${
-                filled
-                  ? rating < 3
-                    ? 'fill-red-500 text-red-500'
-                    : 'fill-amber-400 text-amber-400'
-                  : 'text-slate-200 fill-slate-100'
-              }`}
+              className={`${size} ${filled ? RATING_STAR_CLASS[tone] : 'text-slate-200 fill-slate-100'}`}
             />
           );
         })}
@@ -401,24 +397,40 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
                   {t.detailModal.noReviewsYet}
                 </div>
               ) : (
-                filteredReviews.map((review) => (
+                filteredReviews.map((review) => {
+                  const tone = ratingTone(review.overallRating);
+                  const cardBorderClass = {
+                    danger: 'border-red-200',
+                    warning: 'border-slate-200',
+                    success: 'border-emerald-200',
+                  }[tone];
+                  const accentBarClass = {
+                    danger: 'bg-red-500',
+                    warning: 'bg-amber-400',
+                    success: 'bg-emerald-500',
+                  }[tone];
+                  const scoreBadgeClass = {
+                    danger: 'bg-red-50 text-red-700 border-red-200',
+                    warning: 'bg-amber-50 text-amber-700 border-amber-200',
+                    success: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                  }[tone];
+
+                  return (
                   <div
                     key={review.id}
                     id={`review-item-${review.id}`}
-                    className={`p-5 rounded-2xl border transition-all ${
-                      review.overallRating <= 2
-                        ? 'bg-red-50/30 border-red-200'
-                        : 'bg-white border-slate-200 shadow-2xs'
-                    }`}
+                    className={`relative overflow-hidden rounded-2xl border bg-white shadow-2xs transition-all ${cardBorderClass}`}
                   >
+                    <span className={`absolute inset-y-0 left-0 w-1.5 ${accentBarClass}`} />
+                    <div className="p-5 pl-6">
                     {/* Reviewer Header */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100">
-                      <div className="flex items-center gap-2">
-                        <div className="w-9 h-9 rounded-full bg-slate-200 text-slate-700 font-bold flex items-center justify-center text-sm">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-100 to-indigo-50 text-indigo-700 font-bold flex items-center justify-center text-sm shrink-0">
                           {review.authorName.charAt(0).toUpperCase()}
                         </div>
-                        <div>
-                          <div className="flex items-center gap-1.5">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1.5 flex-wrap">
                             <span className="text-sm font-bold text-slate-900">
                               {review.authorName}
                             </span>
@@ -440,9 +452,12 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2">
-                        {renderStars(review.overallRating)}
-                        <span className="text-xs text-slate-400 font-medium">{review.date}</span>
+                      <div className="flex flex-col items-end gap-1 shrink-0">
+                        <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border font-bold text-sm ${scoreBadgeClass}`}>
+                          <span>{review.overallRating.toFixed(1)}</span>
+                          {renderStars(review.overallRating, 'w-3.5 h-3.5')}
+                        </div>
+                        <span className="text-2xs text-slate-400 font-medium">{review.date}</span>
                       </div>
                     </div>
 
@@ -559,8 +574,10 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
                         </button>
                       </div>
                     </div>
+                    </div>
                   </div>
-                ))
+                  );
+                })
               )}
             </div>
           </div>
