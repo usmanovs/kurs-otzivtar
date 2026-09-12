@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { Teacher } from '../types';
 import { SupportedLang, TRANSLATIONS } from '../translations';
+import { ratingTone, RATING_STAR_CLASS, RATING_TEXT_CLASS } from '../lib/ratingTone';
 import { Award, TrendingUp, TrendingDown, Star } from 'lucide-react';
 
 interface TeacherLeaderboardSectionProps {
@@ -12,24 +13,6 @@ interface TeacherLeaderboardSectionProps {
 const MAX_ROWS = 5;
 const TOP_THRESHOLD = 4.5;
 const FLAGGED_THRESHOLD = 2.5;
-
-function ratingTone(rating: number): 'danger' | 'warning' | 'success' {
-  if (rating <= 2) return 'danger';
-  if (rating < 4) return 'warning';
-  return 'success';
-}
-
-const TONE_STAR_CLASS: Record<string, string> = {
-  danger: 'fill-red-500 text-red-500',
-  warning: 'fill-amber-400 text-amber-400',
-  success: 'fill-emerald-500 text-emerald-500',
-};
-
-const TONE_TEXT_CLASS: Record<string, string> = {
-  danger: 'text-red-600',
-  warning: 'text-amber-600',
-  success: 'text-emerald-600',
-};
 
 const RowAvatar: React.FC<{ teacher: Teacher }> = ({ teacher }) => {
   if (teacher.photoUrl) {
@@ -79,11 +62,11 @@ const LeaderboardRow: React.FC<{
           {Array.from({ length: 5 }).map((_, i) => (
             <Star
               key={i}
-              className={`w-3.5 h-3.5 ${i < filled ? TONE_STAR_CLASS[tone] : 'text-slate-200'}`}
+              className={`w-3.5 h-3.5 ${i < filled ? RATING_STAR_CLASS[tone] : 'text-slate-200'}`}
             />
           ))}
         </div>
-        <span className={`text-2xs font-bold ${TONE_TEXT_CLASS[tone]}`}>
+        <span className={`text-2xs font-bold ${RATING_TEXT_CLASS[tone]}`}>
           {teacher.averageRating.toFixed(1)} &middot; {teacher.reviewCount} {t.leaderboard.reviewsSuffix}
         </span>
       </div>

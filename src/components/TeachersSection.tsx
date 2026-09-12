@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { CourseCategory, Teacher, TeacherGender } from '../types';
 import { SupportedLang, TRANSLATIONS } from '../translations';
+import { ratingTone, RATING_BADGE_CLASS } from '../lib/ratingTone';
 import { GraduationCap, Star, PlusCircle, Building2, Pencil, Instagram, Youtube, MessageSquarePlus, X } from 'lucide-react';
 
 interface TeachersSectionProps {
@@ -228,7 +229,11 @@ export const TeachersSection: React.FC<TeachersSectionProps> = ({
                 <div className="relative">
                   <TeacherAvatar teacher={teacher} />
                   {teacher.reviewCount > 0 && (
-                    <div className="absolute -bottom-1.5 -right-1.5 flex items-center gap-0.5 text-2xs font-bold text-white bg-amber-500 px-1.5 py-0.5 rounded-full shadow-sm border-2 border-white">
+                    <div
+                      className={`absolute -bottom-1.5 -right-1.5 flex items-center gap-0.5 text-2xs font-bold text-white px-1.5 py-0.5 rounded-full shadow-sm border-2 border-white ${
+                        RATING_BADGE_CLASS[ratingTone(teacher.averageRating)]
+                      }`}
+                    >
                       <Star className="w-2.5 h-2.5 fill-white" />
                       {teacher.averageRating.toFixed(1)}
                     </div>

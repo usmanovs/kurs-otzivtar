@@ -38,7 +38,7 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
   const [authorName, setAuthorName] = useState('');
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [authorStatus, setAuthorStatus] = useState<StudentStatus>('graduate');
-  const [overallRating, setOverallRating] = useState<number>(5);
+  const [overallRating, setOverallRating] = useState<number>(0);
   const [teacherRating, setTeacherRating] = useState<number>(5);
   const [practiceRating, setPracticeRating] = useState<number>(4);
   const [jobSupportRating, setJobSupportRating] = useState<number>(3);
@@ -122,6 +122,10 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
     e.preventDefault();
     if (!teacherName.trim()) {
       setErrorMsg('Мугалимдин же ментордун атын жазыңыз!');
+      return;
+    }
+    if (overallRating === 0) {
+      setErrorMsg('Жалпы бааны тандаңыз — жылдыздардын бирин басыңыз.');
       return;
     }
     if (!fullReview.trim() || fullReview.trim().length < 20) {
@@ -259,7 +263,7 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
                 </button>
               ))}
               <span className="ml-2 text-xs font-semibold text-indigo-900">
-                {overallRating} / 5 — {getRatingDesc(overallRating)}
+                {overallRating > 0 ? `${overallRating} / 5 — ${getRatingDesc(overallRating)}` : 'Жылдызды тандаңыз'}
               </span>
             </div>
           </div>
