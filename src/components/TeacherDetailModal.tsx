@@ -80,8 +80,8 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
     return true;
   });
 
-  const renderStars = (rating: number, size = 'w-4 h-4') => {
-    const tone = ratingTone(rating);
+  const renderStars = (rating: number, size = 'w-4 h-4', neutral = false) => {
+    const filledClass = neutral ? 'fill-amber-400 text-amber-400' : RATING_STAR_CLASS[ratingTone(rating)];
     return (
       <div className="flex items-center gap-0.5">
         {[1, 2, 3, 4, 5].map((star) => {
@@ -89,7 +89,7 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
           return (
             <Star
               key={star}
-              className={`${size} ${filled ? RATING_STAR_CLASS[tone] : 'text-slate-200 fill-slate-100'}`}
+              className={`${size} ${filled ? filledClass : 'text-slate-200 fill-slate-100'}`}
             />
           );
         })}
@@ -241,7 +241,7 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
                   <span className="text-lg font-bold text-slate-900">
                     {teacher.teacherRatingAvg.toFixed(1)} / 5
                   </span>
-                  {renderStars(teacher.teacherRatingAvg)}
+                  {renderStars(teacher.teacherRatingAvg, 'w-4 h-4', true)}
                 </div>
               </div>
 
@@ -251,7 +251,7 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
                   <span className="text-lg font-bold text-slate-900">
                     {teacher.practiceRatingAvg.toFixed(1)} / 5
                   </span>
-                  {renderStars(teacher.practiceRatingAvg)}
+                  {renderStars(teacher.practiceRatingAvg, 'w-4 h-4', true)}
                 </div>
               </div>
 
@@ -261,7 +261,7 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
                   <span className="text-lg font-bold text-slate-900">
                     {teacher.jobSupportRatingAvg.toFixed(1)} / 5
                   </span>
-                  {renderStars(teacher.jobSupportRatingAvg)}
+                  {renderStars(teacher.jobSupportRatingAvg, 'w-4 h-4', true)}
                 </div>
               </div>
 
@@ -271,7 +271,7 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
                   <span className="text-lg font-bold text-slate-900">
                     {teacher.valueRatingAvg.toFixed(1)} / 5
                   </span>
-                  {renderStars(teacher.valueRatingAvg)}
+                  {renderStars(teacher.valueRatingAvg, 'w-4 h-4', true)}
                 </div>
               </div>
 
