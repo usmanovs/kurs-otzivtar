@@ -187,6 +187,30 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
 
         {/* Modal Scrollable Body */}
         <div className="overflow-y-auto p-5 sm:p-7 space-y-6">
+          {/* Action to write review */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-5 bg-indigo-50 rounded-2xl border border-indigo-100">
+            <div>
+              <h4 className="text-sm font-bold text-indigo-950">
+                Бул мугалим менен окуган элеңизби?
+              </h4>
+              <p className="text-xs text-indigo-800/80 mt-0.5">
+                Сиздин чынчыл сын-пикириңиз башка студенттерди алдануудан сактайт.
+              </p>
+            </div>
+            <button
+              type="button"
+              id="detail-modal-add-review-btn"
+              onClick={() => {
+                onClose();
+                onOpenAddReview(teacher);
+              }}
+              className="inline-flex items-center gap-2 px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs sm:text-sm rounded-full transition-colors shadow-xs shrink-0 cursor-pointer"
+            >
+              <PlusCircle className="w-4 h-4" />
+              <span>{t.courseCard.addReview}</span>
+            </button>
+          </div>
+
           {teacher.bio && (
             <div className="text-sm text-slate-600 leading-relaxed bg-slate-50 p-4 rounded-xl border border-slate-200">
               {teacher.bio}
@@ -292,30 +316,6 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
                 </div>
               </div>
             </div>
-          </div>
-
-          {/* Action to write review */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-5 bg-indigo-50 rounded-2xl border border-indigo-100">
-            <div>
-              <h4 className="text-sm font-bold text-indigo-950">
-                Бул мугалим менен окуган элеңизби?
-              </h4>
-              <p className="text-xs text-indigo-800/80 mt-0.5">
-                Сиздин чынчыл сын-пикириңиз башка студенттерди алдануудан сактайт.
-              </p>
-            </div>
-            <button
-              type="button"
-              id="detail-modal-add-review-btn"
-              onClick={() => {
-                onClose();
-                onOpenAddReview(teacher);
-              }}
-              className="inline-flex items-center gap-2 px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs sm:text-sm rounded-full transition-colors shadow-xs shrink-0 cursor-pointer"
-            >
-              <PlusCircle className="w-4 h-4" />
-              <span>{t.courseCard.addReview}</span>
-            </button>
           </div>
 
           {/* Reviews Section Header & Filter Tabs */}
