@@ -519,7 +519,7 @@ export default function App() {
       {/* Main Content */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         {/* Hero Section */}
-        <section className="text-center py-8 sm:py-12 max-w-2xl mx-auto space-y-5">
+        <section className="text-center pt-8 sm:pt-12 pb-4 max-w-2xl mx-auto space-y-5">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium bg-white text-slate-700 border border-slate-200 shadow-2xs">
             <ShieldCheck className="w-3.5 h-3.5 text-indigo-600" />
             <span>{t.hero.badge}</span>

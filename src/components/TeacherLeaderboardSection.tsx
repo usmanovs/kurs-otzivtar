@@ -102,7 +102,7 @@ export const TeacherLeaderboardSection: React.FC<TeacherLeaderboardSectionProps>
   if (topRated.length === 0 && flagged.length === 0) return null;
 
   return (
-    <section id="leaderboard-section" className="my-10 scroll-mt-20">
+    <section id="leaderboard-section" className="mb-10 scroll-mt-20">
       <div className="flex flex-col items-center text-center gap-2 mb-5">
         <div className="p-2.5 rounded-xl bg-indigo-50 text-indigo-600 shrink-0">
           <Award className="w-5 h-5" />
