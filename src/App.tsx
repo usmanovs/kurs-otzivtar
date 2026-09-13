@@ -642,6 +642,13 @@ export default function App() {
           </div>
         </section>
 
+        {/* Best & lowest rated teachers, based on real review averages */}
+        <TeacherLeaderboardSection
+          teachers={teachers}
+          currentLang={currentLang}
+          onViewTeacher={(teacher) => navigate(`/teacher/${teacher.id}`)}
+        />
+
         {/* Teachers & Mentors Directory */}
         <TeachersSection
           teachers={filteredTeachers}
@@ -665,13 +672,6 @@ export default function App() {
             setReviewPreselectedTeacher(teacher);
             setIsAddReviewOpen(true);
           }}
-        />
-
-        {/* Best & lowest rated teachers, based on real review averages */}
-        <TeacherLeaderboardSection
-          teachers={teachers}
-          currentLang={currentLang}
-          onViewTeacher={(teacher) => navigate(`/teacher/${teacher.id}`)}
         />
 
         {/* Educational Safety Banner */}

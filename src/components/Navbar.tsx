@@ -16,8 +16,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   const t = TRANSLATIONS[currentLang];
 
   const navLinks = [
-    { id: 'teachers-section', label: t.navTeachers },
     { id: 'leaderboard-section', label: t.navLeaderboard },
+    { id: 'teachers-section', label: t.navTeachers },
     { id: 'featured-videos-section', label: t.navVideos },
     { id: 'report-scam-section', label: t.navReportScam },
   ];
