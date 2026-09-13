@@ -58,7 +58,7 @@ const LeaderboardRow: React.FC<{
       <span className={`absolute inset-y-0 left-0 w-1 ${RATING_BADGE_CLASS[tone]}`} />
       <span className="text-xs font-bold text-slate-300 w-4 shrink-0 tabular-nums">{rank}</span>
       <RowAvatar teacher={teacher} />
-      <div className="min-w-0 flex-1">
+      <div className="min-w-0 flex-1 max-w-[170px]">
         <div className="text-sm font-semibold text-slate-900 truncate">{teacher.name}</div>
         {teacher.category && (
           <div className="text-2xs text-gray-400 truncate">{t.categories[teacher.category]}</div>
@@ -144,7 +144,7 @@ export const TeacherLeaderboardSection: React.FC<TeacherLeaderboardSectionProps>
             <div className="flex items-center gap-3 pl-4 pr-5 py-1.5 border-b border-slate-100 text-2xs font-semibold text-slate-400">
               <span className="w-4 shrink-0" />
               <span className="w-9 shrink-0" />
-              <span className="flex-1" />
+              <span className="flex-1 max-w-[170px]" />
               <span className="w-16 shrink-0" />
               <span className="w-11 shrink-0 text-right capitalize whitespace-nowrap">{t.leaderboard.reviewsSuffix}</span>
             </div>
@@ -173,7 +173,7 @@ export const TeacherLeaderboardSection: React.FC<TeacherLeaderboardSectionProps>
             <div className="flex items-center gap-3 pl-4 pr-5 py-1.5 border-b border-slate-100 text-2xs font-semibold text-slate-400">
               <span className="w-4 shrink-0" />
               <span className="w-9 shrink-0" />
-              <span className="flex-1" />
+              <span className="flex-1 max-w-[170px]" />
               <span className="w-16 shrink-0" />
               <span className="w-11 shrink-0 text-right capitalize whitespace-nowrap">{t.leaderboard.reviewsSuffix}</span>
             </div>
