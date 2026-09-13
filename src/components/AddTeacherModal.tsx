@@ -175,20 +175,6 @@ export const AddTeacherModal: React.FC<AddTeacherModalProps> = ({
 
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1">
-              {t.addTeacherModal.academy}
-            </label>
-            <input
-              type="text"
-              id="new-teacher-academy-input"
-              value={academyName}
-              onChange={(e) => setAcademyName(e.target.value)}
-              placeholder="Мис: Geeks IT Academy"
-              className="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
               {t.addTeacherModal.category}
             </label>
             <select
