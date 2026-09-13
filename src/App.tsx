@@ -612,9 +612,16 @@ export default function App() {
                 )}
               </div>
               <span className="text-xs text-slate-500 font-medium group-hover:text-indigo-600 transition-colors">
-                {totalReviewsCount > 0
-                  ? `${totalReviewsCount} ${t.stats.reviewsCount}`
-                  : t.hero.socialProofLabel}
+                {totalReviewsCount > 0 ? (
+                  <>
+                    <span className="text-sm font-bold text-slate-800 group-hover:text-indigo-600">
+                      {totalReviewsCount}
+                    </span>{' '}
+                    {t.stats.reviewsCount}
+                  </>
+                ) : (
+                  t.hero.socialProofLabel
+                )}
               </span>
             </button>
           )}
