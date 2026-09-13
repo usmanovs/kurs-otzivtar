@@ -13,6 +13,8 @@ interface TeacherLeaderboardSectionProps {
 const MAX_ROWS = 5;
 const TOP_THRESHOLD = 4.5;
 const FLAGGED_THRESHOLD = 2.5;
+// Temporarily hidden — flip back to true to bring the top-rated panel back.
+const SHOW_TOP_RATED = false;
 // Always surfaced in the flagged panel regardless of where he'd naturally
 // rank, since the list otherwise reshuffles as more low-rated teachers
 // are added.
@@ -88,10 +90,12 @@ export const TeacherLeaderboardSection: React.FC<TeacherLeaderboardSectionProps>
 
   const topRated = useMemo(
     () =>
-      teachers
-        .filter((tch) => tch.reviewCount > 0 && tch.averageRating >= TOP_THRESHOLD)
-        .sort((a, b) => b.averageRating - a.averageRating || b.reviewCount - a.reviewCount)
-        .slice(0, MAX_ROWS),
+      SHOW_TOP_RATED
+        ? teachers
+            .filter((tch) => tch.reviewCount > 0 && tch.averageRating >= TOP_THRESHOLD)
+            .sort((a, b) => b.averageRating - a.averageRating || b.reviewCount - a.reviewCount)
+            .slice(0, MAX_ROWS)
+        : [],
     [teachers]
   );
 
@@ -123,7 +127,7 @@ export const TeacherLeaderboardSection: React.FC<TeacherLeaderboardSectionProps>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <div className={`grid grid-cols-1 gap-5 ${SHOW_TOP_RATED ? 'md:grid-cols-2' : 'max-w-xl mx-auto'}`}>
         {topRated.length > 0 && (
           <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
             <div className="flex items-center gap-2.5 px-5 py-4 border-b border-slate-100 bg-emerald-50/40">
