@@ -64,18 +64,23 @@ const LeaderboardRow: React.FC<{
           <div className="text-2xs text-gray-400 truncate">{t.categories[teacher.category]}</div>
         )}
       </div>
-      <div className="flex flex-col items-end gap-0.5 shrink-0">
-        <div className="flex items-center gap-0.5">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <Star
-              key={i}
-              className={`w-3.5 h-3.5 ${i < filled ? RATING_STAR_CLASS[tone] : 'text-slate-200'}`}
-            />
-          ))}
+      <div className="flex items-center gap-3 shrink-0">
+        <div className="flex flex-col items-end gap-0.5">
+          <div className="flex items-center gap-0.5">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Star
+                key={i}
+                className={`w-3.5 h-3.5 ${i < filled ? RATING_STAR_CLASS[tone] : 'text-slate-200'}`}
+              />
+            ))}
+          </div>
+          <span className={`text-2xs font-bold ${RATING_TEXT_CLASS[tone]}`}>
+            {teacher.averageRating.toFixed(1)}
+          </span>
         </div>
-        <span className={`text-2xs font-bold ${RATING_TEXT_CLASS[tone]}`}>
-          {teacher.averageRating.toFixed(1)} &middot; {teacher.reviewCount} {t.leaderboard.reviewsSuffix}
-        </span>
+        <div className="text-2xs text-slate-400 text-right w-10 shrink-0 leading-tight">
+          {teacher.reviewCount} {t.leaderboard.reviewsSuffix}
+        </div>
       </div>
     </button>
   );
