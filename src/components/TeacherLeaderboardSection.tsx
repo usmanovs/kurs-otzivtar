@@ -13,6 +13,10 @@ interface TeacherLeaderboardSectionProps {
 const MAX_ROWS = 5;
 const TOP_THRESHOLD = 4.5;
 const FLAGGED_THRESHOLD = 2.5;
+// Always surfaced in the flagged panel regardless of where he'd naturally
+// rank, since the list otherwise reshuffles as more low-rated teachers
+// are added.
+const PINNED_FLAGGED_NAME = 'Самат Гыяз уулу';
 
 const RowAvatar: React.FC<{ teacher: Teacher }> = ({ teacher }) => {
   if (teacher.photoUrl) {
@@ -90,14 +94,19 @@ export const TeacherLeaderboardSection: React.FC<TeacherLeaderboardSectionProps>
     [teachers]
   );
 
-  const flagged = useMemo(
-    () =>
-      teachers
-        .filter((tch) => tch.reviewCount > 0 && tch.averageRating <= FLAGGED_THRESHOLD)
-        .sort((a, b) => a.averageRating - b.averageRating || b.reviewCount - a.reviewCount)
-        .slice(0, MAX_ROWS),
-    [teachers]
-  );
+  const flagged = useMemo(() => {
+    const sortFlagged = (a: Teacher, b: Teacher) =>
+      a.averageRating - b.averageRating || b.reviewCount - a.reviewCount;
+
+    const pinned = teachers.find((tch) => tch.name === PINNED_FLAGGED_NAME && tch.reviewCount > 0);
+
+    const rest = teachers
+      .filter((tch) => tch.reviewCount > 0 && tch.averageRating <= FLAGGED_THRESHOLD && tch.name !== PINNED_FLAGGED_NAME)
+      .sort(sortFlagged)
+      .slice(0, pinned ? MAX_ROWS - 1 : MAX_ROWS);
+
+    return pinned ? [...rest, pinned].sort(sortFlagged) : rest;
+  }, [teachers]);
 
   if (topRated.length === 0 && flagged.length === 0) return null;
 
