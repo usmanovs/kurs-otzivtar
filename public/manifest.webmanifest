@@ -1,13 +1,16 @@
 {
+  "id": "/",
   "name": "Kursotzyv.org - Кыргызстандагы онлайн курстардын сын-пикирлери",
   "short_name": "Kursotzyv",
   "description": "Кыргызстандагы онлайн жана IT курстардын ачык жана чынчыл сын-пикирлери, студенттердин пикирлери жана сапат рейтинги.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
+  "orientation": "any",
   "background_color": "#f8fafc",
   "theme_color": "#4f46e5",
   "lang": "ky",
+  "categories": ["education", "lifestyle"],
   "icons": [
     {
       "src": "/favicon-32x32.png",
@@ -31,6 +34,22 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshots/desktop.png",
+      "sizes": "2560x1600",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Мугалимдер жана курстар боюнча сын-пикирлер"
+    },
+    {
+      "src": "/screenshots/mobile.png",
+      "sizes": "780x1688",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Мугалимдер жана курстар боюнча сын-пикирлер"
     }
   ]
 }
