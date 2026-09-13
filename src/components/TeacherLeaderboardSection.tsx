@@ -15,10 +15,10 @@ const TOP_THRESHOLD = 4.5;
 const FLAGGED_THRESHOLD = 2.5;
 // Temporarily hidden — flip back to true to bring the top-rated panel back.
 const SHOW_TOP_RATED = false;
-// Always surfaced in the flagged panel regardless of where he'd naturally
+// Always surfaced in the flagged panel regardless of where they'd naturally
 // rank, since the list otherwise reshuffles as more low-rated teachers
 // are added.
-const PINNED_FLAGGED_NAME = 'Самат Гыяз уулу';
+const PINNED_FLAGGED_NAMES = ['Самат Гыяз уулу', 'Бактыгүл Мырзабек кызы'];
 
 const RowAvatar: React.FC<{ teacher: Teacher }> = ({ teacher }) => {
   if (teacher.photoUrl) {
@@ -111,14 +111,15 @@ export const TeacherLeaderboardSection: React.FC<TeacherLeaderboardSectionProps>
     const sortFlagged = (a: Teacher, b: Teacher) =>
       a.averageRating - b.averageRating || b.reviewCount - a.reviewCount;
 
-    const pinned = teachers.find((tch) => tch.name === PINNED_FLAGGED_NAME && tch.reviewCount > 0);
+    const pinned = teachers.filter((tch) => PINNED_FLAGGED_NAMES.includes(tch.name) && tch.reviewCount > 0);
+    const pinnedNames = new Set(pinned.map((tch) => tch.name));
 
     const rest = teachers
-      .filter((tch) => tch.reviewCount > 0 && tch.averageRating <= FLAGGED_THRESHOLD && tch.name !== PINNED_FLAGGED_NAME)
+      .filter((tch) => tch.reviewCount > 0 && tch.averageRating <= FLAGGED_THRESHOLD && !pinnedNames.has(tch.name))
       .sort(sortFlagged)
-      .slice(0, pinned ? MAX_ROWS - 1 : MAX_ROWS);
+      .slice(0, Math.max(0, MAX_ROWS - pinned.length));
 
-    return pinned ? [...rest, pinned].sort(sortFlagged) : rest;
+    return [...rest, ...pinned].sort(sortFlagged);
   }, [teachers]);
 
   if (topRated.length === 0 && flagged.length === 0) return null;
