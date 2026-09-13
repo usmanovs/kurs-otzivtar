@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { Teacher } from '../types';
 import { SupportedLang, TRANSLATIONS } from '../translations';
-import { ratingTone, RATING_STAR_CLASS, RATING_TEXT_CLASS, RATING_BADGE_CLASS } from '../lib/ratingTone';
+import { ratingTone, RATING_STAR_CLASS, RATING_BADGE_CLASS } from '../lib/ratingTone';
 import { Award, TrendingUp, TrendingDown, Star } from 'lucide-react';
 
 interface TeacherLeaderboardSectionProps {
@@ -73,8 +73,8 @@ const LeaderboardRow: React.FC<{
             />
           ))}
         </div>
-        <span className={`text-2xs font-bold ${RATING_TEXT_CLASS[tone]}`}>
-          {teacher.averageRating.toFixed(1)} &middot; {teacher.reviewCount} {t.leaderboard.reviewsSuffix}
+        <span className="text-2xs text-slate-400">
+          {teacher.reviewCount} {t.leaderboard.reviewsSuffix}
         </span>
       </div>
     </button>
