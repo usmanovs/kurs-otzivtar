@@ -19,6 +19,35 @@ interface TeachersSectionProps {
   onOpenAddReview: (teacher: Teacher) => void;
 }
 
+const ToggleSwitch: React.FC<{ checked: boolean; onChange: () => void; label: string; id: string }> = ({
+  checked,
+  onChange,
+  label,
+  id,
+}) => (
+  <button
+    type="button"
+    id={id}
+    role="switch"
+    aria-checked={checked}
+    onClick={onChange}
+    className="inline-flex items-center gap-2 cursor-pointer"
+  >
+    <span
+      className={`inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${
+        checked ? 'bg-indigo-600' : 'bg-slate-300'
+      }`}
+    >
+      <span
+        className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${
+          checked ? 'translate-x-[18px]' : 'translate-x-[2px]'
+        }`}
+      />
+    </span>
+    <span className="text-xs sm:text-sm font-medium text-slate-700 whitespace-nowrap">{label}</span>
+  </button>
+);
+
 const TeacherAvatar: React.FC<{ teacher: Teacher }> = ({ teacher }) => {
   const [imgError, setImgError] = useState(false);
 
@@ -61,24 +90,34 @@ export const TeachersSection: React.FC<TeachersSectionProps> = ({
 
   const [selectedLetter, setSelectedLetter] = useState<string>('all');
   const [selectedGender, setSelectedGender] = useState<TeacherGender | 'all'>('all');
+  const [onlyWithPhoto, setOnlyWithPhoto] = useState(true);
+  const [onlyWithReviews, setOnlyWithReviews] = useState(true);
+
+  const baseTeachers = useMemo(() => {
+    return teachers.filter((tch) => {
+      if (onlyWithPhoto && !tch.photoUrl) return false;
+      if (onlyWithReviews && tch.reviewCount === 0) return false;
+      return true;
+    });
+  }, [teachers, onlyWithPhoto, onlyWithReviews]);
 
   const availableLetters = useMemo(() => {
     const letters = new Set<string>();
-    teachers.forEach((tch) => {
+    baseTeachers.forEach((tch) => {
       const first = tch.name.trim().charAt(0).toUpperCase();
       if (first) letters.add(first);
     });
     return Array.from(letters).sort((a, b) => a.localeCompare(b, 'ru'));
-  }, [teachers]);
+  }, [baseTeachers]);
 
   const displayedTeachers = useMemo(() => {
-    return teachers.filter((tch) => {
+    return baseTeachers.filter((tch) => {
       if (selectedLetter !== 'all' && tch.name.trim().charAt(0).toUpperCase() !== selectedLetter) return false;
       if (selectedGender !== 'all' && tch.gender !== selectedGender) return false;
       if (selectedCategory !== 'all' && tch.category !== selectedCategory) return false;
       return true;
     });
-  }, [teachers, selectedLetter, selectedGender, selectedCategory]);
+  }, [baseTeachers, selectedLetter, selectedGender, selectedCategory]);
 
   const isFiltered =
     searchQuery.trim().length > 0 ||
@@ -148,6 +187,21 @@ export const TeachersSection: React.FC<TeachersSectionProps> = ({
             <span>{t.teachersSection.addBtn}</span>
           </button>
         </div>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mb-4">
+        <ToggleSwitch
+          id="toggle-only-with-photo"
+          checked={onlyWithPhoto}
+          onChange={() => setOnlyWithPhoto((v) => !v)}
+          label={t.teachersSection.onlyWithPhoto}
+        />
+        <ToggleSwitch
+          id="toggle-only-with-reviews"
+          checked={onlyWithReviews}
+          onChange={() => setOnlyWithReviews((v) => !v)}
+          label={t.teachersSection.onlyWithReviews}
+        />
       </div>
 
       {availableLetters.length > 0 && (

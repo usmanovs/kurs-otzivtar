@@ -207,7 +207,9 @@ export const TRANSLATIONS = {
       filteredCount: 'мугалим табылды',
       clearSearch: 'Издөөнү тазалоо',
       allLetters: 'Бардыгы',
-      allGenders: 'Жынысы боюнча'
+      allGenders: 'Жынысы боюнча',
+      onlyWithPhoto: 'Сүрөтү барлар гана',
+      onlyWithReviews: 'Сын-пикири барлар гана'
     },
     addTeacherModal: {
       title: 'Жаңы мугалим же ментор кошуу',
@@ -447,7 +449,9 @@ export const TRANSLATIONS = {
       filteredCount: 'преподавателей найдено',
       clearSearch: 'Очистить поиск',
       allLetters: 'Все',
-      allGenders: 'По полу'
+      allGenders: 'По полу',
+      onlyWithPhoto: 'Только с фото',
+      onlyWithReviews: 'Только с отзывами'
     },
     addTeacherModal: {
       title: 'Добавить преподавателя или ментора',
