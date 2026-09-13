@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { Teacher } from '../types';
 import { SupportedLang, TRANSLATIONS } from '../translations';
-import { ratingTone, RATING_STAR_CLASS, RATING_TEXT_CLASS } from '../lib/ratingTone';
+import { ratingTone, RATING_STAR_CLASS, RATING_TEXT_CLASS, RATING_BADGE_CLASS } from '../lib/ratingTone';
 import { Award, TrendingUp, TrendingDown, Star } from 'lucide-react';
 
 interface TeacherLeaderboardSectionProps {
@@ -51,14 +51,15 @@ const LeaderboardRow: React.FC<{
     <button
       type="button"
       onClick={() => onViewTeacher(teacher)}
-      className="w-full flex items-center gap-3 px-5 py-3 hover:bg-slate-50 transition-colors text-left border-b border-slate-100 last:border-b-0 cursor-pointer"
+      className="relative w-full flex items-center gap-3 pl-4 pr-5 py-3 hover:bg-slate-50 transition-colors text-left border-b border-slate-100 last:border-b-0 cursor-pointer"
     >
+      <span className={`absolute inset-y-0 left-0 w-1 ${RATING_BADGE_CLASS[tone]}`} />
       <span className="text-xs font-bold text-slate-300 w-4 shrink-0 tabular-nums">{rank}</span>
       <RowAvatar teacher={teacher} />
       <div className="min-w-0 flex-1">
         <div className="text-sm font-semibold text-slate-900 truncate">{teacher.name}</div>
         {teacher.category && (
-          <div className="text-2xs text-slate-400 truncate">{t.categories[teacher.category]}</div>
+          <div className="text-2xs text-gray-400 truncate">{t.categories[teacher.category]}</div>
         )}
       </div>
       <div className="flex flex-col items-end gap-0.5 shrink-0">
