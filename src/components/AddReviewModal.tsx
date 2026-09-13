@@ -44,9 +44,9 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
   const [jobSupportRating, setJobSupportRating] = useState<number>(3);
   const [valueRating, setValueRating] = useState<number>(4);
   const [wouldRecommend, setWouldRecommend] = useState<boolean>(true);
-  const [pricePaidKGS, setPricePaidKGS] = useState<string>('45000');
-  const [durationMonths, setDurationMonths] = useState<string>('6');
-  const [cohortYear, setCohortYear] = useState<string>('2024');
+  const [pricePaidKGS, setPricePaidKGS] = useState<string>('');
+  const [durationMonths, setDurationMonths] = useState<string>('');
+  const [cohortYear, setCohortYear] = useState<string>('');
   const [title, setTitle] = useState('');
   const [fullReview, setFullReview] = useState('');
   const [prosText, setProsText] = useState('');
@@ -160,7 +160,7 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
       wouldRecommend,
       pricePaidKGS: pricePaidKGS ? parseInt(pricePaidKGS, 10) : undefined,
       durationMonths: durationMonths ? parseInt(durationMonths, 10) : undefined,
-      cohortYear,
+      cohortYear: cohortYear.trim() || undefined,
       title: title.trim() || (wouldRecommend ? 'Жакшы тажрыйба болду' : 'Көңүл калтырган тажрыйба'),
       fullReview: fullReview.trim(),
       pros,
