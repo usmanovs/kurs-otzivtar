@@ -65,7 +65,7 @@ const LeaderboardRow: React.FC<{
         )}
       </div>
       <div className="flex items-center gap-3 shrink-0">
-        <div className="flex flex-col items-end gap-0.5">
+        <div className="flex flex-col items-center gap-0.5">
           <div className="flex items-center gap-0.5">
             {Array.from({ length: 5 }).map((_, i) => (
               <Star
