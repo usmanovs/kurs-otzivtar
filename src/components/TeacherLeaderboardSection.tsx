@@ -53,35 +53,38 @@ const LeaderboardRow: React.FC<{
     <button
       type="button"
       onClick={() => onViewTeacher(teacher)}
-      className="relative w-full flex items-center gap-3 pl-4 pr-5 py-3 hover:bg-slate-50 transition-colors text-left border-b border-slate-100 last:border-b-0 cursor-pointer"
+      className="relative w-full flex items-center pl-4 pr-5 py-3 hover:bg-slate-50 transition-colors text-left border-b border-slate-100 last:border-b-0 cursor-pointer"
     >
       <span className={`absolute inset-y-0 left-0 w-1 ${RATING_BADGE_CLASS[tone]}`} />
-      <span className="text-xs font-bold text-slate-300 w-4 shrink-0 tabular-nums">{rank}</span>
-      <RowAvatar teacher={teacher} />
+      <span className="text-xs font-bold text-slate-300 w-4 shrink-0 tabular-nums mr-3">{rank}</span>
+      <div className="shrink-0 mr-3">
+        <RowAvatar teacher={teacher} />
+      </div>
       <div className="min-w-0 flex-1 max-w-[220px]">
         <div className="text-sm font-semibold text-slate-900 truncate">{teacher.name}</div>
         {teacher.category && (
           <div className="text-2xs text-gray-400 truncate">{t.categories[teacher.category]}</div>
         )}
       </div>
-      <div className="flex items-center gap-3 shrink-0">
-        <div className="flex flex-col items-center gap-0.5">
-          <div className="flex items-center gap-0.5">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <Star
-                key={i}
-                className={`w-3.5 h-3.5 ${i < filled ? RATING_STAR_CLASS[tone] : 'text-slate-200'}`}
-              />
-            ))}
-          </div>
-          <span className={`text-2xs font-bold ${RATING_TEXT_CLASS[tone]}`}>
-            {teacher.averageRating.toFixed(1)}
-          </span>
+      <span className="flex-1" />
+      <div className="flex flex-col items-center gap-0.5 shrink-0">
+        <div className="flex items-center gap-0.5">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Star
+              key={i}
+              className={`w-3.5 h-3.5 ${i < filled ? RATING_STAR_CLASS[tone] : 'text-slate-200'}`}
+            />
+          ))}
         </div>
-        <div className="text-xs text-slate-400 text-right w-6 shrink-0 tabular-nums">
-          {teacher.reviewCount}
-        </div>
+        <span className={`text-2xs font-bold ${RATING_TEXT_CLASS[tone]}`}>
+          {teacher.averageRating.toFixed(1)}
+        </span>
       </div>
+      <span className="flex-1" />
+      <div className="text-xs text-slate-400 text-right w-6 shrink-0 tabular-nums">
+        {teacher.reviewCount}
+      </div>
+      <span className="flex-1" />
     </button>
   );
 };
@@ -141,12 +144,15 @@ export const TeacherLeaderboardSection: React.FC<TeacherLeaderboardSectionProps>
               </div>
               <h3 className="text-sm font-bold text-slate-900">{t.leaderboard.topTitle}</h3>
             </div>
-            <div className="flex items-center gap-3 pl-4 pr-5 py-1.5 border-b border-slate-100 text-2xs font-semibold text-slate-400">
-              <span className="w-4 shrink-0" />
-              <span className="w-9 shrink-0" />
+            <div className="flex items-center pl-4 pr-5 py-1.5 border-b border-slate-100 text-2xs font-semibold text-slate-400">
+              <span className="w-4 shrink-0 mr-3" />
+              <span className="w-9 shrink-0 mr-3" />
               <span className="flex-1 max-w-[220px]" />
-              <span className="w-16 shrink-0" />
-              <span className="w-11 shrink-0 text-right capitalize whitespace-nowrap">{t.leaderboard.reviewsSuffix}</span>
+              <span className="flex-1" />
+              <span className="w-[78px] shrink-0" />
+              <span className="flex-1" />
+              <span className="shrink-0 whitespace-nowrap capitalize">{t.leaderboard.reviewsSuffix}</span>
+              <span className="flex-1" />
             </div>
             <div>
               {topRated.map((tch, i) => (
@@ -170,12 +176,15 @@ export const TeacherLeaderboardSection: React.FC<TeacherLeaderboardSectionProps>
               </div>
               <h3 className="text-sm font-bold text-slate-900">{t.leaderboard.flaggedTitle}</h3>
             </div>
-            <div className="flex items-center gap-3 pl-4 pr-5 py-1.5 border-b border-slate-100 text-2xs font-semibold text-slate-400">
-              <span className="w-4 shrink-0" />
-              <span className="w-9 shrink-0" />
+            <div className="flex items-center pl-4 pr-5 py-1.5 border-b border-slate-100 text-2xs font-semibold text-slate-400">
+              <span className="w-4 shrink-0 mr-3" />
+              <span className="w-9 shrink-0 mr-3" />
               <span className="flex-1 max-w-[220px]" />
-              <span className="w-16 shrink-0" />
-              <span className="w-11 shrink-0 text-right capitalize whitespace-nowrap">{t.leaderboard.reviewsSuffix}</span>
+              <span className="flex-1" />
+              <span className="w-[78px] shrink-0" />
+              <span className="flex-1" />
+              <span className="shrink-0 whitespace-nowrap capitalize">{t.leaderboard.reviewsSuffix}</span>
+              <span className="flex-1" />
             </div>
             <div>
               {flagged.map((tch, i) => (
