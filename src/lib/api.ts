@@ -247,6 +247,17 @@ export async function submitReview(
     });
   }
 
+  // Best-effort spam/abuse signal — logs the submitter's IP server-side, where the
+  // real address can actually be read from the request. Never blocks the review
+  // itself and never readable back via the anon key (see api/log-review-ip.ts).
+  fetch('/api/log-review-ip', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ reviewId }),
+  }).catch(() => {
+    // Ignore — this is a secondary signal, not something the reviewer should ever see fail.
+  });
+
   return { teacherId, review: mapReviewRow(data), isNewTeacher, newTeacher };
 }
 
