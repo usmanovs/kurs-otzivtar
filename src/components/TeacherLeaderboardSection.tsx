@@ -60,7 +60,7 @@ const LeaderboardRow: React.FC<{
       <div className="shrink-0 mr-3">
         <RowAvatar teacher={teacher} />
       </div>
-      <div className="min-w-0 flex-1 max-w-[220px]">
+      <div className="min-w-0 max-w-[220px] flex-[1000_1_0%]">
         <div className="text-sm font-semibold text-slate-900 truncate">{teacher.name}</div>
         {teacher.category && (
           <div className="text-2xs text-gray-400 truncate">{t.categories[teacher.category]}</div>
@@ -147,7 +147,7 @@ export const TeacherLeaderboardSection: React.FC<TeacherLeaderboardSectionProps>
             <div className="flex items-center pl-4 pr-5 py-1.5 border-b border-slate-100 text-2xs font-semibold text-slate-400">
               <span className="w-4 shrink-0 mr-3" />
               <span className="w-9 shrink-0 mr-3" />
-              <span className="flex-1 max-w-[220px]" />
+              <span className="max-w-[220px] flex-[1000_1_0%]" />
               <span className="flex-1" />
               <span className="w-[78px] shrink-0" />
               <span className="flex-1" />
@@ -179,7 +179,7 @@ export const TeacherLeaderboardSection: React.FC<TeacherLeaderboardSectionProps>
             <div className="flex items-center pl-4 pr-5 py-1.5 border-b border-slate-100 text-2xs font-semibold text-slate-400">
               <span className="w-4 shrink-0 mr-3" />
               <span className="w-9 shrink-0 mr-3" />
-              <span className="flex-1 max-w-[220px]" />
+              <span className="max-w-[220px] flex-[1000_1_0%]" />
               <span className="flex-1" />
               <span className="w-[78px] shrink-0" />
               <span className="flex-1" />
