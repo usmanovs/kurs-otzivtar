@@ -34,6 +34,8 @@ export interface Review {
   authorStatus: StudentStatus;
   isVerified: boolean;
   date: string;
+  createdAt?: string;
+  country?: string;
   overallRating: number; // 1 to 5
   teacherRating: number; // 1 to 5
   practiceRating: number; // 1 to 5

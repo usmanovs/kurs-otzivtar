@@ -3,6 +3,7 @@ import { Teacher } from '../types';
 import { SupportedLang, TRANSLATIONS } from '../translations';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { ratingTone, RATING_STAR_CLASS } from '../lib/ratingTone';
+import { fetchReviewIpLog } from '../lib/api';
 import {
   X,
   Star,
@@ -17,21 +18,40 @@ import {
   Instagram,
   Youtube,
   Share2,
+  ShieldAlert,
 } from 'lucide-react';
 
 interface TeacherDetailModalProps {
   teacher: Teacher | null;
   currentLang: SupportedLang;
   highlightReviewId?: string;
+  isAdmin: boolean;
   onClose: () => void;
   onOpenAddReview: (teacher: Teacher) => void;
   onVoteReview: (teacherId: string, reviewId: string, type: 'helpful' | 'unhelpful') => void;
+}
+
+function formatDateTime(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function countryFlag(countryCode: string): string {
+  if (!/^[A-Z]{2}$/i.test(countryCode)) return '';
+  const codePoints = countryCode
+    .toUpperCase()
+    .split('')
+    .map((c) => 127397 + c.charCodeAt(0));
+  return String.fromCodePoint(...codePoints);
 }
 
 export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
   teacher,
   currentLang,
   highlightReviewId,
+  isAdmin,
   onClose,
   onOpenAddReview,
   onVoteReview,
@@ -39,6 +59,7 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
   useEscapeKey(onClose);
   const [reviewTab, setReviewTab] = useState<'all' | 'positive' | 'negative' | 'verified'>('all');
   const [copied, setCopied] = useState(false);
+  const [ipLogMap, setIpLogMap] = useState<Record<string, { ipAddress: string; createdAt: string }>>({});
 
   // Scroll to and briefly highlight a specific review, e.g. when arriving here
   // from the recent-review popup on the homepage.
@@ -53,6 +74,23 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
     }, 2500);
     return () => clearTimeout(timeout);
   }, [teacher, highlightReviewId]);
+
+  // Admin-only: pull the precise submission IP/time for this teacher's reviews.
+  // RLS silently returns nothing for non-admin sessions, but we skip the call
+  // entirely for regular visitors anyway.
+  useEffect(() => {
+    if (!isAdmin || !teacher) {
+      setIpLogMap({});
+      return;
+    }
+    let cancelled = false;
+    fetchReviewIpLog(teacher.reviews.map((r) => r.id)).then((map) => {
+      if (!cancelled) setIpLogMap(map);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [isAdmin, teacher]);
 
   if (!teacher) return null;
 
@@ -438,8 +476,19 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
                             {review.pricePaidKGS && (
                               <span> • {review.pricePaidKGS.toLocaleString('ru-RU')} сом төлөгөн</span>
                             )}
-                            <span> • {review.date}</span>
+                            <span> • {review.createdAt ? formatDateTime(review.createdAt) : review.date}</span>
+                            {review.country && <span> {countryFlag(review.country)}</span>}
                           </div>
+                          {isAdmin && (
+                            <div className="mt-1 inline-flex items-center gap-1 text-2xs font-medium text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">
+                              <ShieldAlert className="w-3 h-3" />
+                              <span>
+                                {ipLogMap[review.id]
+                                  ? `${ipLogMap[review.id].ipAddress} · ${formatDateTime(ipLogMap[review.id].createdAt)}`
+                                  : 'IP белгисиз'}
+                              </span>
+                            </div>
+                          )}
                         </div>
                       </div>
 

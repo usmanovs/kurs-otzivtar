@@ -10,6 +10,8 @@ function mapReviewRow(row: any): Review {
     authorStatus: row.author_status,
     isVerified: row.is_verified,
     date: row.review_date,
+    createdAt: row.created_at ?? undefined,
+    country: row.country ?? undefined,
     overallRating: Number(row.overall_rating),
     teacherRating: Number(row.teacher_rating),
     practiceRating: Number(row.practice_rating),
@@ -261,6 +263,25 @@ export async function submitReview(
   });
 
   return { teacherId, review: mapReviewRow(data), isNewTeacher, newTeacher };
+}
+
+// Admin-only: precise submission IP/time per review, for spotting abuse
+// patterns. RLS on review_ip_log restricts SELECT to the admin owner, so
+// this silently returns nothing for anyone else.
+export async function fetchReviewIpLog(
+  reviewIds: string[]
+): Promise<Record<string, { ipAddress: string; createdAt: string }>> {
+  if (reviewIds.length === 0) return {};
+  const { data, error } = await supabase
+    .from('review_ip_log')
+    .select('review_id, ip_address, created_at')
+    .in('review_id', reviewIds);
+  if (error || !data) return {};
+  const map: Record<string, { ipAddress: string; createdAt: string }> = {};
+  for (const row of data) {
+    map[row.review_id] = { ipAddress: row.ip_address, createdAt: row.created_at };
+  }
+  return map;
 }
 
 export async function updateReviewVoteCounts(

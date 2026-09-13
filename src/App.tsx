@@ -761,6 +761,7 @@ export default function App() {
             teacher={selectedTeacherForDetail}
             currentLang={currentLang}
             highlightReviewId={highlightReviewId}
+            isAdmin={isAdmin}
             onClose={() => navigate('/')}
             onOpenAddReview={(teacher) => {
               setReviewPreselectedTeacher(teacher);
