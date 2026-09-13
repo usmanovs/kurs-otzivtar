@@ -78,8 +78,8 @@ const LeaderboardRow: React.FC<{
             {teacher.averageRating.toFixed(1)}
           </span>
         </div>
-        <div className="text-2xs text-slate-400 text-right w-10 shrink-0 leading-tight">
-          {teacher.reviewCount} {t.leaderboard.reviewsSuffix}
+        <div className="text-xs text-slate-400 text-right w-6 shrink-0 tabular-nums">
+          {teacher.reviewCount}
         </div>
       </div>
     </button>
@@ -141,6 +141,13 @@ export const TeacherLeaderboardSection: React.FC<TeacherLeaderboardSectionProps>
               </div>
               <h3 className="text-sm font-bold text-slate-900">{t.leaderboard.topTitle}</h3>
             </div>
+            <div className="flex items-center gap-3 pl-4 pr-5 py-1.5 border-b border-slate-100 text-2xs font-semibold text-slate-400">
+              <span className="w-4 shrink-0" />
+              <span className="w-9 shrink-0" />
+              <span className="flex-1" />
+              <span className="w-[78px] shrink-0" />
+              <span className="w-6 shrink-0 text-right capitalize">{t.leaderboard.reviewsSuffix}</span>
+            </div>
             <div>
               {topRated.map((tch, i) => (
                 <LeaderboardRow
@@ -162,6 +169,13 @@ export const TeacherLeaderboardSection: React.FC<TeacherLeaderboardSectionProps>
                 <TrendingDown className="w-4 h-4" />
               </div>
               <h3 className="text-sm font-bold text-slate-900">{t.leaderboard.flaggedTitle}</h3>
+            </div>
+            <div className="flex items-center gap-3 pl-4 pr-5 py-1.5 border-b border-slate-100 text-2xs font-semibold text-slate-400">
+              <span className="w-4 shrink-0" />
+              <span className="w-9 shrink-0" />
+              <span className="flex-1" />
+              <span className="w-[78px] shrink-0" />
+              <span className="w-6 shrink-0 text-right capitalize">{t.leaderboard.reviewsSuffix}</span>
             </div>
             <div>
               {flagged.map((tch, i) => (
