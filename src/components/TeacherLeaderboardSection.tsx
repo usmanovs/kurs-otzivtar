@@ -81,7 +81,7 @@ const LeaderboardRow: React.FC<{
         </span>
       </div>
       <span className="flex-1" />
-      <div className="text-xs text-slate-400 text-right w-6 shrink-0 tabular-nums">
+      <div className="text-xs text-slate-400 text-center w-6 shrink-0 tabular-nums">
         {teacher.reviewCount}
       </div>
       <span className="flex-1" />
@@ -151,7 +151,7 @@ export const TeacherLeaderboardSection: React.FC<TeacherLeaderboardSectionProps>
               <span className="flex-1" />
               <span className="w-[78px] shrink-0" />
               <span className="flex-1" />
-              <span className="shrink-0 whitespace-nowrap capitalize">{t.leaderboard.reviewsSuffix}</span>
+              <span className="w-6 shrink-0 whitespace-nowrap capitalize text-center overflow-visible">{t.leaderboard.reviewsSuffix}</span>
               <span className="flex-1" />
             </div>
             <div>
@@ -183,7 +183,7 @@ export const TeacherLeaderboardSection: React.FC<TeacherLeaderboardSectionProps>
               <span className="flex-1" />
               <span className="w-[78px] shrink-0" />
               <span className="flex-1" />
-              <span className="shrink-0 whitespace-nowrap capitalize">{t.leaderboard.reviewsSuffix}</span>
+              <span className="w-6 shrink-0 whitespace-nowrap capitalize text-center overflow-visible">{t.leaderboard.reviewsSuffix}</span>
               <span className="flex-1" />
             </div>
             <div>
