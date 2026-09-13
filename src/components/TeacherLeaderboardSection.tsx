@@ -103,8 +103,8 @@ export const TeacherLeaderboardSection: React.FC<TeacherLeaderboardSectionProps>
 
   return (
     <section id="leaderboard-section" className="my-10 scroll-mt-20">
-      <div className="flex items-start gap-3 mb-5">
-        <div className="p-2.5 rounded-xl bg-indigo-50 text-indigo-600 mt-0.5 shrink-0">
+      <div className="flex flex-col items-center text-center gap-2 mb-5">
+        <div className="p-2.5 rounded-xl bg-indigo-50 text-indigo-600 shrink-0">
           <Award className="w-5 h-5" />
         </div>
         <div>
