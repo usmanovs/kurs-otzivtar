@@ -45,6 +45,7 @@ export async function fetchMostRecentReview(): Promise<RecentReviewSummary | nul
   const { data, error } = await supabase
     .from('reviews')
     .select('id, teacher_id, author_name, is_anonymous, overall_rating, title, teachers(name, photo_url)')
+    .eq('is_hidden', false)
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle();
@@ -65,6 +66,7 @@ export async function fetchMostRecentReview(): Promise<RecentReviewSummary | nul
 
 function mapTeacherRow(row: any): Teacher {
   const reviews = (row.reviews ?? [])
+    .filter((r: any) => !r.is_hidden)
     .map(mapReviewRow)
     .sort((a: Review, b: Review) => b.date.localeCompare(a.date));
 

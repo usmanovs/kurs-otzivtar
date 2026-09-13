@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, lazy, Suspense } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import type { Session } from '@supabase/supabase-js';
 import { Course, CourseCategory, Review, Teacher, FeaturedVideo } from './types';
 import { calculateTeacherMetrics } from './data/teachers';
@@ -72,6 +72,10 @@ function applyVoteOverlay(teachers: Teacher[], votes: VoteMap): Teacher[] {
 export default function App() {
   const { teacherId: urlTeacherId, categorySlug: urlCategorySlug } = useParams<{ teacherId?: string; categorySlug?: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+  const highlightReviewId = location.hash.startsWith('#review-item-')
+    ? location.hash.slice(1)
+    : undefined;
 
   // Language state
   const [currentLang, setCurrentLang] = useState<SupportedLang>(() => {
@@ -501,7 +505,7 @@ export default function App() {
           onDismiss={() => setRecentReview(null)}
           onClick={() => {
             setRecentReview(null);
-            document.getElementById('teachers-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            navigate(`/teacher/${recentReview.teacherId}#review-item-${recentReview.reviewId}`);
           }}
         />
       )}
@@ -756,6 +760,7 @@ export default function App() {
           <TeacherDetailModal
             teacher={selectedTeacherForDetail}
             currentLang={currentLang}
+            highlightReviewId={highlightReviewId}
             onClose={() => navigate('/')}
             onOpenAddReview={(teacher) => {
               setReviewPreselectedTeacher(teacher);

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Teacher } from '../types';
 import { SupportedLang, TRANSLATIONS } from '../translations';
 import { useEscapeKey } from '../hooks/useEscapeKey';
@@ -22,6 +22,7 @@ import {
 interface TeacherDetailModalProps {
   teacher: Teacher | null;
   currentLang: SupportedLang;
+  highlightReviewId?: string;
   onClose: () => void;
   onOpenAddReview: (teacher: Teacher) => void;
   onVoteReview: (teacherId: string, reviewId: string, type: 'helpful' | 'unhelpful') => void;
@@ -30,6 +31,7 @@ interface TeacherDetailModalProps {
 export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
   teacher,
   currentLang,
+  highlightReviewId,
   onClose,
   onOpenAddReview,
   onVoteReview,
@@ -37,6 +39,20 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
   useEscapeKey(onClose);
   const [reviewTab, setReviewTab] = useState<'all' | 'positive' | 'negative' | 'verified'>('all');
   const [copied, setCopied] = useState(false);
+
+  // Scroll to and briefly highlight a specific review, e.g. when arriving here
+  // from the recent-review popup on the homepage.
+  useEffect(() => {
+    if (!teacher || !highlightReviewId) return;
+    const el = document.getElementById(highlightReviewId);
+    if (!el) return;
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    el.classList.add('ring-2', 'ring-indigo-400');
+    const timeout = setTimeout(() => {
+      el.classList.remove('ring-2', 'ring-indigo-400');
+    }, 2500);
+    return () => clearTimeout(timeout);
+  }, [teacher, highlightReviewId]);
 
   if (!teacher) return null;
 
