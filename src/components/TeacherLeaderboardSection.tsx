@@ -145,8 +145,8 @@ export const TeacherLeaderboardSection: React.FC<TeacherLeaderboardSectionProps>
               <span className="w-4 shrink-0" />
               <span className="w-9 shrink-0" />
               <span className="flex-1" />
-              <span className="w-[78px] shrink-0" />
-              <span className="w-6 shrink-0 text-right capitalize">{t.leaderboard.reviewsSuffix}</span>
+              <span className="w-16 shrink-0" />
+              <span className="w-11 shrink-0 text-right capitalize whitespace-nowrap">{t.leaderboard.reviewsSuffix}</span>
             </div>
             <div>
               {topRated.map((tch, i) => (
@@ -174,8 +174,8 @@ export const TeacherLeaderboardSection: React.FC<TeacherLeaderboardSectionProps>
               <span className="w-4 shrink-0" />
               <span className="w-9 shrink-0" />
               <span className="flex-1" />
-              <span className="w-[78px] shrink-0" />
-              <span className="w-6 shrink-0 text-right capitalize">{t.leaderboard.reviewsSuffix}</span>
+              <span className="w-16 shrink-0" />
+              <span className="w-11 shrink-0 text-right capitalize whitespace-nowrap">{t.leaderboard.reviewsSuffix}</span>
             </div>
             <div>
               {flagged.map((tch, i) => (
