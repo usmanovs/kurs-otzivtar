@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Teacher } from '../types';
+import { Review, Teacher } from '../types';
 import { SupportedLang, TRANSLATIONS } from '../translations';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { ratingTone, RATING_STAR_CLASS } from '../lib/ratingTone';
@@ -23,6 +23,7 @@ import {
   ShieldAlert,
   ShieldCheck,
   MessageSquareReply,
+  Info,
 } from 'lucide-react';
 
 interface TeacherDetailModalProps {
@@ -50,6 +51,51 @@ function countryFlag(countryCode: string): string {
     .map((c) => 127397 + c.charCodeAt(0));
   return String.fromCodePoint(...codePoints);
 }
+
+
+type TrustTier = 'proof' | 'self' | 'imported';
+
+function trustTier(review: Review): TrustTier {
+  if (review.proofVerified) return 'proof';
+  if (review.source === 'imported') return 'imported';
+  return 'self';
+}
+
+const TRUST_CLASS: Record<TrustTier, string> = {
+  proof: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  self: 'bg-slate-50 text-slate-600 border-slate-200',
+  imported: 'bg-amber-50 text-amber-700 border-amber-200',
+};
+
+const ReviewTrustBadge: React.FC<{ review: Review; currentLang: SupportedLang }> = ({
+  review,
+  currentLang,
+}) => {
+  const t = TRANSLATIONS[currentLang];
+  const tier = trustTier(review);
+  const label =
+    tier === 'proof'
+      ? t.reviewTrust.proofVerified
+      : tier === 'imported'
+        ? t.reviewTrust.imported
+        : t.reviewTrust.selfDeclared;
+  const hint =
+    tier === 'proof'
+      ? t.reviewTrust.proofVerifiedHint
+      : tier === 'imported'
+        ? t.reviewTrust.importedHint
+        : t.reviewTrust.selfDeclaredHint;
+
+  return (
+    <span
+      title={hint}
+      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] font-semibold ${TRUST_CLASS[tier]}`}
+    >
+      {tier === 'proof' ? <ShieldCheck className="w-3 h-3 shrink-0" /> : <Info className="w-3 h-3 shrink-0" />}
+      {label}
+    </span>
+  );
+};
 
 export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
   teacher,
@@ -151,10 +197,12 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
     ratingCounts[star] = (ratingCounts[star] || 0) + 1;
   });
 
+  const hasProofVerified = teacher.reviews.some((r) => r.proofVerified);
+
   const filteredReviews = teacher.reviews.filter((r) => {
     if (reviewTab === 'positive') return r.overallRating >= 4;
     if (reviewTab === 'negative') return r.overallRating <= 2;
-    if (reviewTab === 'verified') return r.isVerified;
+    if (reviewTab === 'verified') return r.proofVerified === true;
     return true;
   });
 
@@ -455,17 +503,19 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
                 >
                   {t.detailModal.negative}
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setReviewTab('verified')}
-                  className={`px-3.5 py-1.5 rounded-full transition-colors cursor-pointer ${
-                    reviewTab === 'verified'
-                      ? 'bg-indigo-600 text-white shadow-xs'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                  }`}
-                >
-                  {t.detailModal.verifiedOnly}
-                </button>
+                {hasProofVerified && (
+                  <button
+                    type="button"
+                    onClick={() => setReviewTab('verified')}
+                    className={`px-3.5 py-1.5 rounded-full transition-colors cursor-pointer ${
+                      reviewTab === 'verified'
+                        ? 'bg-indigo-600 text-white shadow-xs'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    }`}
+                  >
+                    {t.detailModal.verifiedOnly}
+                  </button>
+                )}
               </div>
             </div>
 
@@ -501,12 +551,7 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
                             <span className="text-sm font-bold text-slate-900">
                               {review.authorName}
                             </span>
-                            {review.isVerified && (
-                              <CheckCircle
-                                className="w-3.5 h-3.5 text-slate-400"
-                                aria-label={t.courseCard.verifiedGraduate}
-                              />
-                            )}
+                            <ReviewTrustBadge review={review} currentLang={currentLang} />
                           </div>
                           <div className="text-2xs text-slate-500">
                             <span>{getStatusLabel(review.authorStatus)}</span>
@@ -632,7 +677,7 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
                     </div>
 
                     {/* Prove enrollment to earn the verified badge */}
-                    {!review.isVerified && (
+                    {!review.proofVerified && (
                       <button
                         type="button"
                         onClick={() => setVerifyingReviewId(review.id)}

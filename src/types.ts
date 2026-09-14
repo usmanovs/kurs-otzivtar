@@ -33,7 +33,12 @@ export interface Review {
   // about their experience. Not sent anywhere automatically (no backend yet).
   whatsappNumber?: string;
   authorStatus: StudentStatus;
+  // Self-declared: the submitter ticked the "I really studied here" box.
   isVerified: boolean;
+  // Set only after an admin checks an uploaded receipt/certificate.
+  proofVerified?: boolean;
+  // 'submitted' on this site, or 'imported' from a public source.
+  source?: 'submitted' | 'imported';
   date: string;
   createdAt?: string;
   country?: string;

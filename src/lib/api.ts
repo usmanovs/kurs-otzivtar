@@ -9,6 +9,8 @@ function mapReviewRow(row: any): Review {
     isAnonymous: row.is_anonymous,
     authorStatus: row.author_status,
     isVerified: row.is_verified,
+    proofVerified: row.proof_verified ?? false,
+    source: row.source ?? 'submitted',
     date: row.review_date,
     createdAt: row.created_at ?? undefined,
     country: row.country ?? undefined,
@@ -445,7 +447,7 @@ export async function decideVerification(
   if (approve) {
     const { error: reviewError } = await supabase
       .from('reviews')
-      .update({ is_verified: true })
+      .update({ proof_verified: true, is_verified: true })
       .eq('id', reviewId);
     if (reviewError) throw reviewError;
   }

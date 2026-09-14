@@ -378,6 +378,15 @@ export const TRANSLATIONS = {
       modalLabel: 'Тар багыттары (милдеттүү эмес)',
       selectCategoryFirst: 'Адегенде категорияны тандаңыз'
     },
+    reviewTrust: {
+      proofVerified: 'Документ менен тастыкталган',
+      proofVerifiedHint: 'Окуучу төлөм чегин же сертификатын жүктөгөн, модератор текшерген.',
+      selfDeclared: 'Өзү студент деп билдирген',
+      selfDeclaredHint: 'Сайт аркылуу жөнөтүлгөн. Документ текшерилген эмес.',
+      imported: 'Ачык булактан алынган',
+      importedHint: 'YouTube сыяктуу ачык баракчалардан чогултулган пикир. Автору тастыкталган эмес.',
+      legendTitle: 'Пикирлердин ишенимдүүлүгү'
+    },
     stats: {
       coursesCount: 'Талданган курстар',
       reviewsCount: 'Чынчыл сын-пикирлер',
@@ -783,6 +792,15 @@ export const TRANSLATIONS = {
       all: 'Все',
       modalLabel: 'Узкие направления (необязательно)',
       selectCategoryFirst: 'Сначала выберите категорию'
+    },
+    reviewTrust: {
+      proofVerified: 'Подтверждён документом',
+      proofVerifiedHint: 'Студент загрузил чек или сертификат, модератор проверил.',
+      selfDeclared: 'Заявил, что был студентом',
+      selfDeclaredHint: 'Отправлено через сайт. Документы не проверялись.',
+      imported: 'Из открытого источника',
+      importedHint: 'Собрано с публичных страниц (например, YouTube). Автор не подтверждён.',
+      legendTitle: 'Достоверность отзывов'
     },
     stats: {
       coursesCount: 'Курсов проверено',
