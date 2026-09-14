@@ -43,7 +43,9 @@ export const TRANSLATIONS = {
       statsCourses: 'курс',
       statsVerified: 'ырасталган пикир',
       socialProofLabel: 'Чыныгы мугалимдер, чыныгы пикирлер',
-      socialProofMore: 'дагы мугалим'
+      socialProofMore: 'дагы мугалим',
+      liveVisitors: 'акыркы 24 саатта сайтка кирген',
+      liveReviewsWeek: 'жаңы пикир бул жумада'
     },
     warningBannerTitle: 'Шектүү курстардан кантип сактануу керек? Студенттер үчүн эскертүү:',
     warningBannerPoint1: '«1 айда $2000 табасың» деген убадаларга ишенбеңиз — кесиптик билим алуу убакытты жана мээнетти талап кылат.',
@@ -286,7 +288,9 @@ export const TRANSLATIONS = {
       statsCourses: 'курсов',
       statsVerified: 'подтверждённых отзывов',
       socialProofLabel: 'Реальные преподаватели, реальные отзывы',
-      socialProofMore: 'ещё преподавателей'
+      socialProofMore: 'ещё преподавателей',
+      liveVisitors: 'посетили сайт за последние 24 часа',
+      liveReviewsWeek: 'новых отзывов на этой неделе'
     },
     warningBannerTitle: 'Как не стать жертвой инфоцыган и некачественных курсов в КР:',
     warningBannerPoint1: 'Не верьте обещаниям «$2000 через 1 месяц с нуля» — реальная IT-профессия требует минимум 6-9 месяцев упорного труда.',

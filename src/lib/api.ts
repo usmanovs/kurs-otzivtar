@@ -295,3 +295,56 @@ export async function updateReviewVoteCounts(
     .eq('id', reviewId);
   if (error) throw error;
 }
+
+const VISITOR_ID_KEY = 'kursotzyv_visitor_id';
+
+function getOrCreateVisitorId(): string {
+  let id = localStorage.getItem(VISITOR_ID_KEY);
+  if (!id) {
+    id = crypto.randomUUID();
+    localStorage.setItem(VISITOR_ID_KEY, id);
+  }
+  return id;
+}
+
+// Records one real visit per browser per day (upsert on the (visitor_id,
+// visit_date) primary key means repeat visits/reloads the same day are
+// silently no-ops). Best-effort — a logged-out visitor or network hiccup
+// should never affect the page itself.
+export async function recordSiteVisit(): Promise<void> {
+  try {
+    const visitorId = getOrCreateVisitorId();
+    await supabase.from('site_visits').upsert(
+      { visitor_id: visitorId },
+      { onConflict: 'visitor_id,visit_date', ignoreDuplicates: true }
+    );
+  } catch {
+    // Ignore — this is a secondary signal, not something a visitor should ever see fail.
+  }
+}
+
+export interface SiteStats {
+  visitsLast24h: number;
+  reviewsLast7Days: number;
+}
+
+// Real, unfaked numbers: unique visitors in the trailing 24 hours (via a
+// SECURITY DEFINER RPC so raw visit rows stay unreadable to anon), and
+// reviews actually submitted in the last 7 days.
+export async function fetchSiteStats(): Promise<SiteStats> {
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
+  const [visitsResult, reviewsResult] = await Promise.all([
+    supabase.rpc('get_visits_last_24h'),
+    supabase
+      .from('reviews')
+      .select('id', { count: 'exact', head: true })
+      .eq('is_hidden', false)
+      .gte('created_at', sevenDaysAgo),
+  ]);
+
+  return {
+    visitsLast24h: Number(visitsResult.data ?? 0),
+    reviewsLast7Days: reviewsResult.count ?? 0,
+  };
+}

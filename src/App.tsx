@@ -15,6 +15,9 @@ import {
   updateTeacher,
   submitReview,
   updateReviewVoteCounts,
+  recordSiteVisit,
+  fetchSiteStats,
+  SiteStats,
 } from './lib/api';
 import { SupportedLang, TRANSLATIONS } from './translations';
 import { Navbar } from './components/Navbar';
@@ -88,6 +91,7 @@ export default function App() {
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [featuredVideos, setFeaturedVideos] = useState<FeaturedVideo[]>([]);
   const [recentReview, setRecentReview] = useState<RecentReviewSummary | null>(null);
+  const [siteStats, setSiteStats] = useState<SiteStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
 
@@ -101,6 +105,15 @@ export default function App() {
       console.error('Failed to save voted reviews to localStorage', e);
     }
   }, [votedReviews]);
+
+  // Real (unfaked) activity numbers — one visit recorded per browser per day,
+  // and a count of reviews actually submitted in the last week.
+  useEffect(() => {
+    recordSiteVisit();
+    fetchSiteStats()
+      .then(setSiteStats)
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -644,6 +657,25 @@ export default function App() {
             </button>
 
           </div>
+
+          {siteStats && (siteStats.visitsLast24h > 0 || siteStats.reviewsLast7Days > 0) && (
+            <div className="pt-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 text-xs text-slate-500">
+              {siteStats.visitsLast24h > 0 && (
+                <span className="flex items-center gap-1.5">
+                  <span className="relative flex w-2 h-2">
+                    <span className="animate-ping absolute inline-flex w-full h-full rounded-full bg-emerald-400 opacity-75" />
+                    <span className="relative inline-flex w-2 h-2 rounded-full bg-emerald-500" />
+                  </span>
+                  <span className="font-semibold text-slate-700">{siteStats.visitsLast24h}</span> {t.hero.liveVisitors}
+                </span>
+              )}
+              {siteStats.reviewsLast7Days > 0 && (
+                <span>
+                  <span className="font-semibold text-slate-700">{siteStats.reviewsLast7Days}</span> {t.hero.liveReviewsWeek}
+                </span>
+              )}
+            </div>
+          )}
         </section>
 
         {/* Best & lowest rated teachers, based on real review averages */}
