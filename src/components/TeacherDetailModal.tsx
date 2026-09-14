@@ -402,12 +402,15 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
               {/* Sub-scores & rating distribution */}
               <div className="md:col-span-8 flex flex-col justify-center gap-5">
                 <div className="space-y-3">
+                  {/* Sub-criteria are optional, so 0 means "nobody rated this"
+                      rather than a score of zero — drop those rows instead of
+                      drawing an empty bar labelled 0.0. */}
                   {[
                     { label: t.courseCard.teachers, value: teacher.teacherRatingAvg },
                     { label: t.courseCard.practice, value: teacher.practiceRatingAvg },
                     { label: t.courseCard.jobSupport, value: teacher.jobSupportRatingAvg },
                     { label: t.courseCard.value, value: teacher.valueRatingAvg },
-                  ].map((metric) => (
+                  ].filter((metric) => metric.value > 0).map((metric) => (
                     <div key={metric.label} className="flex items-center gap-3">
                       <span className="text-sm text-slate-500 w-28 sm:w-32 shrink-0 truncate">
                         {metric.label}

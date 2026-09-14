@@ -18,9 +18,14 @@ export function calculateTeacherMetrics(
   }
 
   const reviewCount = reviews.length;
+  // Sub-criteria are optional: a reviewer who only gave an overall score leaves
+  // them at 0. Averaging those zeros in would invent a low score nobody gave,
+  // so unrated reviews are excluded from the sub-averages rather than counted.
   const avg = (field: keyof Review) => {
-    const sum = reviews.reduce((acc, r) => acc + (typeof r[field] === 'number' ? (r[field] as number) : 0), 0);
-    return Number((sum / reviewCount).toFixed(1));
+    const rated = reviews.filter((r) => typeof r[field] === 'number' && (r[field] as number) > 0);
+    if (rated.length === 0) return 0;
+    const sum = rated.reduce((acc, r) => acc + (r[field] as number), 0);
+    return Number((sum / rated.length).toFixed(1));
   };
 
   const recommendCount = reviews.filter((r) => r.wouldRecommend).length;

@@ -1,5 +1,5 @@
 import { supabase } from './supabaseClient';
-import { Course, CourseCategory, FeaturedVideo, Review, Teacher } from '../types';
+import { Course, CourseCategory, FeaturedVideo, Review, StudentStatus, Teacher } from '../types';
 import { calculateTeacherMetrics } from '../data/teachers';
 
 function mapReviewRow(row: any): Review {
@@ -203,6 +203,62 @@ export async function updateTeacher(
  */
 export function teacherNameKey(name: string): string {
   return name.trim().replace(/\s+/g, ' ').toLowerCase();
+}
+
+/** Fields the enrichment step can add after the review is already saved. */
+export interface ReviewEnrichment {
+  pros?: string[];
+  cons?: string[];
+  pricePaidKGS?: number;
+  durationMonths?: number;
+  cohortYear?: string;
+  teacherRating?: number;
+  practiceRating?: number;
+  jobSupportRating?: number;
+  valueRating?: number;
+  authorName?: string;
+  isAnonymous?: boolean;
+  authorStatus?: StudentStatus;
+  hasJobScamReport?: boolean;
+}
+
+/**
+ * Second write for a review that is already live. The first screen saves as
+ * soon as it has the essentials, so everything here is an edit to an existing
+ * row rather than part of the original insert.
+ */
+export async function updateReview(
+  reviewId: string,
+  patch: ReviewEnrichment,
+  whatsappNumber?: string
+): Promise<void> {
+  const row: Record<string, unknown> = {};
+  if (patch.pros !== undefined) row.pros = patch.pros;
+  if (patch.cons !== undefined) row.cons = patch.cons;
+  if (patch.pricePaidKGS !== undefined) row.price_paid_kgs = patch.pricePaidKGS;
+  if (patch.durationMonths !== undefined) row.duration_months = patch.durationMonths;
+  if (patch.cohortYear !== undefined) row.cohort_year = patch.cohortYear;
+  if (patch.teacherRating !== undefined) row.teacher_rating = patch.teacherRating;
+  if (patch.practiceRating !== undefined) row.practice_rating = patch.practiceRating;
+  if (patch.jobSupportRating !== undefined) row.job_support_rating = patch.jobSupportRating;
+  if (patch.valueRating !== undefined) row.value_rating = patch.valueRating;
+  if (patch.authorName !== undefined) row.author_name = patch.authorName;
+  if (patch.isAnonymous !== undefined) row.is_anonymous = patch.isAnonymous;
+  if (patch.authorStatus !== undefined) row.author_status = patch.authorStatus;
+  if (patch.hasJobScamReport !== undefined) row.has_job_scam_report = patch.hasJobScamReport;
+
+  if (Object.keys(row).length > 0) {
+    const { error } = await supabase.from('reviews').update(row).eq('id', reviewId);
+    if (error) throw error;
+  }
+
+  if (whatsappNumber && whatsappNumber.trim()) {
+    // Same best-effort contract as the insert path: never blocks, never read back.
+    await supabase.from('review_contact_info').insert({
+      review_id: reviewId,
+      whatsapp_number: whatsappNumber.trim(),
+    });
+  }
 }
 
 export async function submitReview(

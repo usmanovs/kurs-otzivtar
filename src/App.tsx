@@ -14,6 +14,8 @@ import {
   insertTeacher,
   updateTeacher,
   submitReview,
+  updateReview,
+  type ReviewEnrichment,
   updateReviewVoteCounts,
   recordSiteVisit,
   fetchSiteStats,
@@ -442,11 +444,38 @@ export default function App() {
   };
 
   // Submit new review — resolves to an existing teacher by name, or creates a new one
+  // Second step of the review modal: the row already exists, so this patches it
+  // and mirrors the change into local state so the detail view updates without
+  // a refetch.
+  const handleEnrichReview = async (
+    reviewId: string,
+    patch: ReviewEnrichment,
+    whatsappNumber?: string
+  ): Promise<boolean> => {
+    try {
+      await updateReview(reviewId, patch, whatsappNumber);
+      setTeachers((prev) =>
+        prev.map((tch) => {
+          if (!tch.reviews.some((r) => r.id === reviewId)) return tch;
+          return calculateTeacherMetrics({
+            ...tch,
+            reviews: tch.reviews.map((r) => (r.id === reviewId ? { ...r, ...patch } : r)),
+          });
+        })
+      );
+      return true;
+    } catch (e) {
+      console.error('Failed to enrich review', e);
+      showToast('Кошумча маалыматты сактай алган жокпуз, бирок сын-пикириңиз сакталды.');
+      return false;
+    }
+  };
+
   const handleSubmitReview = async (
     teacherName: string,
     reviewData: Omit<Review, 'id' | 'date' | 'helpfulCount' | 'unhelpfulCount'>,
     newTeacherCategory?: CourseCategory
-  ) => {
+  ): Promise<string | null> => {
     const { whatsappNumber, ...reviewFields } = reviewData;
     try {
       const result = await submitReview(
@@ -476,9 +505,13 @@ export default function App() {
       });
 
       showToast('Сын-пикириңиз ийгиликтүү кошулду! Чынчыл пикириңиз үчүн чоң рахмат.');
+      // The id lets the modal's second step enrich this row instead of
+      // re-submitting it.
+      return result.review.id;
     } catch (e) {
       console.error('Failed to submit review', e);
       showToast('Ката кетти. Сын-пикирди сактай алган жокпуз, интернетиңизди текшерип кайра аракет кылыңыз.');
+      return null;
     }
   };
 
@@ -950,6 +983,7 @@ export default function App() {
               setReviewPreselectedTeacher(null);
             }}
             onSubmitReview={handleSubmitReview}
+            onEnrichReview={handleEnrichReview}
           />
         )}
 
