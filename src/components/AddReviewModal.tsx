@@ -421,6 +421,14 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
               </span>
             </label>
 
+            {/* The proof upload lives on the next screen so this one stays
+                fast, but without saying so a reviewer looking for the verified
+                badge concludes it does not exist and stops looking. */}
+            <p className="flex items-start gap-1.5 -mt-2 text-2xs text-slate-500 leading-relaxed">
+              <ShieldCheck className="w-3.5 h-3.5 shrink-0 mt-px text-emerald-600" />
+              <span>{t.addReviewModal.proofComingHint}</span>
+            </p>
+
             <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200">
               <button
                 type="button"
