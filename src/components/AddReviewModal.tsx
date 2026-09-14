@@ -72,6 +72,11 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
   const [wouldRecommend, setWouldRecommend] = useState<boolean>(true);
   const [fullReview, setFullReview] = useState('');
   const [attested, setAttested] = useState(false);
+  // Proof lives here rather than on step 2: someone who came to submit a
+  // verified review needs to see it while writing, not after.
+  const [wantsProof, setWantsProof] = useState(false);
+  const [proofFile, setProofFile] = useState<File | null>(null);
+  const [proofError, setProofError] = useState('');
 
   // --- step 2 ---
   const [proTags, setProTags] = useState<string[]>([]);
@@ -87,8 +92,6 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
   const [authorStatus, setAuthorStatus] = useState<StudentStatus>('graduate');
   const [hasJobScamReport, setHasJobScamReport] = useState(false);
   const [whatsappNumber, setWhatsappNumber] = useState('');
-  const [proofFile, setProofFile] = useState<File | null>(null);
-  const [proofError, setProofError] = useState('');
 
   const knownTeacherNames = useMemo(
     () => teachers.map((teacher) => teacher.name.trim()).filter(Boolean).sort((a, b) => a.localeCompare(b)),
@@ -161,6 +164,15 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
       setErrorMsg(t.addReviewModal.errorAttest);
       return;
     }
+    if (wantsProof && !proofFile) {
+      setErrorMsg(t.verifyModal.errorNoFile);
+      return;
+    }
+    // Matches the 5 MB the privacy/size copy promises.
+    if (proofFile && proofFile.size > 5 * 1024 * 1024) {
+      setErrorMsg(t.verifyModal.errorSize);
+      return;
+    }
     setErrorMsg('');
     setBusy(true);
     const saved = await onSubmitReview(
@@ -185,8 +197,20 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
       },
       willCreateTeacher ? (newTeacherCategory as CourseCategory) : undefined
     );
+    if (!saved) {
+      setBusy(false);
+      return; // App already surfaced the failure; keep their text on screen
+    }
+    // The proof can only be attached once the row exists, so it is uploaded
+    // here rather than on submit. A failure must not cost them the review.
+    if (wantsProof && proofFile) {
+      try {
+        await submitVerificationProof(saved.reviewId, saved.teacherId, proofFile);
+      } catch {
+        setProofError(t.addReviewModal.proofUploadFailed);
+      }
+    }
     setBusy(false);
-    if (!saved) return; // App already surfaced the failure; keep their text on screen
     setSavedReviewId(saved.reviewId);
     setSavedTeacherId(saved.teacherId);
     setEditToken(saved.editToken);
@@ -421,13 +445,49 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
               </span>
             </label>
 
-            {/* The proof upload lives on the next screen so this one stays
-                fast, but without saying so a reviewer looking for the verified
-                badge concludes it does not exist and stops looking. */}
-            <p className="flex items-start gap-1.5 -mt-2 text-2xs text-slate-500 leading-relaxed">
-              <ShieldCheck className="w-3.5 h-3.5 shrink-0 mt-px text-emerald-600" />
-              <span>{t.addReviewModal.proofComingHint}</span>
-            </p>
+            {/* Collapsed by default so the fast path stays fast, but visible
+                to anyone who came here specifically to submit a verified
+                review — which is what they were looking for and not finding. */}
+            <div className="-mt-2">
+              <label className="flex items-start gap-2.5 cursor-pointer">
+                <input
+                  type="checkbox"
+                  id="want-proof-checkbox"
+                  checked={wantsProof}
+                  onChange={(e) => {
+                    setWantsProof(e.target.checked);
+                    if (!e.target.checked) setProofFile(null);
+                  }}
+                  className="mt-0.5 rounded text-emerald-600 focus:ring-emerald-500"
+                />
+                <span className="text-xs text-slate-700 font-medium leading-relaxed">
+                  {t.addReviewModal.wantProofLabel}
+                </span>
+              </label>
+
+              {wantsProof && (
+                <div className="mt-2.5 ml-6 rounded-xl border border-emerald-200 bg-emerald-50/70 p-3.5 animate-fade-in">
+                  <p className="text-2xs text-emerald-900/80 mb-2 leading-relaxed">
+                    {t.addReviewModal.wantProofHint}
+                  </p>
+                  <input
+                    type="file"
+                    id="review-proof-input"
+                    accept="image/*,application/pdf"
+                    onChange={(e) => setProofFile(e.target.files?.[0] ?? null)}
+                    className="w-full text-xs text-slate-700 file:mr-3 file:px-3 file:py-1.5 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-emerald-100 file:text-emerald-900 hover:file:bg-emerald-200 file:cursor-pointer cursor-pointer"
+                  />
+                  {proofFile && (
+                    <p className="text-2xs text-emerald-900 mt-1.5 font-medium">
+                      {proofFile.name} — {(proofFile.size / 1024).toFixed(0)} KB
+                    </p>
+                  )}
+                  <p className="text-2xs text-emerald-900/70 mt-1.5 leading-relaxed">
+                    {t.verifyModal.privacyNote}
+                  </p>
+                </div>
+              )}
+            </div>
 
             <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200">
               <button
@@ -455,40 +515,14 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
               <span className="text-xs sm:text-sm font-semibold">{t.addReviewModal.savedBanner}</span>
             </div>
 
-            {/* The only moment the review's actual author is identifiable. The
-                per-review link in the profile is shown to every visitor of an
-                anonymous review, so nobody can meaningfully use it — which is
-                why no proof has ever been submitted. */}
-            <div className="rounded-2xl border border-emerald-200 bg-emerald-50/70 p-4">
-              <label className="flex items-center gap-1.5 text-xs font-bold text-emerald-900 mb-1">
-                <ShieldCheck className="w-4 h-4 shrink-0" />
-                {t.addReviewModal.proofLabel}
-              </label>
-              <p className="text-2xs text-emerald-900/80 mb-2 leading-relaxed">
-                {t.addReviewModal.proofHint}
-              </p>
-              <input
-                type="file"
-                id="review-proof-input"
-                accept="image/*,application/pdf"
-                onChange={(e) => {
-                  setProofFile(e.target.files?.[0] ?? null);
-                  setProofError('');
-                }}
-                className="w-full text-xs text-slate-700 file:mr-3 file:px-3 file:py-1.5 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-emerald-100 file:text-emerald-900 hover:file:bg-emerald-200 file:cursor-pointer cursor-pointer"
-              />
-              {proofFile && (
-                <p className="text-2xs text-emerald-900 mt-1.5 font-medium">
-                  {proofFile.name} — {(proofFile.size / 1024).toFixed(0)} KB
-                </p>
-              )}
-              <p className="text-2xs text-emerald-900/70 mt-1.5 leading-relaxed">
-                {t.verifyModal.privacyNote}
-              </p>
-              {proofError && (
-                <p className="text-2xs text-red-600 mt-1.5 font-semibold">{proofError}</p>
-              )}
-            </div>
+            {/* The review saved; only the proof upload failed. Say which, so
+                nobody thinks they have lost the review itself. */}
+            {proofError && (
+              <div className="flex items-start gap-2 p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-900">
+                <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+                <span className="text-xs">{proofError}</span>
+              </div>
+            )}
 
             <div>
               <label className="block text-xs font-bold text-emerald-700 mb-2">
