@@ -34,6 +34,7 @@ import { TeachersSection } from './components/TeachersSection';
 import { TeacherLeaderboardSection } from './components/TeacherLeaderboardSection';
 import { RecentReviewPopup } from './components/RecentReviewPopup';
 import { ScrollFadeRow } from './components/ScrollFadeRow';
+import { HeroSearch } from './components/HeroSearch';
 
 // Lazy-loaded: only needed once a user opens one of these modals, so keeping
 // them out of the initial bundle shrinks first-load JS meaningfully.
@@ -42,8 +43,6 @@ const AddTeacherModal = lazy(() => import('./components/AddTeacherModal').then((
 const TeacherDetailModal = lazy(() => import('./components/TeacherDetailModal').then((m) => ({ default: m.TeacherDetailModal })));
 const AdminLoginModal = lazy(() => import('./components/AdminLoginModal').then((m) => ({ default: m.AdminLoginModal })));
 import {
-  Search,
-  X,
   CheckCircle,
   AlertTriangle,
   Loader2,
@@ -614,53 +613,14 @@ export default function App() {
             <span>{t.trustBadge}</span>
           </div>
 
-          <form
-            onSubmit={handleHeroSearchSubmit}
-            className="max-w-xl mx-auto flex flex-col sm:flex-row gap-2 pt-2"
-          >
-            <div className="relative flex-1">
-              <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-              <input
-                type="text"
-                id="hero-search-input"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={t.hero.searchPlaceholder}
-                enterKeyHint="search"
-                className="w-full pl-11 pr-20 sm:pr-12 py-3 bg-white border border-slate-200 rounded-full text-sm shadow-xs focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-slate-900 placeholder:text-slate-400"
-              />
-              <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                {searchQuery && (
-                  <button
-                    type="button"
-                    id="hero-search-clear-btn"
-                    onClick={() => setSearchQuery('')}
-                    aria-label="Тазалоо"
-                    className="p-1.5 text-slate-400 hover:text-slate-600 cursor-pointer"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                )}
-                {/* Phones submit from inside the field (or the keyboard's
-                    search key); the full-width button below cost a fold. */}
-                <button
-                  type="submit"
-                  id="hero-search-inline-btn"
-                  aria-label={t.hero.searchBtn}
-                  className="sm:hidden p-2 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white transition-colors cursor-pointer"
-                >
-                  <Search className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-            <button
-              type="submit"
-              id="hero-search-btn"
-              className="hidden sm:inline-flex items-center justify-center px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm rounded-full transition-all shadow-xs cursor-pointer shrink-0"
-            >
-              {t.hero.searchBtn}
-            </button>
-          </form>
+          <HeroSearch
+            teachers={teachers}
+            value={searchQuery}
+            currentLang={currentLang}
+            onChange={setSearchQuery}
+            onSubmit={scrollToTeachers}
+            onSelectTeacher={(teacher) => navigate(`/teacher/${teacher.id}`)}
+          />
 
           {/* One swipeable row on phones (wrapping put these on three lines);
               reverts to a centred wrap once there's width for it. */}
