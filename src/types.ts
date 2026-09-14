@@ -4,6 +4,7 @@ export type CourseCategory =
   | 'design_uiux'
   | 'languages'
   | 'marketing_smm'
+  | 'youtube'
   | 'business_trading'
   | 'data_analytics'
   | 'psychology'
