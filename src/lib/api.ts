@@ -12,6 +12,7 @@ function mapReviewRow(row: any): Review {
     date: row.review_date,
     createdAt: row.created_at ?? undefined,
     country: row.country ?? undefined,
+    city: row.city ?? undefined,
     overallRating: Number(row.overall_rating),
     teacherRating: Number(row.teacher_rating),
     practiceRating: Number(row.practice_rating),

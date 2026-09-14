@@ -2,10 +2,9 @@
 //  - Precise IP + timestamp go to review_ip_log, for spam/abuse detection only
 //    (e.g. one source submitting many reviews in a burst). That table has RLS
 //    restricted to the admin owner — never joined into any public fetch.
-//  - The country (from Vercel's edge geo header — no external IP lookup
-//    needed) is written to reviews.country instead, since a country is coarse
-//    enough to show publicly as a light anti-fraud signal without identifying
-//    the reviewer the way a raw IP would.
+//  - Country and city (from Vercel's edge geo headers — no external IP
+//    lookup needed) are written to reviews.country/reviews.city instead, and
+//    shown publicly next to the review by explicit site-owner choice.
 
 export default async function handler(request: Request) {
   if (request.method !== 'POST') {
@@ -29,6 +28,8 @@ export default async function handler(request: Request) {
     request.headers.get('x-real-ip') ||
     'unknown';
   const country = request.headers.get('x-vercel-ip-country') || null;
+  const rawCity = request.headers.get('x-vercel-ip-city');
+  const city = rawCity ? decodeURIComponent(rawCity) : null;
 
   const supabaseUrl = process.env.SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -50,15 +51,15 @@ export default async function handler(request: Request) {
       console.error('Failed to log review IP', e);
     }
 
-    if (country) {
+    if (country || city) {
       try {
         await fetch(`${supabaseUrl}/rest/v1/reviews?id=eq.${encodeURIComponent(reviewId)}`, {
           method: 'PATCH',
           headers: { ...headers, Prefer: 'return=minimal' },
-          body: JSON.stringify({ country }),
+          body: JSON.stringify({ ...(country ? { country } : {}), ...(city ? { city } : {}) }),
         });
       } catch (e) {
-        console.error('Failed to set review country', e);
+        console.error('Failed to set review country/city', e);
       }
     }
   }

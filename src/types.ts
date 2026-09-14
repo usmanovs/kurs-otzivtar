@@ -37,6 +37,7 @@ export interface Review {
   date: string;
   createdAt?: string;
   country?: string;
+  city?: string;
   overallRating: number; // 1 to 5
   teacherRating: number; // 1 to 5
   practiceRating: number; // 1 to 5

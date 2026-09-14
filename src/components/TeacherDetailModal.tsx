@@ -477,7 +477,13 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
                               <span> • {review.pricePaidKGS.toLocaleString('ru-RU')} сом төлөгөн</span>
                             )}
                             <span> • {review.createdAt ? formatDateTime(review.createdAt) : review.date}</span>
-                            {review.country && <span> {countryFlag(review.country)}</span>}
+                            {review.country && (
+                              <span>
+                                {' '}
+                                {countryFlag(review.country)}
+                                {review.city && <> {review.city}</>}
+                              </span>
+                            )}
                           </div>
                           {isAdmin && (
                             <div className="mt-1 inline-flex items-center gap-1 text-2xs font-medium text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">
