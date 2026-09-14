@@ -519,10 +519,12 @@ export async function decideVerification(
   if (error) throw error;
 
   if (approve) {
-    const { error: reviewError } = await supabase
-      .from('reviews')
-      .update({ proof_verified: true, is_verified: true })
-      .eq('id', reviewId);
+    // proof_verified / is_verified are no longer column-grantable to anon or
+    // to ordinary signed-in users, so the badge can only be set through this
+    // definer function, which re-checks the caller is the admin.
+    const { error: reviewError } = await supabase.rpc('admin_approve_review_proof', {
+      p_review_id: reviewId,
+    });
     if (reviewError) throw reviewError;
   }
 }
