@@ -23,6 +23,8 @@ import {
   Share2,
   ShieldAlert,
   ShieldCheck,
+  CheckCircle2,
+  User,
   MessageSquareReply,
   Info,
 } from 'lucide-react';
@@ -65,10 +67,13 @@ function trustTier(review: Review): TrustTier {
   return 'self';
 }
 
+// Branded rather than uniformly muted: a harvested YouTube comment and a
+// proof-backed student are different kinds of evidence, and the badge is the
+// only thing on the card that says so.
 const TRUST_CLASS: Record<TrustTier, string> = {
   proof: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-  self: 'bg-slate-50 text-slate-600 border-slate-200',
-  imported: 'bg-amber-50 text-amber-700 border-amber-200',
+  self: 'bg-sky-50 text-sky-700 border-sky-200',
+  imported: 'bg-red-50 text-red-600 border-red-200',
 };
 
 const ReviewTrustBadge: React.FC<{ review: Review; currentLang: SupportedLang }> = ({
@@ -90,13 +95,18 @@ const ReviewTrustBadge: React.FC<{ review: Review; currentLang: SupportedLang }>
         ? t.reviewTrust.importedHint
         : t.reviewTrust.selfDeclaredHint;
 
+  const Icon = tier === 'proof' ? CheckCircle2 : tier === 'imported' ? Youtube : User;
+
   return (
     <span
       title={hint}
-      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] font-semibold ${TRUST_CLASS[tier]}`}
+      className={`inline-flex items-center gap-1 max-w-full px-2 py-0.5 rounded-full border text-[10px] font-semibold ${TRUST_CLASS[tier]}`}
     >
-      {tier === 'proof' ? <ShieldCheck className="w-3 h-3 shrink-0" /> : <Info className="w-3 h-3 shrink-0" />}
-      {label}
+      <Icon className="w-3 h-3 shrink-0" />
+      <span className="truncate">{label}</span>
+      {/* Only the harvested tier needs explaining — the other two say what
+          they are. */}
+      {tier === 'imported' && <Info className="w-2.5 h-2.5 shrink-0 opacity-70" />}
     </span>
   );
 };
@@ -618,19 +628,36 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
                             </span>
                             <ReviewTrustBadge review={review} currentLang={currentLang} />
                           </div>
-                          <div className="text-2xs text-slate-500">
+                          {/* Wraps as items rather than one text run, so a long
+                              author name or a wide price chip cannot push the
+                              date off the card at 375px. */}
+                          <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 mt-0.5 text-2xs text-slate-500">
                             <span>{getStatusLabel(review.authorStatus)}</span>
-                            {review.cohortYear && <span> • {review.cohortYear}</span>}
-                            {review.durationMonths && <span> • {review.durationMonths} ай окуган</span>}
-                            {review.pricePaidKGS && (
-                              <span> • {review.pricePaidKGS.toLocaleString('ru-RU')} сом төлөгөн</span>
-                            )}
-                            <span> • {review.createdAt ? formatDateTime(review.createdAt) : review.date}</span>
-                            {review.country && (
+                            {review.cohortYear && (
                               <>
-                                {' '}
-                                <CountryTag country={review.country} city={review.city} />
+                                <span aria-hidden="true">•</span>
+                                <span>{review.cohortYear}</span>
                               </>
+                            )}
+                            {review.durationMonths && (
+                              <>
+                                <span aria-hidden="true">•</span>
+                                <span>{review.durationMonths} ай окуган</span>
+                              </>
+                            )}
+                            {/* What they actually lost is the most scannable
+                                fact on the card, so it gets a chip. */}
+                            {review.pricePaidKGS && (
+                              <span className="px-1.5 py-px rounded bg-amber-50 border border-amber-200 text-amber-800 font-semibold whitespace-nowrap">
+                                {review.pricePaidKGS.toLocaleString('ru-RU')} сом төлөгөн
+                              </span>
+                            )}
+                            <span aria-hidden="true">•</span>
+                            <span className="whitespace-nowrap">
+                              {review.createdAt ? formatDateTime(review.createdAt) : review.date}
+                            </span>
+                            {review.country && (
+                              <CountryTag country={review.country} city={review.city} />
                             )}
                           </div>
                           {isAdmin && (
