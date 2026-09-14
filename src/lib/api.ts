@@ -353,3 +353,176 @@ export async function fetchSiteStats(): Promise<SiteStats> {
     reviewsLast7Days: reviewsResult.count ?? 0,
   };
 }
+
+// ─────────────────────────────────────────────────────────────
+// Proof-of-enrollment submissions (earns the "verified" badge)
+// ─────────────────────────────────────────────────────────────
+
+export interface VerificationRequest {
+  id: string;
+  reviewId: string;
+  teacherId: string;
+  proofPath: string;
+  note?: string;
+  status: 'pending' | 'approved' | 'rejected';
+  createdAt: string;
+}
+
+// Uploads the proof to a private bucket, then files a pending request.
+// The file is never publicly readable — only the admin can open it, via a
+// short-lived signed URL (see createProofSignedUrl).
+export async function submitVerificationProof(
+  reviewId: string,
+  teacherId: string,
+  file: File,
+  note?: string
+): Promise<void> {
+  const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+  const proofPath = `${reviewId}/${Date.now()}.${ext}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from('verification-proofs')
+    .upload(proofPath, file, { contentType: file.type, upsert: false });
+  if (uploadError) throw uploadError;
+
+  const { error } = await supabase.from('review_verifications').insert({
+    id: `ver-${Date.now()}`,
+    review_id: reviewId,
+    teacher_id: teacherId,
+    proof_path: proofPath,
+    note: note?.trim() || null,
+  });
+  if (error) throw error;
+}
+
+// Admin-only: RLS returns nothing for anyone else.
+export async function fetchPendingVerifications(): Promise<VerificationRequest[]> {
+  const { data, error } = await supabase
+    .from('review_verifications')
+    .select('*')
+    .eq('status', 'pending')
+    .order('created_at', { ascending: true });
+  if (error || !data) return [];
+  return data.map((row: any) => ({
+    id: row.id,
+    reviewId: row.review_id,
+    teacherId: row.teacher_id,
+    proofPath: row.proof_path,
+    note: row.note ?? undefined,
+    status: row.status,
+    createdAt: row.created_at,
+  }));
+}
+
+export async function createProofSignedUrl(proofPath: string): Promise<string | null> {
+  const { data, error } = await supabase.storage
+    .from('verification-proofs')
+    .createSignedUrl(proofPath, 300);
+  if (error || !data) return null;
+  return data.signedUrl;
+}
+
+// Approving flips the review's existing is_verified flag — the badge the
+// UI already renders — so the badge always traces back to a reviewed proof.
+export async function decideVerification(
+  requestId: string,
+  reviewId: string,
+  approve: boolean
+): Promise<void> {
+  const { error } = await supabase
+    .from('review_verifications')
+    .update({ status: approve ? 'approved' : 'rejected', reviewed_at: new Date().toISOString() })
+    .eq('id', requestId);
+  if (error) throw error;
+
+  if (approve) {
+    const { error: reviewError } = await supabase
+      .from('reviews')
+      .update({ is_verified: true })
+      .eq('id', reviewId);
+    if (reviewError) throw reviewError;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// Instructor responses / profile claims
+// ─────────────────────────────────────────────────────────────
+
+export interface TeacherResponse {
+  id: string;
+  teacherId: string;
+  reviewId?: string;
+  authorName: string;
+  responseText: string;
+  status: 'pending' | 'approved' | 'rejected';
+  createdAt: string;
+}
+
+function mapResponseRow(row: any): TeacherResponse {
+  return {
+    id: row.id,
+    teacherId: row.teacher_id,
+    reviewId: row.review_id ?? undefined,
+    authorName: row.author_name,
+    responseText: row.response_text,
+    status: row.status,
+    createdAt: row.created_at,
+  };
+}
+
+// Contact email goes to a separate admin-only table so approved responses
+// stay publicly readable without exposing it.
+export async function submitTeacherResponse(input: {
+  teacherId: string;
+  reviewId?: string;
+  authorName: string;
+  contactEmail: string;
+  responseText: string;
+}): Promise<void> {
+  const id = `resp-${Date.now()}`;
+
+  const { error } = await supabase.from('teacher_responses').insert({
+    id,
+    teacher_id: input.teacherId,
+    review_id: input.reviewId || null,
+    author_name: input.authorName.trim(),
+    response_text: input.responseText.trim(),
+    status: 'pending',
+  });
+  if (error) throw error;
+
+  const { error: contactError } = await supabase
+    .from('teacher_response_contacts')
+    .insert({ response_id: id, contact_email: input.contactEmail.trim() });
+  if (contactError) throw contactError;
+}
+
+// Public: RLS limits this to approved rows for non-admins.
+export async function fetchApprovedResponses(teacherId: string): Promise<TeacherResponse[]> {
+  const { data, error } = await supabase
+    .from('teacher_responses')
+    .select('*')
+    .eq('teacher_id', teacherId)
+    .eq('status', 'approved')
+    .order('created_at', { ascending: true });
+  if (error || !data) return [];
+  return data.map(mapResponseRow);
+}
+
+export async function fetchPendingResponses(): Promise<TeacherResponse[]> {
+  const { data, error } = await supabase
+    .from('teacher_responses')
+    .select('*')
+    .eq('status', 'pending')
+    .order('created_at', { ascending: true });
+  if (error || !data) return [];
+  return data.map(mapResponseRow);
+}
+
+export async function decideTeacherResponse(responseId: string, approve: boolean): Promise<void> {
+  const { error } = await supabase
+    .from('teacher_responses')
+    .update({ status: approve ? 'approved' : 'rejected', reviewed_at: new Date().toISOString() })
+    .eq('id', responseId);
+  if (error) throw error;
+}

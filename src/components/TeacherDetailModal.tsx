@@ -3,7 +3,9 @@ import { Teacher } from '../types';
 import { SupportedLang, TRANSLATIONS } from '../translations';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { ratingTone, RATING_STAR_CLASS } from '../lib/ratingTone';
-import { fetchReviewIpLog } from '../lib/api';
+import { fetchReviewIpLog, fetchApprovedResponses, TeacherResponse } from '../lib/api';
+import { VerifyReviewModal } from './VerifyReviewModal';
+import { TeacherResponseModal } from './TeacherResponseModal';
 import {
   X,
   Star,
@@ -19,6 +21,8 @@ import {
   Youtube,
   Share2,
   ShieldAlert,
+  ShieldCheck,
+  MessageSquareReply,
 } from 'lucide-react';
 
 interface TeacherDetailModalProps {
@@ -60,6 +64,26 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
   const [reviewTab, setReviewTab] = useState<'all' | 'positive' | 'negative' | 'verified'>('all');
   const [copied, setCopied] = useState(false);
   const [ipLogMap, setIpLogMap] = useState<Record<string, { ipAddress: string; createdAt: string }>>({});
+  const [verifyingReviewId, setVerifyingReviewId] = useState<string | null>(null);
+  const [isRespondOpen, setIsRespondOpen] = useState(false);
+  const [responses, setResponses] = useState<TeacherResponse[]>([]);
+
+  // Approved instructor responses — RLS keeps unapproved ones out of reach.
+  useEffect(() => {
+    if (!teacher) {
+      setResponses([]);
+      return;
+    }
+    let cancelled = false;
+    fetchApprovedResponses(teacher.id)
+      .then((r) => {
+        if (!cancelled) setResponses(r);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [teacher]);
 
   // Scroll to and briefly highlight a specific review, e.g. when arriving here
   // from the recent-review popup on the homepage.
@@ -241,6 +265,21 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
 
         {/* Modal Scrollable Body */}
         <div className="overflow-y-auto p-5 sm:p-7 space-y-6">
+          {/* Approved instructor statements that aren't tied to one review */}
+          {responses
+            .filter((resp) => !resp.reviewId)
+            .map((resp) => (
+              <div key={resp.id} className="rounded-2xl border border-indigo-100 bg-indigo-50/60 p-4">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-indigo-700">
+                  <MessageSquareReply className="w-4 h-4" />
+                  {t.responseModal.responseBadge} — {resp.authorName}
+                </div>
+                <p className="mt-2 text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">
+                  {resp.responseText}
+                </p>
+              </div>
+            ))}
+
           {/* Action to write review */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-5 bg-indigo-50 rounded-2xl border border-indigo-100">
             <div>
@@ -591,6 +630,36 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
                         </button>
                       </div>
                     </div>
+
+                    {/* Prove enrollment to earn the verified badge */}
+                    {!review.isVerified && (
+                      <button
+                        type="button"
+                        onClick={() => setVerifyingReviewId(review.id)}
+                        className="mt-3 inline-flex items-center gap-1.5 text-2xs font-semibold text-indigo-600 hover:text-indigo-700 cursor-pointer"
+                      >
+                        <ShieldCheck className="w-3.5 h-3.5" />
+                        {t.verifyModal.buttonLabel}
+                      </button>
+                    )}
+
+                    {/* Instructor's approved response to this specific review */}
+                    {responses
+                      .filter((resp) => resp.reviewId === review.id)
+                      .map((resp) => (
+                        <div
+                          key={resp.id}
+                          className="mt-3 rounded-xl border border-indigo-100 bg-indigo-50/60 p-3"
+                        >
+                          <div className="flex items-center gap-1.5 text-2xs font-bold text-indigo-700">
+                            <MessageSquareReply className="w-3.5 h-3.5" />
+                            {t.responseModal.responseBadge} — {resp.authorName}
+                          </div>
+                          <p className="mt-1.5 text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">
+                            {resp.responseText}
+                          </p>
+                        </div>
+                      ))}
                   </div>
                   );
                 })
@@ -600,7 +669,15 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
         </div>
 
         {/* Modal Footer */}
-        <div className="p-4 bg-slate-50 border-t border-slate-200 flex justify-end">
+        <div className="p-4 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3">
+          <button
+            type="button"
+            onClick={() => setIsRespondOpen(true)}
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-indigo-700 cursor-pointer"
+          >
+            <MessageSquareReply className="w-4 h-4" />
+            {t.responseModal.buttonLabel}
+          </button>
           <button
             type="button"
             onClick={onClose}
@@ -610,6 +687,24 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
           </button>
         </div>
       </div>
+
+      {verifyingReviewId && (
+        <VerifyReviewModal
+          reviewId={verifyingReviewId}
+          teacherId={teacher.id}
+          currentLang={currentLang}
+          onClose={() => setVerifyingReviewId(null)}
+        />
+      )}
+
+      {isRespondOpen && (
+        <TeacherResponseModal
+          teacher={teacher}
+          reviews={teacher.reviews}
+          currentLang={currentLang}
+          onClose={() => setIsRespondOpen(false)}
+        />
+      )}
     </div>
   );
 };

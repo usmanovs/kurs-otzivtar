@@ -26,6 +26,7 @@ import { FeaturedVideosSection } from './components/FeaturedVideosSection';
 import { ReportScamSection } from './components/ReportScamSection';
 import { StatsBar } from './components/StatsBar';
 import { StatsSection } from './components/StatsSection';
+import { ModerationPanel } from './components/ModerationPanel';
 import { TeachersSection } from './components/TeachersSection';
 import { TeacherLeaderboardSection } from './components/TeacherLeaderboardSection';
 import { RecentReviewPopup } from './components/RecentReviewPopup';
@@ -170,6 +171,7 @@ export default function App() {
   const [isAddTeacherOpen, setIsAddTeacherOpen] = useState(false);
   const [editingTeacher, setEditingTeacher] = useState<Teacher | null>(null);
   const [isAdminLoginOpen, setIsAdminLoginOpen] = useState(false);
+  const [isModerationOpen, setIsModerationOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Admin session — only ADMIN_EMAIL can edit existing teacher profiles,
@@ -766,14 +768,24 @@ export default function App() {
               </div>
               <div className="mt-2">
                 {isAdmin ? (
-                  <button
-                    type="button"
-                    onClick={() => signOutAdmin()}
-                    className="inline-flex items-center gap-1 text-slate-400 hover:text-red-600 transition-colors cursor-pointer"
-                  >
-                    <LogOut className="w-3 h-3" />
-                    <span>Admin чыгуу</span>
-                  </button>
+                  <div className="inline-flex items-center gap-4">
+                    <button
+                      type="button"
+                      onClick={() => setIsModerationOpen(true)}
+                      className="inline-flex items-center gap-1 text-slate-400 hover:text-indigo-600 transition-colors cursor-pointer"
+                    >
+                      <ShieldCheck className="w-3 h-3" />
+                      <span>{t.moderation.openButton}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => signOutAdmin()}
+                      className="inline-flex items-center gap-1 text-slate-400 hover:text-red-600 transition-colors cursor-pointer"
+                    >
+                      <LogOut className="w-3 h-3" />
+                      <span>Admin чыгуу</span>
+                    </button>
+                  </div>
                 ) : (
                   <button
                     type="button"
@@ -789,6 +801,18 @@ export default function App() {
           </div>
         </div>
       </footer>
+
+      {isModerationOpen && isAdmin && (
+        <ModerationPanel
+          currentLang={currentLang}
+          onClose={() => setIsModerationOpen(false)}
+          onModerated={() => {
+            fetchTeachers()
+              .then((fetched) => setTeachers(applyVoteOverlay(fetched, votedReviews)))
+              .catch(() => {});
+          }}
+        />
+      )}
 
       {/* Modals */}
       <Suspense fallback={null}>
