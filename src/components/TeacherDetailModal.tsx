@@ -7,13 +7,13 @@ import { fetchReviewIpLog, fetchApprovedResponses, TeacherResponse } from '../li
 import { VerifyReviewModal } from './VerifyReviewModal';
 import { TeacherResponseModal } from './TeacherResponseModal';
 import { CountryTag } from './CountryTag';
+import { buildHeaderTags } from '../lib/headerTags';
 import {
   X,
   Star,
   CheckCircle,
   ThumbsUp,
   ThumbsDown,
-  Building2,
   PlusCircle,
   AlertTriangle,
   Lightbulb,
@@ -197,6 +197,19 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
   // Muted against the dark header rather than the page's usual saturated
   // rating colours, which glare on slate-900.
   const headerTone = ratingTone(teacher.averageRating);
+  // academy_name is free text that people have used as a tag dump
+  // ("маркетинг,смм") beside a category saying the same thing — so the pills
+  // are built by one deduping pass rather than rendered from three sources.
+  const { tags: headerTags, overflow: headerTagOverflow } = buildHeaderTags({
+    categoryLabel: teacher.category ? t.categories[teacher.category] : undefined,
+    subnicheLabels: (teacher.subniches ?? []).map(
+      (sn) => (t.subniches as Record<string, string>)[sn] ?? sn
+    ),
+    academyName: teacher.academyName,
+    // Two, not three: the score and status pills sit in the same wrap row and
+    // are the more valuable pair, so the tags get whatever space is left.
+    max: 2,
+  });
   const totalReviews = teacher.reviews.length;
   const ratingCounts: Record<number, number> = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
   teacher.reviews.forEach((r) => {
@@ -244,62 +257,56 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
         className="bg-white w-full max-w-4xl rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh] supports-[height:100dvh]:max-h-[88dvh]"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Modal Header */}
-        <div className="p-5 sm:p-6 bg-slate-900 text-white flex items-start justify-between gap-3 sm:gap-4 shrink-0">
+        {/* Modal Header — one metadata row, not four. Name, then a single
+            wrap container carrying academy, category, sub-niches, score,
+            status and social links together. */}
+        <div className="px-4 py-3 sm:px-6 sm:py-4 bg-slate-900 text-white flex items-start justify-between gap-3 shrink-0">
           {/* min-w-0 all the way down, or a long name refuses to shrink and
               shoves the share/close buttons off the edge on a phone. */}
-          <div className="flex items-start gap-3 sm:gap-4 min-w-0">
+          <div className="flex items-center gap-3 min-w-0">
             {teacher.photoUrl ? (
               <img
                 src={teacher.photoUrl}
                 alt={teacher.name}
-                className="w-14 h-14 sm:w-16 sm:h-16 rounded-full object-cover ring-2 ring-white/20 shrink-0"
+                className="w-12 h-12 sm:w-14 sm:h-14 rounded-full object-cover ring-1 ring-white/25 shrink-0"
               />
             ) : (
-              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-indigo-500/30 text-white font-bold flex items-center justify-center text-xl shrink-0">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-indigo-500/30 text-white font-bold flex items-center justify-center text-lg ring-1 ring-white/25 shrink-0">
                 {teacher.name.charAt(0).toUpperCase()}
               </div>
             )}
+
             <div className="min-w-0">
-              <h2 className="text-xl sm:text-2xl font-bold leading-tight tracking-tight break-words">
+              <h2 className="text-lg sm:text-xl font-bold leading-tight tracking-tight break-words">
                 {teacher.name}
               </h2>
-              {teacher.academyName && (
-                <div className="flex items-center gap-1 text-xs font-semibold text-indigo-300 mt-1">
-                  <Building2 className="w-3.5 h-3.5" />
-                  <span>{teacher.academyName}</span>
-                </div>
-              )}
 
-              {/* What they teach and how they score, before any scrolling.
-                  Wraps as one flow so long Kyrgyz category names cannot push
-                  into the share/close buttons. */}
-              <div className="flex flex-wrap items-center gap-1.5 mt-2">
-                {teacher.category && (
-                  <span className="px-2.5 py-0.5 rounded-full bg-slate-700/60 text-slate-200 text-2xs font-medium">
-                    {t.categories[teacher.category]}
-                  </span>
-                )}
-                {(teacher.subniches ?? []).map((sn) => (
+              <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                {headerTags.map((tag) => (
                   <span
-                    key={sn}
-                    className="px-2.5 py-0.5 rounded-full bg-slate-700/40 text-slate-300 text-2xs font-medium"
+                    key={tag}
+                    className="px-2.5 py-0.5 rounded-full bg-slate-800/80 border border-slate-700/60 text-slate-300 text-2xs font-medium"
                   >
-                    {t.subniches[sn as keyof typeof t.subniches] ?? sn}
+                    {tag}
                   </span>
                 ))}
+                {headerTagOverflow > 0 && (
+                  <span className="px-2 py-0.5 rounded-full bg-slate-800/60 border border-slate-700/50 text-slate-400 text-2xs font-medium">
+                    +{headerTagOverflow}
+                  </span>
+                )}
 
                 {teacher.reviewCount > 0 && (
                   <>
                     <span
-                      className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-2xs font-bold ${HEADER_RATING_CLASS[headerTone]}`}
+                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-bold ${HEADER_RATING_CLASS[headerTone]}`}
                     >
                       <Star className={`w-3 h-3 ${HEADER_STAR_CLASS[headerTone]}`} />
                       {teacher.averageRating.toFixed(1)}
                       <span className="font-medium opacity-80">({teacher.reviewCount})</span>
                     </span>
                     <span
-                      className={`px-2.5 py-0.5 rounded-full text-2xs font-semibold ${HEADER_RATING_CLASS[headerTone]}`}
+                      className={`px-2 py-0.5 rounded-full text-2xs font-semibold ${HEADER_RATING_CLASS[headerTone]}`}
                     >
                       {headerTone === 'danger'
                         ? t.analytics.flaggedLabel
@@ -307,37 +314,34 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
                     </span>
                   </>
                 )}
+
+                {teacher.instagramUrl && (
+                  <a
+                    href={teacher.instagramUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Instagram"
+                    className="text-slate-400 hover:text-pink-400 transition-colors"
+                  >
+                    <Instagram className="w-3.5 h-3.5" />
+                  </a>
+                )}
+                {teacher.youtubeUrl && (
+                  <a
+                    href={teacher.youtubeUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="YouTube"
+                    className="text-slate-400 hover:text-red-400 transition-colors"
+                  >
+                    <Youtube className="w-3.5 h-3.5" />
+                  </a>
+                )}
               </div>
-              {(teacher.instagramUrl || teacher.youtubeUrl) && (
-                <div className="flex items-center gap-2 mt-2">
-                  {teacher.instagramUrl && (
-                    <a
-                      href={teacher.instagramUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      aria-label="Instagram"
-                      className="text-slate-300 hover:text-pink-400 transition-colors"
-                    >
-                      <Instagram className="w-4 h-4" />
-                    </a>
-                  )}
-                  {teacher.youtubeUrl && (
-                    <a
-                      href={teacher.youtubeUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      aria-label="YouTube"
-                      className="text-slate-300 hover:text-red-400 transition-colors"
-                    >
-                      <Youtube className="w-4 h-4" />
-                    </a>
-                  )}
-                </div>
-              )}
             </div>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-1 shrink-0">
             <button
               type="button"
               id="share-teacher-btn"
@@ -386,30 +390,6 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
               </div>
             ))}
 
-          {/* Action to write review */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-5 bg-indigo-50 rounded-2xl border border-indigo-100">
-            <div>
-              <h4 className="text-sm font-bold text-indigo-950">
-                Бул мугалим менен окуган элеңизби?
-              </h4>
-              <p className="text-xs text-indigo-800/80 mt-0.5">
-                Сиздин чынчыл сын-пикириңиз башка студенттерди алдануудан сактайт.
-              </p>
-            </div>
-            <button
-              type="button"
-              id="detail-modal-add-review-btn"
-              onClick={() => {
-                onClose();
-                onOpenAddReview(teacher);
-              }}
-              className="inline-flex items-center gap-2 px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs sm:text-sm rounded-full transition-colors shadow-xs shrink-0 cursor-pointer"
-            >
-              <PlusCircle className="w-4 h-4" />
-              <span>{t.courseCard.addReview}</span>
-            </button>
-          </div>
-
           {teacher.bio && (
             <div className="text-sm text-slate-600 leading-relaxed bg-slate-50 p-4 rounded-xl border border-slate-200">
               {teacher.bio}
@@ -419,42 +399,66 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
           {/* Overall Ratings — one unified panel instead of separate side-by-side cards */}
           <div className="bg-white border border-slate-200 rounded-2xl shadow-2xs p-5 sm:p-6">
             <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8">
-              {/* Main Score */}
-              <div className="md:col-span-4 flex flex-col items-center justify-center text-center md:border-r md:border-slate-100 md:pr-8">
-                <div
-                  className={`text-4xl sm:text-5xl font-bold mb-2 ${
-                    teacher.averageRating >= 4
-                      ? 'text-emerald-600'
-                      : teacher.averageRating >= 3
-                      ? 'text-amber-600'
-                      : 'text-red-600'
-                  }`}
-                >
-                  {teacher.averageRating.toFixed(1)}
-                </div>
-                {renderStars(teacher.averageRating, 'w-5 h-5')}
-                <div className="text-xs text-slate-500 font-semibold mt-1">
-                  {teacher.reviewCount} {t.courseCard.reviewsCount} негизинде
-                </div>
-
-                {teacher.reviewCount > 0 && (
-                  <div className="mt-4 pt-3 border-t border-slate-100 w-full text-center">
-                    <span
-                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${
-                        teacher.recommendPercent >= 70
-                          ? 'bg-emerald-100 text-emerald-800'
-                          : 'bg-red-100 text-red-800'
+              {/* Score and the review CTA share one row: two full-width
+                  blocks stacked used most of a phone screen before the first
+                  review. */}
+              <div className="md:col-span-4 md:border-r md:border-slate-100 md:pr-8">
+                <div className="flex items-center justify-between gap-3 md:flex-col md:text-center md:gap-4">
+                  <div className="flex items-center gap-3 min-w-0 md:flex-col md:gap-1.5">
+                    <div
+                      className={`text-4xl sm:text-5xl font-bold leading-none shrink-0 ${
+                        teacher.averageRating >= 4
+                          ? 'text-emerald-600'
+                          : teacher.averageRating >= 3
+                            ? 'text-amber-600'
+                            : 'text-red-600'
                       }`}
                     >
-                      {teacher.recommendPercent >= 70 ? (
-                        <ThumbsUp className="w-3.5 h-3.5" />
-                      ) : (
-                        <ThumbsDown className="w-3.5 h-3.5" />
+                      {teacher.averageRating.toFixed(1)}
+                    </div>
+                    <div className="min-w-0 md:flex md:flex-col md:items-center">
+                      {renderStars(teacher.averageRating, 'w-4 h-4 sm:w-5 sm:h-5')}
+                      <div className="text-2xs sm:text-xs text-slate-500 font-semibold mt-1">
+                        {teacher.reviewCount} {t.courseCard.reviewsCount} негизинде
+                      </div>
+                      {teacher.reviewCount > 0 && (
+                        <span
+                          className={`inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 rounded-full text-2xs font-bold ${
+                            teacher.recommendPercent >= 70
+                              ? 'bg-emerald-100 text-emerald-800'
+                              : 'bg-red-100 text-red-800'
+                          }`}
+                        >
+                          {teacher.recommendPercent >= 70 ? (
+                            <ThumbsUp className="w-3 h-3" />
+                          ) : (
+                            <ThumbsDown className="w-3 h-3" />
+                          )}
+                          {teacher.recommendPercent}% {t.courseCard.recommendRate}
+                        </span>
                       )}
-                      {teacher.recommendPercent}% {t.courseCard.recommendRate}
-                    </span>
+                    </div>
                   </div>
-                )}
+
+                  <div className="shrink-0 md:w-full md:pt-3 md:border-t md:border-slate-100">
+                    <button
+                      type="button"
+                      id="detail-modal-add-review-btn"
+                      onClick={() => {
+                        onClose();
+                        onOpenAddReview(teacher);
+                      }}
+                      className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm rounded-xl transition-colors shadow-xs cursor-pointer md:w-full"
+                    >
+                      <PlusCircle className="w-4 h-4 shrink-0" />
+                      <span>{t.courseCard.addReview}</span>
+                    </button>
+                    {/* The longer pitch only earns its space once there is room. */}
+                    <p className="hidden sm:block text-2xs text-slate-500 mt-1.5 text-center leading-snug">
+                      {t.detailModal.reviewPrompt}
+                    </p>
+                  </div>
+                </div>
               </div>
 
               {/* Sub-scores & rating distribution */}
