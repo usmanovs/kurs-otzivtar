@@ -223,6 +223,7 @@ export const TRANSLATIONS = {
       filteredCount: 'мугалим табылды',
       clearSearch: 'Издөөнү тазалоо',
       allLetters: 'Бардыгы',
+      letterFilter: 'Аты боюнча (А-Я)',
       allGenders: 'Жынысы боюнча',
       onlyWithPhoto: 'Сүрөтү барлар гана',
       onlyWithReviews: 'Сын-пикири барлар гана'
@@ -380,7 +381,7 @@ export const TRANSLATIONS = {
     stats: {
       coursesCount: 'Талданган курстар',
       reviewsCount: 'Чынчыл сын-пикирлер',
-      warningCoursesCount: 'Шектүү курстар аныкталды',
+      warningCoursesCount: 'Этияттык керек мугалимдер',
       independentNotice: '100% көз карандысыз жана ачык портал'
     },
     analytics: {
@@ -628,6 +629,7 @@ export const TRANSLATIONS = {
       filteredCount: 'преподавателей найдено',
       clearSearch: 'Очистить поиск',
       allLetters: 'Все',
+      letterFilter: 'По имени (А-Я)',
       allGenders: 'По полу',
       onlyWithPhoto: 'Только с фото',
       onlyWithReviews: 'Только с отзывами'
@@ -785,7 +787,7 @@ export const TRANSLATIONS = {
     stats: {
       coursesCount: 'Курсов проверено',
       reviewsCount: 'Честных отзывов',
-      warningCoursesCount: 'Сомнительных курсов выявлено',
+      warningCoursesCount: 'Преподавателей требуют осторожности',
       independentNotice: '100% независимый портал'
     },
     analytics: {

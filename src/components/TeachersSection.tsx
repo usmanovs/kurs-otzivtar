@@ -3,7 +3,7 @@ import { CourseCategory, Teacher, TeacherGender } from '../types';
 import { SupportedLang, TRANSLATIONS } from '../translations';
 import { ratingTone, RATING_BADGE_CLASS } from '../lib/ratingTone';
 import { SortOption } from '../lib/subniches';
-import { GraduationCap, Star, PlusCircle, Building2, Pencil, Instagram, Youtube, MessageSquarePlus, X } from 'lucide-react';
+import { GraduationCap, Star, PlusCircle, Building2, Pencil, Instagram, Youtube, MessageSquarePlus, X, ChevronDown } from 'lucide-react';
 
 interface TeachersSectionProps {
   teachers: Teacher[];
@@ -95,6 +95,7 @@ export const TeachersSection: React.FC<TeachersSectionProps> = ({
   const [onlyWithReviews, setOnlyWithReviews] = useState(true);
   const [selectedSubniche, setSelectedSubniche] = useState<string>('all');
   const [sortBy, setSortBy] = useState<SortOption>('default');
+  const [showLetters, setShowLetters] = useState(false);
 
   const baseTeachers = useMemo(() => {
     return teachers.filter((tch) => {
@@ -299,8 +300,27 @@ export const TeachersSection: React.FC<TeachersSectionProps> = ({
         </div>
       )}
 
+      {/* On phones this ribbon is one more full row competing with the other
+          filters, so it collapses behind a toggle. Always shown from sm up. */}
       {availableLetters.length > 0 && (
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 mb-4 no-scrollbar">
+        <button
+          type="button"
+          onClick={() => setShowLetters((v) => !v)}
+          aria-expanded={showLetters}
+          className="sm:hidden inline-flex items-center gap-1.5 mb-3 px-3 py-1.5 rounded-full text-xs font-semibold bg-white text-slate-600 border border-slate-200 cursor-pointer"
+        >
+          <span>
+            {t.teachersSection.letterFilter}
+            {selectedLetter !== 'all' ? `: ${selectedLetter}` : ''}
+          </span>
+          <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showLetters ? 'rotate-180' : ''}`} />
+        </button>
+      )}
+
+      {availableLetters.length > 0 && (
+        <div
+          className={`${showLetters ? 'flex' : 'hidden'} sm:flex items-center gap-1.5 overflow-x-auto pb-1 mb-4 no-scrollbar`}
+        >
           <button
             type="button"
             onClick={() => setSelectedLetter('all')}

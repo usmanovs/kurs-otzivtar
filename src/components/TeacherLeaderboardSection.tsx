@@ -1,7 +1,14 @@
 import React, { useMemo } from 'react';
 import { Teacher } from '../types';
 import { SupportedLang, TRANSLATIONS } from '../translations';
-import { ratingTone, RATING_STAR_CLASS, RATING_TEXT_CLASS, RATING_BADGE_CLASS } from '../lib/ratingTone';
+import {
+  ratingTone,
+  RATING_STAR_CLASS,
+  RATING_TEXT_CLASS,
+  RATING_BADGE_CLASS,
+  FLAGGED_THRESHOLD,
+  TOP_THRESHOLD,
+} from '../lib/ratingTone';
 import { Award, TrendingUp, TrendingDown, Star } from 'lucide-react';
 
 interface TeacherLeaderboardSectionProps {
@@ -11,8 +18,6 @@ interface TeacherLeaderboardSectionProps {
 }
 
 const MAX_ROWS = 5;
-const TOP_THRESHOLD = 4.5;
-const FLAGGED_THRESHOLD = 2.5;
 // Temporarily hidden — flip back to true to bring the top-rated panel back.
 const SHOW_TOP_RATED = false;
 // Always surfaced in the flagged panel regardless of where they'd naturally

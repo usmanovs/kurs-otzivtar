@@ -19,6 +19,7 @@ import {
   fetchSiteStats,
   SiteStats,
 } from './lib/api';
+import { isFlaggedRating } from './lib/ratingTone';
 import { SupportedLang, TRANSLATIONS } from './translations';
 import { Navbar } from './components/Navbar';
 import { TransparencyBanner } from './components/TransparencyBanner';
@@ -331,9 +332,13 @@ export default function App() {
     }, 4500);
   };
 
+  // Counts flagged *instructors*, using the same threshold as the leaderboard
+  // and the analytics breakdown. It used to count rows in the courses table,
+  // which read as "0 suspicious" right next to a panel full of 1.0-rated
+  // instructors.
   const warningCoursesCount = useMemo(() => {
-    return courses.filter((c) => c.isWarningCourse).length;
-  }, [courses]);
+    return teachers.filter((tch) => isFlaggedRating(tch.averageRating, tch.reviewCount)).length;
+  }, [teachers]);
 
   const totalReviewsCount = useMemo(() => {
     return teachers.reduce((acc, tch) => acc + tch.reviews.length, 0);
@@ -603,18 +608,23 @@ export default function App() {
             </button>
           </form>
 
-          <div className="flex flex-wrap items-center justify-center gap-2 text-xs">
-            <span className="text-slate-400">{t.hero.popularLabel}</span>
-            {t.hero.popularTags.map((tag) => (
-              <button
-                key={tag}
-                type="button"
-                onClick={() => handlePopularTagClick(tag)}
-                className="px-3 py-1 bg-white border border-slate-200 rounded-full text-slate-600 hover:border-indigo-300 hover:text-indigo-600 transition-colors cursor-pointer"
-              >
-                {tag}
-              </button>
-            ))}
+          {/* One swipeable row on phones (wrapping put these on three lines);
+              reverts to a centred wrap once there's width for it. */}
+          <div className="text-xs">
+            <span className="block sm:hidden text-slate-400 mb-1.5">{t.hero.popularLabel}</span>
+            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap sm:justify-center sm:overflow-visible">
+              <span className="hidden sm:inline text-slate-400 shrink-0">{t.hero.popularLabel}</span>
+              {t.hero.popularTags.map((tag) => (
+                <button
+                  key={tag}
+                  type="button"
+                  onClick={() => handlePopularTagClick(tag)}
+                  className="shrink-0 whitespace-nowrap px-3 py-1.5 bg-white border border-slate-200 rounded-full text-slate-600 hover:border-indigo-300 hover:text-indigo-600 transition-colors cursor-pointer"
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium bg-white text-slate-700 border border-slate-200 shadow-2xs">

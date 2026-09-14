@@ -1,1 +1,35 @@
 @import "tailwindcss";
+
+/* Utilities referenced throughout the app that Tailwind doesn't ship.
+   Without these the class names are silently inert: horizontal scroll rows
+   show a native scrollbar, and modals/toasts pop in with no fade. */
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.18s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in {
+    animation: none;
+  }
+}

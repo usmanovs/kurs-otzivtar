@@ -23,3 +23,14 @@ export const RATING_TEXT_CLASS: Record<RatingTone, string> = {
   warning: 'text-amber-600',
   success: 'text-emerald-600',
 };
+
+// A teacher is "flagged" (needs caution) at or below this average. Shared by
+// the leaderboard's flagged panel, the analytics breakdown and the stats bar
+// so those three can never report different numbers for the same idea.
+export const FLAGGED_THRESHOLD = 2.5;
+export const TOP_THRESHOLD = 4.5;
+export const HEALTHY_THRESHOLD = 4;
+
+export function isFlaggedRating(averageRating: number, reviewCount: number): boolean {
+  return reviewCount > 0 && averageRating <= FLAGGED_THRESHOLD;
+}
