@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Teacher } from '../types';
 import { SupportedLang, TRANSLATIONS } from '../translations';
 import {
@@ -11,7 +11,7 @@ import {
   MIN_REVIEWS_FOR_WATCHLIST,
   bayesianRating,
 } from '../lib/ratingTone';
-import { Award, TrendingUp, TrendingDown, Star } from 'lucide-react';
+import { Award, TrendingUp, TrendingDown, Star, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface TeacherLeaderboardSectionProps {
   teachers: Teacher[];
@@ -102,6 +102,7 @@ export const TeacherLeaderboardSection: React.FC<TeacherLeaderboardSectionProps>
   onViewTeacher,
 }) => {
   const t = TRANSLATIONS[currentLang];
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const topRated = useMemo(
     () =>
@@ -114,7 +115,7 @@ export const TeacherLeaderboardSection: React.FC<TeacherLeaderboardSectionProps>
     [teachers]
   );
 
-  const flagged = useMemo(() => {
+  const { flagged, flaggedTotal } = useMemo(() => {
     const score = (tch: Teacher) => bayesianRating(tch.averageRating, tch.reviewCount);
 
     // Rank by the shrunk score, so a teacher with many consistent complaints
@@ -131,11 +132,17 @@ export const TeacherLeaderboardSection: React.FC<TeacherLeaderboardSectionProps>
           score(tch) <= FLAGGED_THRESHOLD &&
           !pinnedNames.has(tch.name)
       )
-      .sort(sortFlagged)
-      .slice(0, Math.max(0, MAX_ROWS - pinned.length));
+      .sort(sortFlagged);
 
-    return [...rest, ...pinned].sort(sortFlagged);
-  }, [teachers]);
+    // Collapsed still reserves room for the pinned entries, so pinning keeps
+    // meaning something at either size.
+    const shownRest = isExpanded ? rest : rest.slice(0, Math.max(0, MAX_ROWS - pinned.length));
+
+    return {
+      flagged: [...shownRest, ...pinned].sort(sortFlagged),
+      flaggedTotal: rest.length + pinned.length,
+    };
+  }, [teachers, isExpanded]);
 
   if (topRated.length === 0 && flagged.length === 0) return null;
 
@@ -213,6 +220,27 @@ export const TeacherLeaderboardSection: React.FC<TeacherLeaderboardSectionProps>
                 />
               ))}
             </div>
+            {flaggedTotal > MAX_ROWS && (
+              <button
+                type="button"
+                id="leaderboard-expand-btn"
+                onClick={() => setIsExpanded((v) => !v)}
+                aria-expanded={isExpanded}
+                className="w-full flex items-center justify-center gap-1.5 px-5 py-3 border-t border-slate-100 text-xs font-semibold text-indigo-600 hover:bg-indigo-50/60 transition-colors cursor-pointer"
+              >
+                {isExpanded ? (
+                  <>
+                    {t.leaderboard.showLess}
+                    <ChevronUp className="w-3.5 h-3.5" />
+                  </>
+                ) : (
+                  <>
+                    {t.leaderboard.showMore.replace('{n}', String(flaggedTotal - flagged.length))}
+                    <ChevronDown className="w-3.5 h-3.5" />
+                  </>
+                )}
+              </button>
+            )}
             <p className="text-2xs text-slate-400 px-5 py-3 border-t border-slate-100 bg-slate-50/50">
               {t.leaderboard.lowReviewNotice}
             </p>
