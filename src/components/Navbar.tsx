@@ -20,6 +20,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     { id: 'teachers-section', label: t.navTeachers },
     { id: 'featured-videos-section', label: t.navVideos },
     { id: 'report-scam-section', label: t.navReportScam },
+    { id: 'stats-section', label: t.navStats },
   ];
 
   const scrollToSection = (id: string) => {

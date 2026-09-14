@@ -13,6 +13,7 @@ export const TRANSLATIONS = {
     navVideos: 'Видеолор',
     navLeaderboard: 'Рейтинг',
     navReportScam: 'Кайда кайрылуу',
+    navStats: 'Аналитика',
     leaderboard: {
       title: 'Мугалимдер рейтинги',
       subtitle: 'Сын-пикирлер боюнча эсептелген орточо баа',
@@ -245,6 +246,28 @@ export const TRANSLATIONS = {
       reviewsCount: 'Чынчыл сын-пикирлер',
       warningCoursesCount: 'Шектүү курстар аныкталды',
       independentNotice: '100% көз карандысыз жана ачык портал'
+    },
+    analytics: {
+      title: 'Мугалимдер аналитикасы',
+      subtitle: 'Платформадагы бардык мугалимдер боюнча жалпы көрүнүш',
+      totalTeachers: 'Бардык мугалимдер',
+      genderTitle: 'Жынысы боюнча бөлүштүрүү',
+      genderMale: 'Эркек',
+      genderFemale: 'Аял',
+      genderUnspecified: 'Көрсөтүлгөн жок',
+      categoryTitle: 'Багыты боюнча бөлүштүрүү',
+      categoryUnspecified: 'Категориясы көрсөтүлгөн жок',
+      ratingHealthTitle: 'Сын-пикирлердин жалпы сапаты',
+      ratingHealthSubtitle: 'Кеминде 1 сын-пикири бар мугалимдер арасында',
+      healthyLabel: 'Ишенимдүү',
+      mixedLabel: 'Аралаш пикирлер',
+      flaggedLabel: 'Этияттык керек',
+      recommendRateTitle: 'Жалпы сунуштоо деңгээли',
+      recommendRateSubtitle: 'Бардык сын-пикирлер боюнча',
+      coverageTitle: 'Тизме сапаты',
+      withPhotoLabel: 'Сүрөтү бар',
+      withReviewsLabel: 'Сын-пикири бар',
+      withSocialLabel: 'Instagram/YouTube шилтемеси бар'
     }
   },
   ru: {
@@ -259,6 +282,7 @@ export const TRANSLATIONS = {
     navVideos: 'Видео',
     navLeaderboard: 'Рейтинг',
     navReportScam: 'Куда обращаться',
+    navStats: 'Аналитика',
     leaderboard: {
       title: 'Рейтинг преподавателей',
       subtitle: 'Средняя оценка на основе отзывов студентов',
@@ -491,6 +515,28 @@ export const TRANSLATIONS = {
       reviewsCount: 'Честных отзывов',
       warningCoursesCount: 'Сомнительных курсов выявлено',
       independentNotice: '100% независимый портал'
+    },
+    analytics: {
+      title: 'Аналитика преподавателей',
+      subtitle: 'Общая картина по всем преподавателям на платформе',
+      totalTeachers: 'Всего преподавателей',
+      genderTitle: 'Распределение по полу',
+      genderMale: 'Мужчины',
+      genderFemale: 'Женщины',
+      genderUnspecified: 'Не указано',
+      categoryTitle: 'Распределение по направлениям',
+      categoryUnspecified: 'Категория не указана',
+      ratingHealthTitle: 'Общее качество отзывов',
+      ratingHealthSubtitle: 'Среди преподавателей минимум с 1 отзывом',
+      healthyLabel: 'Надёжные',
+      mixedLabel: 'Смешанные отзывы',
+      flaggedLabel: 'Требуют осторожности',
+      recommendRateTitle: 'Общий уровень рекомендаций',
+      recommendRateSubtitle: 'По всем отзывам',
+      coverageTitle: 'Качество каталога',
+      withPhotoLabel: 'Есть фото',
+      withReviewsLabel: 'Есть отзывы',
+      withSocialLabel: 'Есть Instagram/YouTube'
     }
   },
 };

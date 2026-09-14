@@ -25,6 +25,7 @@ import { TransparencyBanner } from './components/TransparencyBanner';
 import { FeaturedVideosSection } from './components/FeaturedVideosSection';
 import { ReportScamSection } from './components/ReportScamSection';
 import { StatsBar } from './components/StatsBar';
+import { StatsSection } from './components/StatsSection';
 import { TeachersSection } from './components/TeachersSection';
 import { TeacherLeaderboardSection } from './components/TeacherLeaderboardSection';
 import { RecentReviewPopup } from './components/RecentReviewPopup';
@@ -736,6 +737,9 @@ export default function App() {
           totalReviews={totalReviewsCount}
           warningCoursesCount={warningCoursesCount}
         />
+
+        {/* Teacher analytics: gender/category breakdown, rating health, etc. */}
+        <StatsSection teachers={teachers} currentLang={currentLang} />
 
       </main>
 
