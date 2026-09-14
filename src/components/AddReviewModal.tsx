@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from 'react';
-import { Review, StudentStatus, Teacher } from '../types';
+import { CourseCategory, Review, StudentStatus, Teacher } from '../types';
 import { SupportedLang, TRANSLATIONS } from '../translations';
 import { useEscapeKey } from '../hooks/useEscapeKey';
+import { teacherNameKey } from '../lib/api';
 import {
   X,
   Star,
@@ -20,7 +21,10 @@ interface AddReviewModalProps {
   onClose: () => void;
   onSubmitReview: (
     teacherName: string,
-    reviewData: Omit<Review, 'id' | 'date' | 'helpfulCount' | 'unhelpfulCount'>
+    reviewData: Omit<Review, 'id' | 'date' | 'helpfulCount' | 'unhelpfulCount'>,
+    // Only set when the name matches nobody in the directory and the review
+    // is therefore about to mint a profile.
+    newTeacherCategory?: CourseCategory
   ) => void;
 }
 
@@ -57,6 +61,7 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
   const [isVerified, setIsVerified] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
   const [showMore, setShowMore] = useState(false);
+  const [newTeacherCategory, setNewTeacherCategory] = useState<CourseCategory | ''>('');
 
   // Existing teacher/mentor names, for lookup-or-create autocomplete
   const knownTeacherNames = useMemo(() => {
@@ -65,6 +70,15 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
       .filter(Boolean)
       .sort((a, b) => a.localeCompare(b));
   }, [teachers]);
+
+  // Submitting a review for a name nobody has reviewed yet silently creates the
+  // profile, so this is the only moment anyone can say what it teaches. Must
+  // match submitReview()'s lookup exactly, or we'd ask at the wrong times.
+  const willCreateTeacher = useMemo(() => {
+    const normalized = teacherNameKey(teacherName);
+    if (!normalized) return false;
+    return !teachers.some((teacher) => teacherNameKey(teacher.name) === normalized);
+  }, [teacherName, teachers]);
 
   const getRatingDesc = (val: number) => {
     switch (val) {
@@ -124,6 +138,10 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
       setErrorMsg('Мугалимдин же ментордун атын жазыңыз!');
       return;
     }
+    if (willCreateTeacher && !newTeacherCategory) {
+      setErrorMsg(t.addReviewModal.errorNewTeacherCategory);
+      return;
+    }
     if (overallRating === 0) {
       setErrorMsg('Жалпы бааны тандаңыз — жылдыздардын бирин басыңыз.');
       return;
@@ -168,7 +186,7 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
       adviceForNewcomers: adviceForNewcomers.trim() || undefined,
       whatsappNumber: whatsappNumber.trim() || undefined,
       hasJobScamReport,
-    });
+    }, willCreateTeacher ? (newTeacherCategory as CourseCategory) : undefined);
 
     onClose();
   };
@@ -236,6 +254,37 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
               </p>
             )}
           </div>
+
+          {/* This review is about to create the profile, so it is the only
+              chance to file it under something. */}
+          {willCreateTeacher && (
+            <div className="bg-amber-50/70 p-4 rounded-2xl border border-amber-100">
+              <label className="block text-xs font-bold text-amber-950 mb-1">
+                {t.addReviewModal.newTeacherCategory} *
+              </label>
+              <p className="text-2xs text-amber-800/80 mb-2">
+                {t.addReviewModal.newTeacherCategoryHint}
+              </p>
+              <select
+                id="new-review-teacher-category"
+                value={newTeacherCategory}
+                onChange={(e) => setNewTeacherCategory(e.target.value as CourseCategory | '')}
+                className="w-full px-3.5 py-2 bg-white border border-amber-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500"
+                required
+              >
+                <option value="" disabled>
+                  {t.addTeacherModal.categoryNone}
+                </option>
+                {(Object.keys(t.categories) as (CourseCategory | 'all')[])
+                  .filter((key) => key !== 'all')
+                  .map((key) => (
+                    <option key={key} value={key}>
+                      {t.categories[key as CourseCategory]}
+                    </option>
+                  ))}
+              </select>
+            </div>
+          )}
 
           {/* Overall Rating Selection */}
           <div className="bg-indigo-50/70 p-4 rounded-2xl border border-indigo-100">

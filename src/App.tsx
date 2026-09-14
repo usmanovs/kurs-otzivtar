@@ -444,11 +444,18 @@ export default function App() {
   // Submit new review — resolves to an existing teacher by name, or creates a new one
   const handleSubmitReview = async (
     teacherName: string,
-    reviewData: Omit<Review, 'id' | 'date' | 'helpfulCount' | 'unhelpfulCount'>
+    reviewData: Omit<Review, 'id' | 'date' | 'helpfulCount' | 'unhelpfulCount'>,
+    newTeacherCategory?: CourseCategory
   ) => {
     const { whatsappNumber, ...reviewFields } = reviewData;
     try {
-      const result = await submitReview(teacherName, teachers, reviewFields, whatsappNumber);
+      const result = await submitReview(
+        teacherName,
+        teachers,
+        reviewFields,
+        whatsappNumber,
+        newTeacherCategory
+      );
 
       setTeachers((prev) => {
         if (result.isNewTeacher && result.newTeacher) {

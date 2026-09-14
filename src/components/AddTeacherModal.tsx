@@ -67,12 +67,16 @@ export const AddTeacherModal: React.FC<AddTeacherModalProps> = ({
       setError(t.addTeacherModal.errorName);
       return;
     }
+    if (!category) {
+      setError(t.addTeacherModal.errorCategory);
+      return;
+    }
 
     onSubmit(
       {
         name: name.trim(),
         academyName: academyName.trim() || undefined,
-        category: category || undefined,
+        category,
         subniches,
         gender: gender || undefined,
         bio: bio.trim() || undefined,
@@ -190,15 +194,21 @@ export const AddTeacherModal: React.FC<AddTeacherModalProps> = ({
 
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1">
-              {t.addTeacherModal.category}
+              {t.addTeacherModal.category} *
             </label>
             <select
               id="new-teacher-category-select"
               value={category}
               onChange={(e) => handleCategoryChange(e.target.value as CourseCategory | '')}
               className="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+              required
             >
-              <option value="">{t.addTeacherModal.categoryNone}</option>
+              {/* Selectable only until a real choice is made: leaving it here as a
+                  valid option is how 13 of the directory's profiles ended up
+                  uncategorised. */}
+              <option value="" disabled>
+                {t.addTeacherModal.categoryNone}
+              </option>
               {(Object.keys(t.categories) as (CourseCategory | 'all')[])
                 .filter((key) => key !== 'all')
                 .map((key) => (

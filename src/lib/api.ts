@@ -1,5 +1,5 @@
 import { supabase } from './supabaseClient';
-import { Course, FeaturedVideo, Review, Teacher } from '../types';
+import { Course, CourseCategory, FeaturedVideo, Review, Teacher } from '../types';
 import { calculateTeacherMetrics } from '../data/teachers';
 
 function mapReviewRow(row: any): Review {
@@ -194,14 +194,26 @@ export async function updateTeacher(
  * among already-loaded teachers, or creating a new teacher record if no match exists.
  * Returns the teacher id the review was attached to, and whether that teacher is new.
  */
+/**
+ * Key a teacher name for lookup. Case and stray whitespace must not mint a
+ * second profile: "самара   кеңешова" and "Самара Кеңешова" are one person,
+ * and the duplicate would arrive with no category attached.
+ * AddReviewModal decides whether to prompt for a category with this same
+ * function, so the prompt can never disagree with what the insert does.
+ */
+export function teacherNameKey(name: string): string {
+  return name.trim().replace(/\s+/g, ' ').toLowerCase();
+}
+
 export async function submitReview(
   teacherName: string,
   existingTeachers: Teacher[],
   reviewData: Omit<Review, 'id' | 'date' | 'helpfulCount' | 'unhelpfulCount'>,
-  whatsappNumber?: string
+  whatsappNumber?: string,
+  newTeacherCategory?: CourseCategory
 ): Promise<{ teacherId: string; review: Review; isNewTeacher: boolean; newTeacher?: Teacher }> {
-  const normalized = teacherName.trim().toLowerCase();
-  const existing = existingTeachers.find((t) => t.name.trim().toLowerCase() === normalized);
+  const normalized = teacherNameKey(teacherName);
+  const existing = existingTeachers.find((t) => teacherNameKey(t.name) === normalized);
 
   let teacherId: string;
   let newTeacher: Teacher | undefined;
@@ -210,7 +222,13 @@ export async function submitReview(
   if (existing) {
     teacherId = existing.id;
   } else {
-    const created = await insertTeacher({ name: teacherName.trim() });
+    // The reviewer is asked for this in the modal whenever the name matches
+    // nobody — creating a profile with a name and nothing else is what left
+    // most of the directory uncategorised.
+    const created = await insertTeacher({
+      name: teacherName.trim(),
+      category: newTeacherCategory,
+    });
     teacherId = created.id;
     newTeacher = created;
     isNewTeacher = true;

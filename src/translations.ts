@@ -168,6 +168,9 @@ export const TRANSLATIONS = {
       title: 'Мугалимге сын-пикир калтыруу',
       subtitle: 'Сиздин чынчыл пикириңиз башка студенттерге туура тандоо жасоого жардам берет',
       teacherName: 'Мугалимдин же ментордун аты-жөнү',
+      newTeacherCategory: 'Бул мугалим эмне үйрөтөт?',
+      newTeacherCategoryHint: 'Бул ат тизмеде жок — сиздин сын-пикириңиз аны каталогго кошот. Багытын тандасаңыз, аны издегендер таба алат.',
+      errorNewTeacherCategory: 'Жаңы мугалим үчүн багытын тандаңыз',
       selectCourse: 'Курсту тандаңыз',
       showMoreDetails: 'Кошумча маалымат кошуу (милдеттүү эмес)',
       showLessDetails: 'Кошумча маалыматты жашыруу',
@@ -235,8 +238,8 @@ export const TRANSLATIONS = {
       subtitleEdit: 'Мугалимдин профилин жаңыртыңыз',
       name: 'Мугалимдин же ментордун толук аты-жөнү',
       academy: 'Иштеген академиясы (милдеттүү эмес)',
-      category: 'Адистиги (категория) — милдеттүү эмес',
-      categoryNone: 'Категория тандалган жок',
+      category: 'Адистиги (категория)',
+      categoryNone: 'Категорияны тандаңыз…',
       gender: 'Жынысы (милдеттүү эмес)',
       genderNone: 'Тандалган жок',
       genderFemale: 'Аял',
@@ -251,7 +254,8 @@ export const TRANSLATIONS = {
       submitBtn: 'Мугалимди кошуу',
       submitBtnEdit: 'Сактоо',
       cancelBtn: 'Жокко чыгаруу',
-      errorName: 'Мугалимдин атын жазыңыз'
+      errorName: 'Мугалимдин атын жазыңыз',
+      errorCategory: 'Категорияны тандаңыз — ошондо профиль каталогдун туура бөлүмүнө түшөт'
     },
     verifyModal: {
       title: 'Окуганыңызды тастыктаңыз',
@@ -583,6 +587,9 @@ export const TRANSLATIONS = {
       title: 'Оставить отзыв о преподавателе',
       subtitle: 'Ваш честный отзыв защитит будущих студентов от потери денег и времени',
       teacherName: 'Имя преподавателя или ментора',
+      newTeacherCategory: 'Чему обучает этот преподаватель?',
+      newTeacherCategoryHint: 'Этого имени ещё нет в каталоге — ваш отзыв создаст профиль. Укажите направление, чтобы его могли найти.',
+      errorNewTeacherCategory: 'Выберите направление для нового преподавателя',
       selectCourse: 'Выберите курс',
       showMoreDetails: 'Добавить подробности (необязательно)',
       showLessDetails: 'Скрыть подробности',
@@ -657,8 +664,8 @@ export const TRANSLATIONS = {
       photoRemove: 'Удалить фото',
       instagram: 'Ссылка на Instagram (необязательно)',
       youtube: 'Ссылка на YouTube (необязательно)',
-      category: 'Специализация (категория) — необязательно',
-      categoryNone: 'Категория не выбрана',
+      category: 'Специализация (категория)',
+      categoryNone: 'Выберите категорию…',
       gender: 'Пол (необязательно)',
       genderNone: 'Не выбран',
       genderFemale: 'Женский',
@@ -666,7 +673,8 @@ export const TRANSLATIONS = {
       submitBtn: 'Добавить преподавателя',
       submitBtnEdit: 'Сохранить',
       cancelBtn: 'Отмена',
-      errorName: 'Укажите имя преподавателя'
+      errorName: 'Укажите имя преподавателя',
+      errorCategory: 'Выберите категорию — так профиль попадёт в нужный раздел каталога'
     },
     verifyModal: {
       title: 'Подтвердите обучение',
