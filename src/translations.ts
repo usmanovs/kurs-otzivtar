@@ -14,6 +14,12 @@ export const TRANSLATIONS = {
     navLeaderboard: 'Рейтинг',
     navReportScam: 'Кайда кайрылуу',
     navStats: 'Аналитика',
+    navMenu: {
+      title: 'Меню',
+      open: 'Менюну ачуу',
+      close: 'Жабуу'
+    },
+    trustBadge: 'Ачык & Чынчыл',
     leaderboard: {
       title: 'Мугалимдер рейтинги',
       subtitle: 'Сын-пикирлер боюнча эсептелген орточо баа',
@@ -47,7 +53,10 @@ export const TRANSLATIONS = {
       socialProofMore: 'дагы мугалим',
       liveVisitors: 'адам акыркы 24 сааттын ичинде сайтка кирген',
       livePageViews: 'көрүү акыркы 24 сааттын ичинде',
-      liveReviewsWeek: 'жаңы пикир бул жумада'
+      liveReviewsWeek: 'жаңы пикир бул жумада',
+      tickerVisitors: 'конок (24с)',
+      tickerPageViews: 'көрүү (24с)',
+      tickerReviews: 'пикир (апта)'
     },
     warningBannerTitle: 'Шектүү курстардан кантип сактануу керек? Студенттер үчүн эскертүү:',
     warningBannerPoint1: '«1 айда $2000 табасың» деген убадаларга ишенбеңиз — кесиптик билим алуу убакытты жана мээнетти талап кылат.',
@@ -408,6 +417,12 @@ export const TRANSLATIONS = {
     navLeaderboard: 'Рейтинг',
     navReportScam: 'Куда обращаться',
     navStats: 'Аналитика',
+    navMenu: {
+      title: 'Меню',
+      open: 'Открыть меню',
+      close: 'Закрыть'
+    },
+    trustBadge: 'Ачык & Чынчыл',
     leaderboard: {
       title: 'Рейтинг преподавателей',
       subtitle: 'Средняя оценка на основе отзывов студентов',
@@ -441,7 +456,10 @@ export const TRANSLATIONS = {
       socialProofMore: 'ещё преподавателей',
       liveVisitors: 'посетили сайт за последние 24 часа',
       livePageViews: 'просмотров за последние 24 часа',
-      liveReviewsWeek: 'новых отзывов на этой неделе'
+      liveReviewsWeek: 'новых отзывов на этой неделе',
+      tickerVisitors: 'гостей (24ч)',
+      tickerPageViews: 'просмотров (24ч)',
+      tickerReviews: 'отзывов (нед.)'
     },
     warningBannerTitle: 'Как не стать жертвой инфоцыган и некачественных курсов в КР:',
     warningBannerPoint1: 'Не верьте обещаниям «$2000 через 1 месяц с нуля» — реальная IT-профессия требует минимум 6-9 месяцев упорного труда.',

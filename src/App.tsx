@@ -45,6 +45,7 @@ import {
   Loader2,
   ShieldCheck,
   LogOut,
+  Eye,
 } from 'lucide-react';
 
 const LANG_STORAGE_KEY = 'kursotzivtar_lang';
@@ -529,7 +530,11 @@ export default function App() {
       {/* Header */}
       <Navbar
         currentLang={currentLang}
+        isAdmin={isAdmin}
         onSelectLang={handleSelectLang}
+        onOpenAdminLogin={() => setIsAdminLoginOpen(true)}
+        onOpenModeration={() => setIsModerationOpen(true)}
+        onSignOutAdmin={() => signOutAdmin()}
         onOpenAddReview={() => {
           setReviewPreselectedTeacher(null);
           setIsAddReviewOpen(true);
@@ -540,37 +545,6 @@ export default function App() {
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         {/* Hero Section */}
         <section className="text-center pb-4 max-w-2xl mx-auto space-y-5">
-          {siteStats &&
-            (siteStats.visitsLast24h > 0 || siteStats.pageViewsLast24h > 0 || siteStats.reviewsLast7Days > 0) && (
-              <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 text-xs text-slate-500">
-                {siteStats.visitsLast24h > 0 && (
-                  <span className="flex items-center gap-1.5">
-                    <span className="relative flex w-2 h-2">
-                      <span className="animate-ping absolute inline-flex w-full h-full rounded-full bg-emerald-400 opacity-75" />
-                      <span className="relative inline-flex w-2 h-2 rounded-full bg-emerald-500" />
-                    </span>
-                    <span className="font-semibold text-slate-700">{siteStats.visitsLast24h}</span> {t.hero.liveVisitors}
-                  </span>
-                )}
-                {siteStats.pageViewsLast24h > 0 && (
-                  <span>
-                    <span className="font-semibold text-slate-700">{siteStats.pageViewsLast24h}</span>{' '}
-                    {t.hero.livePageViews}
-                  </span>
-                )}
-                {siteStats.reviewsLast7Days > 0 && (
-                  <span>
-                    <span className="font-semibold text-slate-700">{siteStats.reviewsLast7Days}</span> {t.hero.liveReviewsWeek}
-                  </span>
-                )}
-              </div>
-            )}
-
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium bg-white text-slate-700 border border-slate-200 shadow-2xs">
-            <ShieldCheck className="w-3.5 h-3.5 text-indigo-600" />
-            <span>{t.hero.badge}</span>
-          </div>
-
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-slate-900 leading-[1.1]">
             {t.hero.headlineLine1}
             <br />
@@ -580,6 +554,11 @@ export default function App() {
           <p className="text-base sm:text-lg text-slate-600 leading-relaxed font-normal max-w-xl mx-auto">
             {t.hero.subtitle}
           </p>
+
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+            <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
+            <span>{t.trustBadge}</span>
+          </div>
 
           <form
             onSubmit={handleHeroSearchSubmit}
@@ -628,6 +607,11 @@ export default function App() {
                 {tag}
               </button>
             ))}
+          </div>
+
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium bg-white text-slate-700 border border-slate-200 shadow-2xs">
+            <ShieldCheck className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+            <span>{t.hero.badge}</span>
           </div>
 
           {featuredTeacherAvatars.length > 0 && (
@@ -687,6 +671,46 @@ export default function App() {
 
           </div>
         </section>
+
+        {siteStats &&
+          (siteStats.visitsLast24h > 0 || siteStats.pageViewsLast24h > 0 || siteStats.reviewsLast7Days > 0) && (
+            <div className="mb-6 flex justify-center">
+              <div className="inline-flex flex-wrap items-center justify-center gap-x-1.5 sm:gap-x-2.5 gap-y-1 px-3 py-1.5 rounded-full bg-white border border-slate-200 shadow-2xs text-[11px] sm:text-xs text-slate-500 whitespace-nowrap">
+                {siteStats.visitsLast24h > 0 && (
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className="relative flex w-1.5 h-1.5">
+                      <span className="animate-ping absolute inline-flex w-full h-full rounded-full bg-emerald-400 opacity-75" />
+                      <span className="relative inline-flex w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                    </span>
+                    <span className="font-bold text-slate-700">{siteStats.visitsLast24h}</span>
+                    {t.hero.tickerVisitors}
+                  </span>
+                )}
+                {siteStats.pageViewsLast24h > 0 && (
+                  <>
+                    <span className="text-slate-300" aria-hidden="true">|</span>
+                    <span
+                      className="inline-flex items-center gap-1"
+                      title={`${siteStats.pageViewsLast24h} ${t.hero.livePageViews}`}
+                    >
+                      <Eye className="w-3 h-3 shrink-0" aria-hidden="true" />
+                      <span className="font-bold text-slate-700">{siteStats.pageViewsLast24h}</span>
+                      <span className="sr-only">{t.hero.tickerPageViews}</span>
+                    </span>
+                  </>
+                )}
+                {siteStats.reviewsLast7Days > 0 && (
+                  <>
+                    <span className="text-slate-300" aria-hidden="true">|</span>
+                    <span className="inline-flex items-center gap-1">
+                      <span className="font-bold text-slate-700">+{siteStats.reviewsLast7Days}</span>
+                      {t.hero.tickerReviews}
+                    </span>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
 
         {/* Best & lowest rated teachers, based on real review averages */}
         <TeacherLeaderboardSection
