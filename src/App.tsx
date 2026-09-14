@@ -148,7 +148,7 @@ export default function App() {
               setRecentReview(review);
               setTimeout(() => {
                 if (!cancelled) setRecentReview(null);
-              }, 8000);
+              }, 6000);
             }
           })
           .catch((e) => console.error('Failed to load most recent review', e));
@@ -585,24 +585,37 @@ export default function App() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={t.hero.searchPlaceholder}
-                className="w-full pl-11 pr-10 py-3 bg-white border border-slate-200 rounded-full text-sm shadow-xs focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-slate-900 placeholder:text-slate-400"
+                enterKeyHint="search"
+                className="w-full pl-11 pr-20 sm:pr-12 py-3 bg-white border border-slate-200 rounded-full text-sm shadow-xs focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-slate-900 placeholder:text-slate-400"
               />
-              {searchQuery && (
+              <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                {searchQuery && (
+                  <button
+                    type="button"
+                    id="hero-search-clear-btn"
+                    onClick={() => setSearchQuery('')}
+                    aria-label="Тазалоо"
+                    className="p-1.5 text-slate-400 hover:text-slate-600 cursor-pointer"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+                {/* Phones submit from inside the field (or the keyboard's
+                    search key); the full-width button below cost a fold. */}
                 <button
-                  type="button"
-                  id="hero-search-clear-btn"
-                  onClick={() => setSearchQuery('')}
-                  aria-label="Тазалоо"
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                  type="submit"
+                  id="hero-search-inline-btn"
+                  aria-label={t.hero.searchBtn}
+                  className="sm:hidden p-2 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white transition-colors cursor-pointer"
                 >
-                  <X className="w-4 h-4" />
+                  <Search className="w-4 h-4" />
                 </button>
-              )}
+              </div>
             </div>
             <button
               type="submit"
               id="hero-search-btn"
-              className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm rounded-full transition-all shadow-xs cursor-pointer shrink-0"
+              className="hidden sm:inline-flex items-center justify-center px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm rounded-full transition-all shadow-xs cursor-pointer shrink-0"
             >
               {t.hero.searchBtn}
             </button>

@@ -21,9 +21,10 @@ export const RecentReviewPopup: React.FC<RecentReviewPopupProps> = ({
 
   return (
     <>
-      {/* Mobile: a slim bar tucked under the sticky header. The full card
-          covered the lower third of the screen, including the hero CTA. */}
-      <div className="sm:hidden fixed top-14 inset-x-0 z-30 px-3 pt-2 animate-fade-in">
+      {/* Mobile: a slim bar along the bottom edge. Under the header it clipped
+          the hero headline; the old full card covered the lower third. This is
+          one line, dismissible, and auto-hides on its own. */}
+      <div className="sm:hidden fixed bottom-0 inset-x-0 z-30 px-3 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 animate-fade-in">
         <div className="flex items-center gap-2 rounded-full bg-white border border-slate-200 shadow-lg pl-3 pr-1 py-1.5">
           <MessageSquareText className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
           <button
