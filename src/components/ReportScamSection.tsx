@@ -1,6 +1,41 @@
 import React from 'react';
 import { SupportedLang, TRANSLATIONS } from '../translations';
-import { Landmark, PhoneCall, FileWarning, Globe2, Scale, Info } from 'lucide-react';
+import {
+  Landmark,
+  PhoneCall,
+  FileWarning,
+  Globe2,
+  Scale,
+  Info,
+  ShieldCheck,
+  Newspaper,
+  ExternalLink,
+} from 'lucide-react';
+
+// Kyrgyz outlets, both languages. Titles and sources live in translations so
+// each reads in the language the visitor chose.
+const READING = [
+  {
+    href: 'https://24.kg/obschestvo/289078_vse_chto_doljen_znat_potrebitel_kak_zaschitit_svoi_prava_ikto_mojet_pomoch/',
+    titleKey: 'reading1',
+    srcKey: 'reading1Src',
+  },
+  {
+    href: 'https://vesti.kg/obshchestvo/item/97636-kto-v-kyrgyzstane-zashchishchaet-prava-potrebitelej-pozhalovatsya-mozhno-dazhe-onlajn.html',
+    titleKey: 'reading2',
+    srcKey: 'reading2Src',
+  },
+  {
+    href: 'https://economist.kg/dengi/2026/09/08/moshenniki-dostavka-onlain-pokupki/',
+    titleKey: 'reading3',
+    srcKey: 'reading3Src',
+  },
+  {
+    href: 'https://kaktus.media/doc/516955_kibermoshenniki_obchishaut_kyrgyzstancev_za_sekyndy_novymi_i_starymi_sposobami._kak_byt.html',
+    titleKey: 'reading4',
+    srcKey: 'reading4Src',
+  },
+] as const;
 
 interface ReportScamSectionProps {
   currentLang: SupportedLang;
@@ -68,6 +103,66 @@ export const ReportScamSection: React.FC<ReportScamSectionProps> = ({ currentLan
           <Scale className="w-3.5 h-3.5" />
           <span>{t.reportScamLinkProkuror}</span>
         </a>
+      </div>
+
+      {/* The five steps above are the criminal route. Most complaints here
+          describe paying for a service and not receiving it, which rarely
+          clears the bar for Article 209 — hence the "уголовное дело не
+          возбуждают" in the reviews. The consumer route accepts those. */}
+      <div className="mt-5 pt-5 border-t border-slate-100">
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 p-4">
+          <div className="flex items-start gap-2.5">
+            <ShieldCheck className="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" />
+            <div className="min-w-0">
+              <h3 className="text-sm font-bold text-emerald-950">{t.consumerTitle}</h3>
+              <p className="text-xs text-emerald-900/80 mt-1 leading-relaxed">{t.consumerBody}</p>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <a
+                  href="https://antimonopolia.gov.kg/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 text-xs sm:text-sm font-semibold text-white bg-emerald-700 hover:bg-emerald-800 rounded-full transition-colors"
+                >
+                  <Globe2 className="w-3.5 h-3.5" />
+                  <span>{t.consumerAgency}</span>
+                </a>
+                <a
+                  href="tel:0312574610"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-emerald-900 bg-white border border-emerald-200 hover:bg-emerald-100 rounded-full transition-colors"
+                >
+                  <PhoneCall className="w-3.5 h-3.5" />
+                  <span>{t.consumerAgencyMeta}</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-5 pt-5 border-t border-slate-100">
+        <h3 className="text-sm font-bold text-slate-900">{t.readingTitle}</h3>
+        <p className="text-xs text-slate-500 mt-0.5">{t.readingSubtitle}</p>
+        <ul className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+          {READING.map((item) => (
+            <li key={item.href}>
+              <a
+                href={item.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group flex items-start gap-2 p-3 rounded-xl border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/40 transition-colors h-full"
+              >
+                <Newspaper className="w-3.5 h-3.5 text-indigo-600 shrink-0 mt-0.5" />
+                <span className="min-w-0">
+                  <span className="block text-xs font-semibold text-slate-800 leading-snug group-hover:text-indigo-700">
+                    {t[item.titleKey]}
+                  </span>
+                  <span className="block text-2xs text-slate-400 mt-0.5">{t[item.srcKey]}</span>
+                </span>
+                <ExternalLink className="w-3 h-3 text-slate-300 shrink-0 mt-0.5 group-hover:text-indigo-400" />
+              </a>
+            </li>
+          ))}
+        </ul>
       </div>
 
       <div className="flex items-start gap-2 mt-4 pt-4 border-t border-slate-100 text-xs text-slate-400">
