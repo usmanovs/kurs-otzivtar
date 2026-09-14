@@ -44,8 +44,8 @@ export const TRANSLATIONS = {
       statsVerified: 'ырасталган пикир',
       socialProofLabel: 'Чыныгы мугалимдер, чыныгы пикирлер',
       socialProofMore: 'дагы мугалим',
-      liveVisitors: 'акыркы 24 саатта сайтка кирген',
-      livePageViews: 'көрүү акыркы 24 саатта',
+      liveVisitors: 'адам акыркы 24 сааттын ичинде сайтка кирген',
+      livePageViews: 'көрүү акыркы 24 сааттын ичинде',
       liveReviewsWeek: 'жаңы пикир бул жумада'
     },
     warningBannerTitle: 'Шектүү курстардан кантип сактануу керек? Студенттер үчүн эскертүү:',
