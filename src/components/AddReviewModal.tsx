@@ -34,12 +34,13 @@ interface AddReviewModalProps {
     teacherName: string,
     reviewData: Omit<Review, 'id' | 'date' | 'helpfulCount' | 'unhelpfulCount'>,
     newTeacherCategory?: CourseCategory
-  ) => Promise<{ reviewId: string; teacherId: string } | null>;
+  ) => Promise<{ reviewId: string; teacherId: string; editToken: string } | null>;
   /** Patches a review that is already saved. */
   onEnrichReview: (
     reviewId: string,
     patch: ReviewEnrichment,
-    whatsappNumber?: string
+    whatsappNumber?: string,
+    editToken?: string
   ) => Promise<boolean>;
 }
 
@@ -59,6 +60,8 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
   const [step, setStep] = useState<1 | 2>(1);
   const [savedReviewId, setSavedReviewId] = useState<string | null>(null);
   const [savedTeacherId, setSavedTeacherId] = useState<string | null>(null);
+  // Held in memory only, for this flow: proves step 2 is the author of step 1.
+  const [editToken, setEditToken] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -186,6 +189,7 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
     if (!saved) return; // App already surfaced the failure; keep their text on screen
     setSavedReviewId(saved.reviewId);
     setSavedTeacherId(saved.teacherId);
+    setEditToken(saved.editToken);
     setStep(2);
   };
 
@@ -211,7 +215,7 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
     if (hasJobScamReport) patch.hasJobScamReport = true;
 
     setBusy(true);
-    await onEnrichReview(savedReviewId, patch, whatsappNumber.trim() || undefined);
+    await onEnrichReview(savedReviewId, patch, whatsappNumber.trim() || undefined, editToken ?? undefined);
     if (proofFile && savedTeacherId) {
       try {
         await submitVerificationProof(savedReviewId, savedTeacherId, proofFile);

@@ -230,7 +230,8 @@ export interface ReviewEnrichment {
 export async function updateReview(
   reviewId: string,
   patch: ReviewEnrichment,
-  whatsappNumber?: string
+  whatsappNumber?: string,
+  editToken?: string
 ): Promise<void> {
   const row: Record<string, unknown> = {};
   if (patch.pros !== undefined) row.pros = patch.pros;
@@ -248,7 +249,14 @@ export async function updateReview(
   if (patch.hasJobScamReport !== undefined) row.has_job_scam_report = patch.hasJobScamReport;
 
   if (Object.keys(row).length > 0) {
-    const { error } = await supabase.from('reviews').update(row).eq('id', reviewId);
+    if (!editToken) throw new Error('enrichment requires the review edit token');
+    // anon no longer holds UPDATE on these columns; only this function can
+    // write them, and only for the author of this review, within 2 hours.
+    const { error } = await supabase.rpc('enrich_review', {
+      p_review_id: reviewId,
+      p_token: editToken,
+      p_patch: row,
+    });
     if (error) throw error;
   }
 
@@ -261,12 +269,32 @@ export async function updateReview(
   }
 }
 
+/**
+ * Secret proving the caller wrote a given review. Generated in the browser,
+ * kept only in memory for the length of the submit flow, and never stored: the
+ * row holds its SHA-256, so the column being world-readable gives an attacker
+ * nothing. It is what lets the enrichment step and the proof upload be scoped
+ * to the author without ever asking who the author is.
+ */
+export function newEditToken(): string {
+  return crypto.randomUUID() + crypto.randomUUID();
+}
+
+async function hashToken(token: string): Promise<string> {
+  const bytes = new TextEncoder().encode(token);
+  const digest = await crypto.subtle.digest('SHA-256', bytes);
+  return Array.from(new Uint8Array(digest))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
 export async function submitReview(
   teacherName: string,
   existingTeachers: Teacher[],
   reviewData: Omit<Review, 'id' | 'date' | 'helpfulCount' | 'unhelpfulCount'>,
   whatsappNumber?: string,
-  newTeacherCategory?: CourseCategory
+  newTeacherCategory?: CourseCategory,
+  editToken?: string
 ): Promise<{ teacherId: string; review: Review; isNewTeacher: boolean; newTeacher?: Teacher }> {
   const normalized = teacherNameKey(teacherName);
   const existing = existingTeachers.find((t) => teacherNameKey(t.name) === normalized);
@@ -319,6 +347,7 @@ export async function submitReview(
       has_job_scam_report: reviewData.hasJobScamReport ?? false,
       helpful_count: 0,
       unhelpful_count: 0,
+      edit_token_hash: editToken ? await hashToken(editToken) : null,
     })
     .select()
     .single();

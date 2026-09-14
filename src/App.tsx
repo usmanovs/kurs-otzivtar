@@ -15,6 +15,7 @@ import {
   updateTeacher,
   submitReview,
   updateReview,
+  newEditToken,
   type ReviewEnrichment,
   updateReviewVoteCounts,
   recordSiteVisit,
@@ -449,10 +450,11 @@ export default function App() {
   const handleEnrichReview = async (
     reviewId: string,
     patch: ReviewEnrichment,
-    whatsappNumber?: string
+    whatsappNumber?: string,
+    editToken?: string
   ): Promise<boolean> => {
     try {
-      await updateReview(reviewId, patch, whatsappNumber);
+      await updateReview(reviewId, patch, whatsappNumber, editToken);
       setTeachers((prev) =>
         prev.map((tch) => {
           if (!tch.reviews.some((r) => r.id === reviewId)) return tch;
@@ -474,15 +476,18 @@ export default function App() {
     teacherName: string,
     reviewData: Omit<Review, 'id' | 'date' | 'helpfulCount' | 'unhelpfulCount'>,
     newTeacherCategory?: CourseCategory
-  ): Promise<{ reviewId: string; teacherId: string } | null> => {
+  ): Promise<{ reviewId: string; teacherId: string; editToken: string } | null> => {
     const { whatsappNumber, ...reviewFields } = reviewData;
     try {
+      // Minted here, handed back to the modal, never persisted anywhere.
+      const editToken = newEditToken();
       const result = await submitReview(
         teacherName,
         teachers,
         reviewFields,
         whatsappNumber,
-        newTeacherCategory
+        newTeacherCategory,
+        editToken
       );
 
       setTeachers((prev) => {
@@ -506,7 +511,7 @@ export default function App() {
       showToast('Сын-пикириңиз ийгиликтүү кошулду! Чынчыл пикириңиз үчүн чоң рахмат.');
       // The ids let the modal's second step enrich this row, and attach an
       // enrolment proof to it, instead of re-submitting anything.
-      return { reviewId: result.review.id, teacherId: result.teacherId };
+      return { reviewId: result.review.id, teacherId: result.teacherId, editToken };
     } catch (e) {
       console.error('Failed to submit review', e);
       showToast('Ката кетти. Сын-пикирди сактай алган жокпуз, интернетиңизди текшерип кайра аракет кылыңыз.');
