@@ -6,6 +6,7 @@ import { ratingTone, RATING_STAR_CLASS } from '../lib/ratingTone';
 import { fetchReviewIpLog, fetchApprovedResponses, TeacherResponse } from '../lib/api';
 import { VerifyReviewModal } from './VerifyReviewModal';
 import { TeacherResponseModal } from './TeacherResponseModal';
+import { CountryTag } from './CountryTag';
 import {
   X,
   Star,
@@ -41,15 +42,6 @@ function formatDateTime(iso: string): string {
   if (Number.isNaN(d.getTime())) return iso;
   const pad = (n: number) => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
-
-function countryFlag(countryCode: string): string {
-  if (!/^[A-Z]{2}$/i.test(countryCode)) return '';
-  const codePoints = countryCode
-    .toUpperCase()
-    .split('')
-    .map((c) => 127397 + c.charCodeAt(0));
-  return String.fromCodePoint(...codePoints);
 }
 
 
@@ -597,11 +589,10 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
                             )}
                             <span> • {review.createdAt ? formatDateTime(review.createdAt) : review.date}</span>
                             {review.country && (
-                              <span>
+                              <>
                                 {' '}
-                                {countryFlag(review.country)}
-                                {review.city && <> {review.city}</>}
-                              </span>
+                                <CountryTag country={review.country} city={review.city} />
+                              </>
                             )}
                           </div>
                           {isAdmin && (
