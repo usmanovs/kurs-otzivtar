@@ -358,6 +358,32 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
             </button>
           </div>
 
+          {/* Instructor's way in. This used to be a grey text link in the footer,
+              below every review, which is why nobody had ever used it. Hidden
+              once a statement is published, since only one ever can be. */}
+          {responses.length === 0 && (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-5 bg-amber-50 rounded-2xl border border-amber-200">
+              <div>
+                <h4 className="text-sm font-bold text-amber-950 flex items-center gap-1.5">
+                  <ShieldCheck className="w-4 h-4 shrink-0" />
+                  {t.responseModal.claimTitle}
+                </h4>
+                <p className="text-xs text-amber-900/80 mt-0.5 leading-relaxed">
+                  {t.responseModal.claimBody}
+                </p>
+              </div>
+              <button
+                type="button"
+                id="detail-modal-claim-profile-btn"
+                onClick={() => setIsRespondOpen(true)}
+                className="inline-flex items-center gap-2 px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs sm:text-sm rounded-full transition-colors shadow-xs shrink-0 cursor-pointer"
+              >
+                <MessageSquareReply className="w-4 h-4" />
+                <span>{t.responseModal.claimBtn}</span>
+              </button>
+            </div>
+          )}
+
           {teacher.bio && (
             <div className="text-sm text-slate-600 leading-relaxed bg-slate-50 p-4 rounded-xl border border-slate-200">
               {teacher.bio}
