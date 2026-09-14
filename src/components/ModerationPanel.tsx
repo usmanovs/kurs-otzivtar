@@ -28,6 +28,7 @@ export const ModerationPanel: React.FC<ModerationPanelProps> = ({
   const [tab, setTab] = useState<'verifications' | 'responses'>('verifications');
   const [verifications, setVerifications] = useState<VerificationRequest[]>([]);
   const [responses, setResponses] = useState<TeacherResponse[]>([]);
+  const [decisionError, setDecisionError] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
 
@@ -61,10 +62,21 @@ export const ModerationPanel: React.FC<ModerationPanelProps> = ({
 
   const handleResponse = async (resp: TeacherResponse, approve: boolean) => {
     setBusyId(resp.id);
+    setDecisionError('');
     try {
       await decideTeacherResponse(resp.id, approve);
       setResponses((prev) => prev.filter((r) => r.id !== resp.id));
       onModerated();
+    } catch (e) {
+      // Only one approved response per instructor is allowed, and the DB is
+      // what enforces it — so say which failure this is rather than letting
+      // the row sit there looking unclicked.
+      const msg = String((e as { message?: string })?.message || '');
+      setDecisionError(
+        msg.includes('teacher_responses_one_approved_per_teacher')
+          ? t.moderation.duplicateResponse
+          : t.moderation.decisionFailed
+      );
     } finally {
       setBusyId(null);
     }
@@ -166,6 +178,12 @@ export const ModerationPanel: React.FC<ModerationPanelProps> = ({
             <p className="text-sm text-slate-500">{t.moderation.emptyResponses}</p>
           )}
 
+          {decisionError && tab === 'responses' && (
+            <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-xs font-semibold text-red-700">
+              {decisionError}
+            </div>
+          )}
+
           {!isLoading &&
             tab === 'responses' &&
             responses.map((resp) => (
@@ -176,6 +194,30 @@ export const ModerationPanel: React.FC<ModerationPanelProps> = ({
                 </div>
                 <div className="text-sm font-semibold text-slate-900">{resp.authorName}</div>
                 <p className="text-sm text-slate-600 whitespace-pre-wrap">{resp.responseText}</p>
+
+                {/* Approving publishes a public "identity verified" badge, so the
+                    proof has to be in front of whoever clicks it. */}
+                <div className="rounded-lg bg-amber-50 border border-amber-200 p-2.5 space-y-1.5">
+                  <div className="text-2xs font-bold text-amber-900">
+                    {t.moderation.identityProof}
+                  </div>
+                  {resp.proofPath ? (
+                    <button
+                      type="button"
+                      onClick={() => openProof(resp.proofPath!)}
+                      className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-900 underline hover:text-amber-700 cursor-pointer"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                      {t.moderation.openProof}
+                    </button>
+                  ) : (
+                    <div className="text-xs text-red-700 font-semibold">
+                      {t.moderation.noProof}
+                    </div>
+                  )}
+                  <div className="text-2xs text-amber-800/80">{t.moderation.compareHint}</div>
+                </div>
+
                 <div className="flex flex-wrap items-center gap-2 pt-1">
                   <button
                     type="button"

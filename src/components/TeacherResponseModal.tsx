@@ -9,6 +9,8 @@ interface TeacherResponseModalProps {
   teacher: Teacher;
   reviews: Review[];
   currentLang: SupportedLang;
+  /** This instructor already has a published statement; the DB allows only one. */
+  hasApprovedResponse?: boolean;
   onClose: () => void;
 }
 
@@ -16,6 +18,7 @@ export const TeacherResponseModal: React.FC<TeacherResponseModalProps> = ({
   teacher,
   reviews,
   currentLang,
+  hasApprovedResponse = false,
   onClose,
 }) => {
   useEscapeKey(onClose);
@@ -24,6 +27,7 @@ export const TeacherResponseModal: React.FC<TeacherResponseModalProps> = ({
   const [contactEmail, setContactEmail] = useState('');
   const [reviewId, setReviewId] = useState('');
   const [responseText, setResponseText] = useState('');
+  const [proofFile, setProofFile] = useState<File | null>(null);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDone, setIsDone] = useState(false);
@@ -32,6 +36,14 @@ export const TeacherResponseModal: React.FC<TeacherResponseModalProps> = ({
     e.preventDefault();
     if (!authorName.trim() || !contactEmail.trim() || !responseText.trim()) {
       setError(t.responseModal.errorRequired);
+      return;
+    }
+    if (!proofFile) {
+      setError(t.responseModal.errorProof);
+      return;
+    }
+    if (proofFile.size > 8 * 1024 * 1024) {
+      setError(t.responseModal.errorProofSize);
       return;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail.trim())) {
@@ -47,6 +59,7 @@ export const TeacherResponseModal: React.FC<TeacherResponseModalProps> = ({
         authorName,
         contactEmail,
         responseText,
+        proofFile,
       });
       setIsDone(true);
     } catch {
@@ -86,6 +99,20 @@ export const TeacherResponseModal: React.FC<TeacherResponseModalProps> = ({
             </div>
             <p className="text-sm font-semibold text-slate-900">{t.responseModal.successTitle}</p>
             <p className="text-sm text-slate-600">{t.responseModal.successBody}</p>
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-sm rounded-full transition-colors cursor-pointer"
+            >
+              {t.responseModal.close}
+            </button>
+          </div>
+        ) : hasApprovedResponse ? (
+          <div className="p-6 space-y-3 text-center">
+            <p className="text-sm font-semibold text-slate-900">
+              {t.responseModal.alreadyRespondedTitle}
+            </p>
+            <p className="text-sm text-slate-600">{t.responseModal.alreadyRespondedBody}</p>
             <button
               type="button"
               onClick={onClose}
@@ -147,6 +174,30 @@ export const TeacherResponseModal: React.FC<TeacherResponseModalProps> = ({
                 </select>
               </div>
             )}
+
+            {/* Without this the statement is an anonymous claim published under
+                a named person — the impersonation risk the feature exists to
+                remove. Stored in a private bucket, admin-only. */}
+            <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-3.5">
+              <label className="block text-xs font-bold text-amber-950 mb-1">
+                {t.responseModal.proofLabel} *
+              </label>
+              <p className="text-2xs text-amber-800/80 mb-2 leading-relaxed">
+                {t.responseModal.proofHint}
+              </p>
+              <input
+                type="file"
+                accept="image/*,application/pdf"
+                onChange={(e) => setProofFile(e.target.files?.[0] ?? null)}
+                className="w-full text-xs text-slate-700 file:mr-3 file:px-3 file:py-1.5 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-amber-100 file:text-amber-900 hover:file:bg-amber-200 file:cursor-pointer cursor-pointer"
+              />
+              {proofFile && (
+                <p className="text-2xs text-amber-900 mt-1.5 font-medium">
+                  {proofFile.name} — {(proofFile.size / 1024).toFixed(0)} KB
+                </p>
+              )}
+              <p className="text-2xs text-amber-800/70 mt-1.5">{t.responseModal.proofPrivacy}</p>
+            </div>
 
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">

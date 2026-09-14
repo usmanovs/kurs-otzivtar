@@ -539,6 +539,11 @@ export interface TeacherResponse {
   responseText: string;
   status: 'pending' | 'approved' | 'rejected';
   createdAt: string;
+  /** Path in the private verification-proofs bucket. Admin-only. */
+  proofPath?: string;
+  /** Set by the admin after looking at the proof — never by the submitter,
+   *  which RLS enforces. Drives the public "verified" badge. */
+  identityVerified: boolean;
 }
 
 function mapResponseRow(row: any): TeacherResponse {
@@ -550,6 +555,8 @@ function mapResponseRow(row: any): TeacherResponse {
     responseText: row.response_text,
     status: row.status,
     createdAt: row.created_at,
+    proofPath: row.proof_path ?? undefined,
+    identityVerified: row.identity_verified === true,
   };
 }
 
@@ -561,8 +568,19 @@ export async function submitTeacherResponse(input: {
   authorName: string;
   contactEmail: string;
   responseText: string;
+  /** Proof this person is the instructor the profile is about. Without it the
+   *  statement is just an anonymous claim under someone else's name, which is
+   *  the opposite of what publishing a rebuttal is meant to achieve. */
+  proofFile: File;
 }): Promise<void> {
   const id = `resp-${Date.now()}`;
+
+  const ext = input.proofFile.name.split('.').pop()?.toLowerCase() || 'jpg';
+  const proofPath = `responses/${id}/${Date.now()}.${ext}`;
+  const { error: uploadError } = await supabase.storage
+    .from('verification-proofs')
+    .upload(proofPath, input.proofFile, { contentType: input.proofFile.type, upsert: false });
+  if (uploadError) throw uploadError;
 
   const { error } = await supabase.from('teacher_responses').insert({
     id,
@@ -571,6 +589,9 @@ export async function submitTeacherResponse(input: {
     author_name: input.authorName.trim(),
     response_text: input.responseText.trim(),
     status: 'pending',
+    proof_path: proofPath,
+    // Stated explicitly to match the RLS check; only the admin may flip this.
+    identity_verified: false,
   });
   if (error) throw error;
 
@@ -602,10 +623,32 @@ export async function fetchPendingResponses(): Promise<TeacherResponse[]> {
   return data.map(mapResponseRow);
 }
 
+/**
+ * Approving both publishes the statement and records that the admin checked
+ * the proof, so the public "verified" badge can never appear on something
+ * nobody looked at. The DB additionally caps this at one approved response
+ * per instructor (teacher_responses_one_approved_per_teacher), so a duplicate
+ * approval fails loudly rather than stacking rebuttals on a profile.
+ */
 export async function decideTeacherResponse(responseId: string, approve: boolean): Promise<void> {
   const { error } = await supabase
     .from('teacher_responses')
-    .update({ status: approve ? 'approved' : 'rejected', reviewed_at: new Date().toISOString() })
+    .update({
+      status: approve ? 'approved' : 'rejected',
+      identity_verified: approve,
+      reviewed_at: new Date().toISOString(),
+    })
     .eq('id', responseId);
   if (error) throw error;
+}
+
+/** True when this instructor already has a published rebuttal. */
+export async function teacherHasApprovedResponse(teacherId: string): Promise<boolean> {
+  const { count, error } = await supabase
+    .from('teacher_responses')
+    .select('id', { count: 'exact', head: true })
+    .eq('teacher_id', teacherId)
+    .eq('status', 'approved');
+  if (error) return false;
+  return (count ?? 0) > 0;
 }

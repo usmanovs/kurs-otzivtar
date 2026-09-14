@@ -318,9 +318,15 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
             .filter((resp) => !resp.reviewId)
             .map((resp) => (
               <div key={resp.id} className="rounded-2xl border border-indigo-100 bg-indigo-50/60 p-4">
-                <div className="flex items-center gap-1.5 text-xs font-bold text-indigo-700">
+                <div className="flex items-center flex-wrap gap-x-1.5 gap-y-1 text-xs font-bold text-indigo-700">
                   <MessageSquareReply className="w-4 h-4" />
-                  {t.responseModal.responseBadge} — {resp.authorName}
+                  <span>{t.responseModal.responseBadge} — {resp.authorName}</span>
+                  {resp.identityVerified && (
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 text-2xs">
+                      <ShieldCheck className="w-3 h-3" />
+                      {t.responseModal.verifiedBadge}
+                    </span>
+                  )}
                 </div>
                 <p className="mt-2 text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">
                   {resp.responseText}
@@ -699,9 +705,15 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
                           key={resp.id}
                           className="mt-3 rounded-xl border border-indigo-100 bg-indigo-50/60 p-3"
                         >
-                          <div className="flex items-center gap-1.5 text-2xs font-bold text-indigo-700">
+                          <div className="flex items-center flex-wrap gap-x-1.5 gap-y-1 text-2xs font-bold text-indigo-700">
                             <MessageSquareReply className="w-3.5 h-3.5" />
-                            {t.responseModal.responseBadge} — {resp.authorName}
+                            <span>{t.responseModal.responseBadge} — {resp.authorName}</span>
+                            {resp.identityVerified && (
+                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                <ShieldCheck className="w-3 h-3" />
+                                {t.responseModal.verifiedBadge}
+                              </span>
+                            )}
                           </div>
                           <p className="mt-1.5 text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">
                             {resp.responseText}
@@ -750,6 +762,9 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
           teacher={teacher}
           reviews={teacher.reviews}
           currentLang={currentLang}
+          // Only one statement per instructor ever publishes, so say so up front
+          // rather than letting someone write one that can't be approved.
+          hasApprovedResponse={responses.length > 0}
           onClose={() => setIsRespondOpen(false)}
         />
       )}
