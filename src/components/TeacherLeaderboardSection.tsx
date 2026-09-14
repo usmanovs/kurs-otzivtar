@@ -19,7 +19,7 @@ interface TeacherLeaderboardSectionProps {
   onViewTeacher: (teacher: Teacher) => void;
 }
 
-const MAX_ROWS = 5;
+const MAX_ROWS = 7;
 // Temporarily hidden — flip back to true to bring the top-rated panel back.
 const SHOW_TOP_RATED = false;
 // Always surfaced in the flagged panel regardless of where they'd naturally
