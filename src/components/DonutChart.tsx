@@ -18,12 +18,12 @@ interface DonutChartProps {
   ariaLabel: string;
 }
 
-const SIZE = 132;
-const STROKE = 20;
+const SIZE = 112;
+const STROKE = 14;
 const R = (SIZE - STROKE) / 2;
 const C = 2 * Math.PI * R;
-// Surface-coloured gap so neighbouring arcs read as separate wedges.
-const GAP = 2;
+// Wide enough to clear the rounded caps on both neighbours.
+const GAP = 7;
 
 export const DonutChart: React.FC<DonutChartProps> = ({
   slices,
@@ -39,7 +39,7 @@ export const DonutChart: React.FC<DonutChartProps> = ({
   let offset = 0;
 
   return (
-    <div className="flex items-center gap-5 flex-wrap sm:flex-nowrap">
+    <div className="flex items-center justify-center gap-5 sm:gap-7 flex-wrap sm:flex-nowrap">
       <svg
         width={SIZE}
         height={SIZE}
@@ -54,12 +54,14 @@ export const DonutChart: React.FC<DonutChartProps> = ({
             cy={SIZE / 2}
             r={R}
             fill="none"
-            stroke="#f1f5f9"
+            stroke="#f8fafc"
             strokeWidth={STROKE}
           />
           {drawn.map((s) => {
             const len = (s.percent / 100) * C;
-            const dash = single ? C : Math.max(len - GAP, 0.5);
+            // Round caps add ~STROKE/2 of visual length at each end, so the
+            // gap has to absorb that as well as separate the arcs.
+            const dash = single ? C : Math.max(len - GAP, 1);
             const el = (
               <circle
                 key={s.label}
@@ -69,8 +71,9 @@ export const DonutChart: React.FC<DonutChartProps> = ({
                 fill="none"
                 stroke={s.color}
                 strokeWidth={STROKE}
+                strokeLinecap={single ? 'butt' : 'round'}
                 strokeDasharray={`${dash} ${C - dash}`}
-                strokeDashoffset={-offset}
+                strokeDashoffset={-(offset + GAP / 2)}
               />
             );
             offset += len;
@@ -79,21 +82,21 @@ export const DonutChart: React.FC<DonutChartProps> = ({
         </g>
         <text
           x="50%"
-          y="47%"
+          y="45%"
           textAnchor="middle"
           dominantBaseline="middle"
           className="fill-slate-900 font-extrabold"
-          style={{ fontSize: 22 }}
+          style={{ fontSize: 24, letterSpacing: '-0.02em' }}
         >
           {centerValue}
         </text>
         <text
           x="50%"
-          y="63%"
+          y="62%"
           textAnchor="middle"
           dominantBaseline="middle"
-          className="fill-slate-400"
-          style={{ fontSize: 9 }}
+          className="fill-slate-400 font-medium"
+          style={{ fontSize: 9.5 }}
         >
           {centerLabel}
         </text>
@@ -101,11 +104,13 @@ export const DonutChart: React.FC<DonutChartProps> = ({
 
       {/* Every slice is named and numbered here, so identity never rests on
           colour alone. */}
-      <ul className="flex-1 min-w-0 space-y-2">
+      {/* Fixed width rather than flex-1: stretching it left short labels like
+          "Эркек" marooned from their own numbers. */}
+      <ul className="w-full sm:w-auto sm:min-w-[190px] space-y-2.5">
         {slices.map((s) => (
           <li key={s.label} className="flex items-center gap-2.5">
-            <span className={`w-2.5 h-2.5 rounded-sm shrink-0 ${s.chipClass}`} aria-hidden="true" />
-            <span className="text-sm text-slate-600 flex-1 min-w-0 leading-tight">{s.label}</span>
+            <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${s.chipClass}`} aria-hidden="true" />
+            <span className="text-sm text-slate-600 flex-1 min-w-0 leading-tight pr-2">{s.label}</span>
             <span className="text-sm font-bold text-slate-900 tabular-nums shrink-0">
               {s.percent.toFixed(0)}%
             </span>

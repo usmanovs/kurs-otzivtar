@@ -13,8 +13,10 @@ import { DonutChart, DonutSlice } from './DonutChart';
 // Gender is categorical (identity); rating health is a status scale, so it
 // keeps the reserved good/warning/critical palette the bars already used
 // rather than borrowing categorical hues.
-const GENDER_COLORS = ['#6366f1', '#f472b6', '#94a3b8'];
-const GENDER_CHIPS = ['bg-indigo-500', 'bg-pink-400', 'bg-slate-400'];
+// Indigo with a muted rose rather than a neon pink: the two stay clearly
+// distinct without the hot-pink arc shouting over the rest of the card.
+const GENDER_COLORS = ['#6366f1', '#fb7ea8', '#cbd5e1'];
+const GENDER_CHIPS = ['bg-indigo-500', 'bg-[#fb7ea8]', 'bg-slate-300'];
 const HEALTH_COLORS = { success: '#10b981', warning: '#f59e0b', danger: '#ef4444' } as const;
 
 interface StatsSectionProps {
