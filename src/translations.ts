@@ -32,6 +32,9 @@ const ky = {
     reviewsSuffix: 'пикир',
     showMore: 'Дагы {n} мугалимди көрсөтүү',
     showLess: 'Жыйнап коюу',
+    allTitle: 'Бардык мугалимдер',
+    allSubtitle: '{n} мугалим — бааcы боюнча иреттелген',
+    noRating: 'пикир жок',
     lowReviewNotice: 'Аз сандагы пикирге негизделген — көбүрөөк пикир чогулгандан кийин өзгөрүшү мүмкүн.'
   },
   teacherNotFound: {
@@ -492,6 +495,9 @@ const ru: TranslationDict = {
     reviewsSuffix: 'отзыв(ов)',
     showMore: 'Показать ещё {n}',
     showLess: 'Свернуть',
+    allTitle: 'Все преподаватели',
+    allSubtitle: '{n} преподавателей — по рейтингу',
+    noRating: 'нет отзывов',
     lowReviewNotice: 'Основано на небольшом числе отзывов — может измениться позже.'
   },
   teacherNotFound: {
