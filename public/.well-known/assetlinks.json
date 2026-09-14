@@ -2,7 +2,7 @@
       "relation": ["delegate_permission/common.handle_all_urls"],
       "target": {
         "namespace": "android_app",
-        "package_name": "org.kursotzyv.twa",
-        "sha256_cert_fingerprints": ["49:6A:20:95:E1:81:E6:62:CA:37:FF:D0:73:B1:EE:73:9E:59:ED:74:E6:4E:D5:C3:FC:57:D9:1E:8A:01:AE:69"]
+        "package_name": "com.kursotzyv.app",
+        "sha256_cert_fingerprints": ["BE:35:44:58:70:96:E7:B8:21:73:80:D1:A4:AB:12:CD:18:73:1E:1C:BC:85:F2:B0:54:7F:7E:40:0A:A1:2B:EB"]
       }
     }]
