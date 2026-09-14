@@ -46,6 +46,7 @@ import {
   ShieldCheck,
   LogOut,
   Eye,
+  Users,
 } from 'lucide-react';
 
 const LANG_STORAGE_KEY = 'kursotzivtar_lang';
@@ -113,9 +114,16 @@ export default function App() {
   // and a count of reviews actually submitted in the last week.
   useEffect(() => {
     recordSiteVisit();
-    fetchSiteStats()
-      .then(setSiteStats)
-      .catch(() => {});
+    const refreshStats = () => fetchSiteStats().then(setSiteStats).catch(() => {});
+    refreshStats();
+
+    // Keep "online now" truthful while someone is reading: the presence
+    // window is 5 minutes, so re-ping well inside it.
+    const heartbeat = setInterval(() => {
+      recordSiteVisit(true);
+      refreshStats();
+    }, 2 * 60 * 1000);
+    return () => clearInterval(heartbeat);
   }, []);
 
   useEffect(() => {
@@ -673,18 +681,36 @@ export default function App() {
         </section>
 
         {siteStats &&
-          (siteStats.visitsLast24h > 0 || siteStats.pageViewsLast24h > 0 || siteStats.reviewsLast7Days > 0) && (
+          (siteStats.onlineNow > 0 ||
+            siteStats.visitsLast24h > 0 ||
+            siteStats.pageViewsLast24h > 0 ||
+            siteStats.reviewsLast7Days > 0) && (
             <div className="mb-6 flex justify-center">
               <div className="inline-flex flex-wrap items-center justify-center gap-x-1.5 sm:gap-x-2.5 gap-y-1 px-3 py-1.5 rounded-full bg-white border border-slate-200 shadow-2xs text-[11px] sm:text-xs text-slate-500 whitespace-nowrap">
-                {siteStats.visitsLast24h > 0 && (
+                {siteStats.onlineNow > 0 && (
                   <span className="inline-flex items-center gap-1.5">
                     <span className="relative flex w-1.5 h-1.5">
                       <span className="animate-ping absolute inline-flex w-full h-full rounded-full bg-emerald-400 opacity-75" />
                       <span className="relative inline-flex w-1.5 h-1.5 rounded-full bg-emerald-500" />
                     </span>
-                    <span className="font-bold text-slate-700">{siteStats.visitsLast24h}</span>
-                    {t.hero.tickerVisitors}
+                    <span className="font-bold text-emerald-600">{siteStats.onlineNow}</span>
+                    {t.hero.tickerOnline}
                   </span>
+                )}
+                {siteStats.visitsLast24h > 0 && (
+                  <>
+                    {siteStats.onlineNow > 0 && (
+                      <span className="text-slate-300" aria-hidden="true">|</span>
+                    )}
+                    <span
+                      className="inline-flex items-center gap-1"
+                      title={`${siteStats.visitsLast24h} ${t.hero.liveVisitors}`}
+                    >
+                      <Users className="w-3 h-3 shrink-0" aria-hidden="true" />
+                      <span className="font-bold text-slate-700">{siteStats.visitsLast24h}</span>
+                      <span className="sr-only">{t.hero.tickerVisitors}</span>
+                    </span>
+                  </>
                 )}
                 {siteStats.pageViewsLast24h > 0 && (
                   <>
@@ -696,6 +722,7 @@ export default function App() {
                       <Eye className="w-3 h-3 shrink-0" aria-hidden="true" />
                       <span className="font-bold text-slate-700">{siteStats.pageViewsLast24h}</span>
                       <span className="sr-only">{t.hero.tickerPageViews}</span>
+                      <span aria-hidden="true">{t.hero.tickerWindow24h}</span>
                     </span>
                   </>
                 )}

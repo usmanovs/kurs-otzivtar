@@ -12,7 +12,7 @@ export default async function handler(request: Request) {
     return new Response('Method not allowed', { status: 405 });
   }
 
-  let body: { visitorId?: unknown };
+  let body: { visitorId?: unknown; heartbeat?: unknown };
   try {
     body = await request.json();
   } catch {
@@ -28,6 +28,8 @@ export default async function handler(request: Request) {
     return new Response('Missing or invalid visitorId', { status: 400 });
   }
 
+  const isHeartbeat = body.heartbeat === true;
+
   const supabaseUrl = process.env.SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -38,6 +40,22 @@ export default async function handler(request: Request) {
       'Content-Type': 'application/json',
       Prefer: 'return=minimal',
     };
+
+    // Presence: refreshed on every ping (including the client heartbeat), so
+    // "online now" reflects who is actually reading right now.
+    try {
+      await fetch(`${supabaseUrl}/rest/v1/site_presence`, {
+        method: 'POST',
+        headers: { ...headers, Prefer: 'resolution=merge-duplicates,return=minimal' },
+        body: JSON.stringify({ visitor_id: visitorId, last_seen_at: new Date().toISOString() }),
+      });
+    } catch (e) {
+      console.error('Failed to record presence', e);
+    }
+
+    if (isHeartbeat) {
+      return new Response(null, { status: 204 });
+    }
 
     try {
       await fetch(`${supabaseUrl}/rest/v1/site_visits`, {

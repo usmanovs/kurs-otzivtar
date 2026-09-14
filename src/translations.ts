@@ -54,6 +54,8 @@ export const TRANSLATIONS = {
       liveVisitors: 'адам акыркы 24 сааттын ичинде сайтка кирген',
       livePageViews: 'көрүү акыркы 24 сааттын ичинде',
       liveReviewsWeek: 'жаңы пикир бул жумада',
+      tickerOnline: 'онлайн',
+      tickerWindow24h: '(24с)',
       tickerVisitors: 'конок (24с)',
       tickerPageViews: 'көрүү (24с)',
       tickerReviews: 'пикир (апта)'
@@ -457,6 +459,8 @@ export const TRANSLATIONS = {
       liveVisitors: 'посетили сайт за последние 24 часа',
       livePageViews: 'просмотров за последние 24 часа',
       liveReviewsWeek: 'новых отзывов на этой неделе',
+      tickerOnline: 'онлайн',
+      tickerWindow24h: '(24ч)',
       tickerVisitors: 'гостей (24ч)',
       tickerPageViews: 'просмотров (24ч)',
       tickerReviews: 'отзывов (нед.)'

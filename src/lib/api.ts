@@ -316,13 +316,13 @@ function getOrCreateVisitorId(): string {
 // same-origin API route (avoids ad blockers dropping a direct cross-origin
 // call to *.supabase.co, which was undercounting real traffic). Best-effort
 // — a logged-out visitor or network hiccup should never affect the page.
-export async function recordSiteVisit(): Promise<void> {
+export async function recordSiteVisit(isHeartbeat = false): Promise<void> {
   try {
     const visitorId = getOrCreateVisitorId();
     await fetch('/api/track-visit', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ visitorId }),
+      body: JSON.stringify({ visitorId, heartbeat: isHeartbeat }),
     });
   } catch {
     // Ignore — this is a secondary signal, not something a visitor should ever see fail.
@@ -330,6 +330,7 @@ export async function recordSiteVisit(): Promise<void> {
 }
 
 export interface SiteStats {
+  onlineNow: number;
   visitsLast24h: number;
   pageViewsLast24h: number;
   reviewsLast7Days: number;
@@ -341,7 +342,8 @@ export interface SiteStats {
 export async function fetchSiteStats(): Promise<SiteStats> {
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
-  const [visitsResult, pageViewsResult, reviewsResult] = await Promise.all([
+  const [onlineResult, visitsResult, pageViewsResult, reviewsResult] = await Promise.all([
+    supabase.rpc('get_online_now'),
     supabase.rpc('get_visits_last_24h'),
     supabase.rpc('get_pageviews_last_24h'),
     supabase
@@ -352,6 +354,7 @@ export async function fetchSiteStats(): Promise<SiteStats> {
   ]);
 
   return {
+    onlineNow: Number(onlineResult.data ?? 0),
     visitsLast24h: Number(visitsResult.data ?? 0),
     pageViewsLast24h: Number(pageViewsResult.data ?? 0),
     reviewsLast7Days: reviewsResult.count ?? 0,
