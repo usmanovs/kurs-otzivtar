@@ -99,7 +99,10 @@ const LeaderboardRow: React.FC<{
         )}
       </div>
       <span className="flex-1" />
-      <div className="text-xs text-slate-400 text-center w-6 shrink-0 tabular-nums">
+      {/* Nudged up and right: the row centres it against a two-line stars +
+          score block, which left it sitting low and a touch left of the
+          "Пикир" header it belongs to. */}
+      <div className="relative -top-1 left-1 text-xs text-slate-400 text-center w-6 shrink-0 tabular-nums">
         {teacher.reviewCount}
       </div>
       <span className="flex-1" />
