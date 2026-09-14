@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { CourseCategory, Review, StudentStatus, Teacher } from '../types';
 import { SupportedLang, TRANSLATIONS } from '../translations';
 import { useEscapeKey } from '../hooks/useEscapeKey';
+import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
 import { teacherNameKey, submitVerificationProof, type ReviewEnrichment } from '../lib/api';
 import { NON_CREATABLE_CATEGORIES } from '../lib/subniches';
 import {
@@ -53,6 +54,7 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
   onEnrichReview,
 }) => {
   useEscapeKey(onClose);
+  useBodyScrollLock();
   const t = TRANSLATIONS[currentLang];
 
   // Step 1 saves the review outright; step 2 only ever edits that saved row,

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Review, Teacher } from '../types';
 import { SupportedLang, TRANSLATIONS } from '../translations';
 import { useEscapeKey } from '../hooks/useEscapeKey';
+import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
 import { ratingTone, RATING_STAR_CLASS } from '../lib/ratingTone';
 import { fetchReviewIpLog, fetchApprovedResponses, TeacherResponse } from '../lib/api';
 import { VerifyReviewModal } from './VerifyReviewModal';
@@ -121,6 +122,7 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
   onVoteReview,
 }) => {
   useEscapeKey(onClose);
+  useBodyScrollLock();
   const [reviewTab, setReviewTab] = useState<'all' | 'positive' | 'negative' | 'verified'>('all');
   const [copied, setCopied] = useState(false);
   const [ipLogMap, setIpLogMap] = useState<Record<string, { ipAddress: string; createdAt: string }>>({});
@@ -260,13 +262,18 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 animate-fade-in">
+    <div className="fixed inset-0 z-50 overflow-hidden bg-slate-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-6 animate-fade-in">
       {/* dvh where supported: on phones vh is measured against the viewport
           without browser chrome, so 92vh put the footer below the fold. */}
       <div
-        className="bg-white w-full max-w-4xl rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh] supports-[height:100dvh]:max-h-[88dvh]"
+        className="bg-white w-full max-w-4xl rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh] sm:max-h-[90vh] supports-[height:100dvh]:max-h-[92dvh] sm:supports-[height:100dvh]:max-h-[88dvh]"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Grab handle: says "this sheet moves" on a phone, where the dialog
+            is anchored to the bottom edge. */}
+        <div className="sm:hidden shrink-0 bg-slate-900 pt-2 flex justify-center" aria-hidden="true">
+          <span className="h-1 w-10 rounded-full bg-white/25" />
+        </div>
         {/* Modal Header — one metadata row, not four. Name, then a single
             wrap container carrying academy, category, sub-niches, score,
             status and social links together. */}
@@ -378,7 +385,7 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
             shrank below its content. The body grew past the container, which
             clips — taking the reviews and the footer with it. flex-1 with
             min-h-0 is what makes it scroll instead. */}
-        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] p-5 sm:p-7 space-y-6">
+        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] p-5 sm:p-7 pb-8 space-y-6">
           {/* Approved instructor statements that aren't tied to one review */}
           {responses
             .filter((resp) => !resp.reviewId)
