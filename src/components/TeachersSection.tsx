@@ -91,7 +91,10 @@ export const TeachersSection: React.FC<TeachersSectionProps> = ({
 
   const [selectedLetter, setSelectedLetter] = useState<string>('all');
   const [selectedGender, setSelectedGender] = useState<TeacherGender | 'all'>('all');
-  const [onlyWithPhoto, setOnlyWithPhoto] = useState(true);
+  // Off by default: 35 of 66 profiles have no photo, so defaulting this on hid
+  // more than half the directory — including from search, which made a real
+  // search for a real instructor return nothing at all.
+  const [onlyWithPhoto, setOnlyWithPhoto] = useState(false);
   const [onlyWithReviews, setOnlyWithReviews] = useState(true);
   const [selectedSubniche, setSelectedSubniche] = useState<string>('all');
   const [sortBy, setSortBy] = useState<SortOption>('default');
