@@ -8,6 +8,14 @@ import {
   bayesianRating,
 } from '../lib/ratingTone';
 import { Users, BarChart3, ThumbsUp, ListChecks } from 'lucide-react';
+import { DonutChart, DonutSlice } from './DonutChart';
+
+// Gender is categorical (identity); rating health is a status scale, so it
+// keeps the reserved good/warning/critical palette the bars already used
+// rather than borrowing categorical hues.
+const GENDER_COLORS = ['#6366f1', '#f472b6', '#94a3b8'];
+const GENDER_CHIPS = ['bg-indigo-500', 'bg-pink-400', 'bg-slate-400'];
+const HEALTH_COLORS = { success: '#10b981', warning: '#f59e0b', danger: '#ef4444' } as const;
 
 interface StatsSectionProps {
   teachers: Teacher[];
@@ -141,11 +149,18 @@ export const StatsSection: React.FC<StatsSectionProps> = ({ teachers, currentLan
             <Users className="w-4 h-4 text-indigo-600" />
             <h3 className="text-sm font-bold text-slate-900">{t.analytics.genderTitle}</h3>
           </div>
-          <div className="space-y-3">
-            {stats.gender.map((g) => (
-              <BarRow key={g.label} label={g.label} count={g.count} percent={g.percent} />
-            ))}
-          </div>
+          <DonutChart
+            ariaLabel={t.analytics.genderTitle}
+            centerValue={String(stats.total)}
+            centerLabel={t.analytics.donutTeachers}
+            slices={stats.gender.map<DonutSlice>((g, i) => ({
+              label: g.label,
+              count: g.count,
+              percent: g.percent,
+              color: GENDER_COLORS[i % GENDER_COLORS.length],
+              chipClass: GENDER_CHIPS[i % GENDER_CHIPS.length],
+            }))}
+          />
         </div>
 
         {/* Rating health */}
@@ -155,26 +170,34 @@ export const StatsSection: React.FC<StatsSectionProps> = ({ teachers, currentLan
             <h3 className="text-sm font-bold text-slate-900">{t.analytics.ratingHealthTitle}</h3>
           </div>
           <p className="text-2xs text-slate-400 mb-4">{t.analytics.ratingHealthSubtitle}</p>
-          <div className="space-y-3">
-            <BarRow
-              label={t.analytics.healthyLabel}
-              count={stats.ratingHealth.healthy.count}
-              percent={stats.ratingHealth.healthy.percent}
-              barClassName={TONE_BAR_CLASS.success}
-            />
-            <BarRow
-              label={t.analytics.mixedLabel}
-              count={stats.ratingHealth.mixed.count}
-              percent={stats.ratingHealth.mixed.percent}
-              barClassName={TONE_BAR_CLASS.warning}
-            />
-            <BarRow
-              label={t.analytics.flaggedLabel}
-              count={stats.ratingHealth.flagged.count}
-              percent={stats.ratingHealth.flagged.percent}
-              barClassName={TONE_BAR_CLASS.danger}
-            />
-          </div>
+          <DonutChart
+            ariaLabel={t.analytics.ratingHealthTitle}
+            centerValue={String(stats.ratingHealth.reviewedTotal)}
+            centerLabel={t.analytics.donutReviewed}
+            slices={[
+              {
+                label: t.analytics.healthyLabel,
+                count: stats.ratingHealth.healthy.count,
+                percent: stats.ratingHealth.healthy.percent,
+                color: HEALTH_COLORS.success,
+                chipClass: TONE_BAR_CLASS.success,
+              },
+              {
+                label: t.analytics.mixedLabel,
+                count: stats.ratingHealth.mixed.count,
+                percent: stats.ratingHealth.mixed.percent,
+                color: HEALTH_COLORS.warning,
+                chipClass: TONE_BAR_CLASS.warning,
+              },
+              {
+                label: t.analytics.flaggedLabel,
+                count: stats.ratingHealth.flagged.count,
+                percent: stats.ratingHealth.flagged.percent,
+                color: HEALTH_COLORS.danger,
+                chipClass: TONE_BAR_CLASS.danger,
+              },
+            ]}
+          />
         </div>
 
         {/* Category breakdown — spans full width, many rows */}
