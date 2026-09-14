@@ -273,15 +273,15 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
         <div className="px-4 py-3 sm:px-6 sm:py-4 bg-slate-900 text-white flex items-start justify-between gap-3 shrink-0">
           {/* min-w-0 all the way down, or a long name refuses to shrink and
               shoves the share/close buttons off the edge on a phone. */}
-          <div className="flex items-center gap-3 min-w-0">
+          <div className="flex items-start gap-3 sm:gap-3.5 min-w-0">
             {teacher.photoUrl ? (
               <img
                 src={teacher.photoUrl}
                 alt={teacher.name}
-                className="w-12 h-12 sm:w-14 sm:h-14 rounded-full object-cover ring-1 ring-white/25 shrink-0"
+                className="w-12 h-12 sm:w-14 sm:h-14 rounded-full object-cover border-2 border-slate-700/60 shrink-0"
               />
             ) : (
-              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-indigo-500/30 text-white font-bold flex items-center justify-center text-lg ring-1 ring-white/25 shrink-0">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-indigo-500/30 text-white font-bold flex items-center justify-center text-lg border-2 border-slate-700/60 shrink-0">
                 {teacher.name.charAt(0).toUpperCase()}
               </div>
             )}
@@ -291,7 +291,7 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
                 {teacher.name}
               </h2>
 
-              <div className="flex flex-wrap items-center gap-1.5 mt-1">
+              <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
                 {headerTags.map((tag) => (
                   <span
                     key={tag}
@@ -351,7 +351,7 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-1 shrink-0">
+          <div className="flex items-center gap-1 shrink-0 self-start">
             <button
               type="button"
               id="share-teacher-btn"
