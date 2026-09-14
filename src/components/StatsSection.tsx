@@ -1,7 +1,12 @@
 import React, { useMemo } from 'react';
 import { CourseCategory, Teacher } from '../types';
 import { SupportedLang, TRANSLATIONS } from '../translations';
-import { ratingTone, FLAGGED_THRESHOLD, HEALTHY_THRESHOLD } from '../lib/ratingTone';
+import {
+  ratingTone,
+  FLAGGED_THRESHOLD,
+  HEALTHY_THRESHOLD,
+  bayesianRating,
+} from '../lib/ratingTone';
 import { Users, BarChart3, ThumbsUp, ListChecks } from 'lucide-react';
 
 interface StatsSectionProps {
@@ -68,8 +73,9 @@ export const StatsSection: React.FC<StatsSectionProps> = ({ teachers, currentLan
 
     // Rating health (only teachers with at least one review)
     const reviewedTeachers = teachers.filter((tch) => tch.reviewCount > 0);
-    const flagged = reviewedTeachers.filter((tch) => tch.averageRating <= FLAGGED_THRESHOLD).length;
-    const healthy = reviewedTeachers.filter((tch) => tch.averageRating >= HEALTHY_THRESHOLD).length;
+    const score = (tch: Teacher) => bayesianRating(tch.averageRating, tch.reviewCount);
+    const flagged = reviewedTeachers.filter((tch) => score(tch) <= FLAGGED_THRESHOLD).length;
+    const healthy = reviewedTeachers.filter((tch) => score(tch) >= HEALTHY_THRESHOLD).length;
     const mixed = reviewedTeachers.length - flagged - healthy;
     const reviewedTotal = reviewedTeachers.length;
 

@@ -31,6 +31,31 @@ export const FLAGGED_THRESHOLD = 2.5;
 export const TOP_THRESHOLD = 4.5;
 export const HEALTHY_THRESHOLD = 4;
 
+// Bayesian smoothing for low-volume ratings.
+//
+// The prior is the neutral midpoint of the 1-5 scale, NOT the observed site
+// mean. This site's reviews are self-selected toward complaints (the observed
+// mean sits around 1.9), so shrinking toward that mean would push thinly
+// reviewed teachers further toward "flagged" — the opposite of the intent. A
+// neutral prior encodes "not enough evidence yet" instead.
+export const BAYESIAN_PRIOR = 3;
+
+// How many "virtual" reviews at the prior each teacher is seeded with. Higher
+// = more real reviews needed before their own average dominates.
+export const BAYESIAN_CONFIDENCE = 5;
+
+// A teacher is never named on the public watchlist below this many reviews.
+// One angry review should not be enough to publicly brand someone.
+export const MIN_REVIEWS_FOR_WATCHLIST = 3;
+
+export function bayesianRating(averageRating: number, reviewCount: number): number {
+  if (reviewCount === 0) return BAYESIAN_PRIOR;
+  return (
+    (BAYESIAN_CONFIDENCE * BAYESIAN_PRIOR + averageRating * reviewCount) /
+    (BAYESIAN_CONFIDENCE + reviewCount)
+  );
+}
+
 export function isFlaggedRating(averageRating: number, reviewCount: number): boolean {
-  return reviewCount > 0 && averageRating <= FLAGGED_THRESHOLD;
+  return reviewCount > 0 && bayesianRating(averageRating, reviewCount) <= FLAGGED_THRESHOLD;
 }

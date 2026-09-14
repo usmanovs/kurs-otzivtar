@@ -8,6 +8,8 @@ import {
   RATING_BADGE_CLASS,
   FLAGGED_THRESHOLD,
   TOP_THRESHOLD,
+  MIN_REVIEWS_FOR_WATCHLIST,
+  bayesianRating,
 } from '../lib/ratingTone';
 import { Award, TrendingUp, TrendingDown, Star } from 'lucide-react';
 
@@ -113,14 +115,22 @@ export const TeacherLeaderboardSection: React.FC<TeacherLeaderboardSectionProps>
   );
 
   const flagged = useMemo(() => {
-    const sortFlagged = (a: Teacher, b: Teacher) =>
-      a.averageRating - b.averageRating || b.reviewCount - a.reviewCount;
+    const score = (tch: Teacher) => bayesianRating(tch.averageRating, tch.reviewCount);
+
+    // Rank by the shrunk score, so a teacher with many consistent complaints
+    // outranks one with a single angry review.
+    const sortFlagged = (a: Teacher, b: Teacher) => score(a) - score(b) || b.reviewCount - a.reviewCount;
 
     const pinned = teachers.filter((tch) => PINNED_FLAGGED_NAMES.includes(tch.name) && tch.reviewCount > 0);
     const pinnedNames = new Set(pinned.map((tch) => tch.name));
 
     const rest = teachers
-      .filter((tch) => tch.reviewCount > 0 && tch.averageRating <= FLAGGED_THRESHOLD && !pinnedNames.has(tch.name))
+      .filter(
+        (tch) =>
+          tch.reviewCount >= MIN_REVIEWS_FOR_WATCHLIST &&
+          score(tch) <= FLAGGED_THRESHOLD &&
+          !pinnedNames.has(tch.name)
+      )
       .sort(sortFlagged)
       .slice(0, Math.max(0, MAX_ROWS - pinned.length));
 
