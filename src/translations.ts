@@ -105,7 +105,8 @@ export const TRANSLATIONS = {
       kids_development: 'Балдарды өнүктүрүү',
       arts_music: 'Искусство жана Музыка',
       ort_school: 'ЖРТ жана Мектеп',
-      public_speaking: 'Чечендик өнөр / Ораторлук'
+      public_speaking: 'Чечендик өнөр / Ораторлук',
+      unknown: 'Белгисиз'
     },
     format: {
       all: 'Бардык форматтар',
@@ -524,7 +525,8 @@ export const TRANSLATIONS = {
       kids_development: 'Развитие детей',
       arts_music: 'Искусство и Музыка',
       ort_school: 'ОРТ и Школьные',
-      public_speaking: 'Ораторское искусство'
+      public_speaking: 'Ораторское искусство',
+      unknown: 'Неизвестно'
     },
     format: {
       all: 'Все форматы',

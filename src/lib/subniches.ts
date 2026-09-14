@@ -20,6 +20,12 @@ export const SUBNICHES_BY_CATEGORY: Partial<Record<CourseCategory, string[]>> = 
   ort_school: ['ort_math', 'ort_kyrgyz', 'school_subjects'],
 };
 
+// Categories that exist for display and filtering but must never be offered
+// when creating a profile: 'all' is a filter pseudo-category, and 'unknown' is
+// a curation outcome. Putting 'unknown' in the create dropdowns would hand
+// people the same skip button that left 62% of the directory uncategorised.
+export const NON_CREATABLE_CATEGORIES: readonly string[] = ['all', 'unknown'];
+
 export const ALL_SUBNICHES: string[] = Array.from(
   new Set(Object.values(SUBNICHES_BY_CATEGORY).flat())
 );

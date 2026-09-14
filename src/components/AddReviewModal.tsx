@@ -3,6 +3,7 @@ import { CourseCategory, Review, StudentStatus, Teacher } from '../types';
 import { SupportedLang, TRANSLATIONS } from '../translations';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { teacherNameKey } from '../lib/api';
+import { NON_CREATABLE_CATEGORIES } from '../lib/subniches';
 import {
   X,
   Star,
@@ -276,7 +277,7 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
                   {t.addTeacherModal.categoryNone}
                 </option>
                 {(Object.keys(t.categories) as (CourseCategory | 'all')[])
-                  .filter((key) => key !== 'all')
+                  .filter((key) => !NON_CREATABLE_CATEGORIES.includes(key))
                   .map((key) => (
                     <option key={key} value={key}>
                       {t.categories[key as CourseCategory]}

@@ -15,7 +15,11 @@ export type CourseCategory =
   | 'kids_development'
   | 'arts_music'
   | 'ort_school'
-  | 'public_speaking';
+  | 'public_speaking'
+  // A curation outcome, not a subject: set when someone has looked and the
+  // profile genuinely can't be placed. Distinct from category = null, which
+  // means nobody has looked yet.
+  | 'unknown';
 
 export type CourseFormat = 'online' | 'offline' | 'hybrid';
 
