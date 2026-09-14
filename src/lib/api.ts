@@ -307,17 +307,18 @@ function getOrCreateVisitorId(): string {
   return id;
 }
 
-// Records one real visit per browser per day (upsert on the (visitor_id,
-// visit_date) primary key means repeat visits/reloads the same day are
-// silently no-ops). Best-effort — a logged-out visitor or network hiccup
-// should never affect the page itself.
+// Records one real visit per browser per day, plus one raw pageview, via a
+// same-origin API route (avoids ad blockers dropping a direct cross-origin
+// call to *.supabase.co, which was undercounting real traffic). Best-effort
+// — a logged-out visitor or network hiccup should never affect the page.
 export async function recordSiteVisit(): Promise<void> {
   try {
     const visitorId = getOrCreateVisitorId();
-    await supabase.from('site_visits').upsert(
-      { visitor_id: visitorId },
-      { onConflict: 'visitor_id,visit_date', ignoreDuplicates: true }
-    );
+    await fetch('/api/track-visit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ visitorId }),
+    });
   } catch {
     // Ignore — this is a secondary signal, not something a visitor should ever see fail.
   }
@@ -325,17 +326,19 @@ export async function recordSiteVisit(): Promise<void> {
 
 export interface SiteStats {
   visitsLast24h: number;
+  pageViewsLast24h: number;
   reviewsLast7Days: number;
 }
 
-// Real, unfaked numbers: unique visitors in the trailing 24 hours (via a
-// SECURITY DEFINER RPC so raw visit rows stay unreadable to anon), and
-// reviews actually submitted in the last 7 days.
+// Real, unfaked numbers: unique visitors and raw pageviews in the trailing
+// 24 hours (via SECURITY DEFINER RPCs so raw rows stay unreadable to anon),
+// and reviews actually submitted in the last 7 days.
 export async function fetchSiteStats(): Promise<SiteStats> {
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
-  const [visitsResult, reviewsResult] = await Promise.all([
+  const [visitsResult, pageViewsResult, reviewsResult] = await Promise.all([
     supabase.rpc('get_visits_last_24h'),
+    supabase.rpc('get_pageviews_last_24h'),
     supabase
       .from('reviews')
       .select('id', { count: 'exact', head: true })
@@ -345,6 +348,7 @@ export async function fetchSiteStats(): Promise<SiteStats> {
 
   return {
     visitsLast24h: Number(visitsResult.data ?? 0),
+    pageViewsLast24h: Number(pageViewsResult.data ?? 0),
     reviewsLast7Days: reviewsResult.count ?? 0,
   };
 }

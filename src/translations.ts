@@ -45,6 +45,7 @@ export const TRANSLATIONS = {
       socialProofLabel: 'Чыныгы мугалимдер, чыныгы пикирлер',
       socialProofMore: 'дагы мугалим',
       liveVisitors: 'акыркы 24 саатта сайтка кирген',
+      livePageViews: 'көрүү акыркы 24 саатта',
       liveReviewsWeek: 'жаңы пикир бул жумада'
     },
     warningBannerTitle: 'Шектүү курстардан кантип сактануу керек? Студенттер үчүн эскертүү:',
@@ -290,6 +291,7 @@ export const TRANSLATIONS = {
       socialProofLabel: 'Реальные преподаватели, реальные отзывы',
       socialProofMore: 'ещё преподавателей',
       liveVisitors: 'посетили сайт за последние 24 часа',
+      livePageViews: 'просмотров за последние 24 часа',
       liveReviewsWeek: 'новых отзывов на этой неделе'
     },
     warningBannerTitle: 'Как не стать жертвой инфоцыган и некачественных курсов в КР:',
