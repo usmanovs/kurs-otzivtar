@@ -24,6 +24,7 @@ import {
   Share2,
   ShieldAlert,
   ShieldCheck,
+  ChevronDown,
   CheckCircle2,
   User,
   MessageSquareReply,
@@ -128,6 +129,9 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
   const [ipLogMap, setIpLogMap] = useState<Record<string, { ipAddress: string; createdAt: string }>>({});
   const [verifyingReviewId, setVerifyingReviewId] = useState<string | null>(null);
   const [isRespondOpen, setIsRespondOpen] = useState(false);
+  // Collapsed by default; the sm: grid override keeps it open on wider screens
+  // without needing a resize listener.
+  const [metricsOpen, setMetricsOpen] = useState(false);
   const [responses, setResponses] = useState<TeacherResponse[]>([]);
 
   // Approved instructor responses — RLS keeps unapproved ones out of reach.
@@ -482,8 +486,36 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
                 </div>
               </div>
 
-              {/* Sub-scores & rating distribution */}
-              <div className="md:col-span-8 flex flex-col justify-center gap-5">
+              {/* Sub-scores & rating distribution. On a phone these two blocks
+                  filled the screen and pushed the reviews — the thing people
+                  came for — entirely out of view, so they collapse. The sm:
+                  row override keeps them open on wider screens, where there is
+                  room and no toggle is shown. */}
+              <div className="md:col-span-8 flex flex-col justify-center">
+                <button
+                  type="button"
+                  id="toggle-detailed-metrics"
+                  onClick={() => setMetricsOpen((v) => !v)}
+                  aria-expanded={metricsOpen}
+                  aria-controls="detailed-metrics"
+                  className="sm:hidden w-full flex items-center justify-between gap-2 py-2 text-xs font-semibold text-slate-600 hover:text-indigo-700 transition-colors cursor-pointer"
+                >
+                  <span>{t.detailModal.detailedMetrics}</span>
+                  <ChevronDown
+                    className={`w-4 h-4 shrink-0 transition-transform duration-200 ${
+                      metricsOpen ? 'rotate-180' : ''
+                    }`}
+                  />
+                </button>
+
+                <div
+                  id="detailed-metrics"
+                  className={`grid transition-all duration-200 ease-out sm:grid-rows-[1fr] ${
+                    metricsOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
+                  }`}
+                >
+                  <div className="overflow-hidden">
+                    <div className="flex flex-col gap-4 pt-1 sm:pt-0">
                 <div className="space-y-3">
                   {/* Sub-criteria are optional, so 0 means "nobody rated this"
                       rather than a score of zero — drop those rows instead of
@@ -539,6 +571,9 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
                         </div>
                       );
                     })}
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
