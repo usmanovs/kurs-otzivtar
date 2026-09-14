@@ -45,6 +45,18 @@ function formatDateTime(iso: string): string {
 }
 
 
+const HEADER_RATING_CLASS: Record<'success' | 'warning' | 'danger', string> = {
+  success: 'bg-emerald-400/15 text-emerald-300',
+  warning: 'bg-amber-400/15 text-amber-300',
+  danger: 'bg-red-400/15 text-red-300',
+};
+
+const HEADER_STAR_CLASS: Record<'success' | 'warning' | 'danger', string> = {
+  success: 'fill-emerald-300 text-emerald-300',
+  warning: 'fill-amber-300 text-amber-300',
+  danger: 'fill-red-300 text-red-300',
+};
+
 type TrustTier = 'proof' | 'self' | 'imported';
 
 function trustTier(review: Review): TrustTier {
@@ -182,6 +194,9 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
     }
   };
 
+  // Muted against the dark header rather than the page's usual saturated
+  // rating colours, which glare on slate-900.
+  const headerTone = ratingTone(teacher.averageRating);
   const totalReviews = teacher.reviews.length;
   const ratingCounts: Record<number, number> = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
   teacher.reviews.forEach((r) => {
@@ -222,27 +237,31 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 animate-fade-in">
+    <div className="fixed inset-0 z-50 overflow-hidden bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 animate-fade-in">
+      {/* dvh where supported: on phones vh is measured against the viewport
+          without browser chrome, so 92vh put the footer below the fold. */}
       <div
-        className="bg-white w-full max-w-4xl rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh]"
+        className="bg-white w-full max-w-4xl rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh] supports-[height:100dvh]:max-h-[88dvh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="p-6 bg-slate-900 text-white flex items-start justify-between gap-4">
-          <div className="flex items-center gap-4">
+        <div className="p-5 sm:p-6 bg-slate-900 text-white flex items-start justify-between gap-3 sm:gap-4 shrink-0">
+          {/* min-w-0 all the way down, or a long name refuses to shrink and
+              shoves the share/close buttons off the edge on a phone. */}
+          <div className="flex items-start gap-3 sm:gap-4 min-w-0">
             {teacher.photoUrl ? (
               <img
                 src={teacher.photoUrl}
                 alt={teacher.name}
-                className="w-16 h-16 rounded-full object-cover ring-2 ring-white/20 shrink-0"
+                className="w-14 h-14 sm:w-16 sm:h-16 rounded-full object-cover ring-2 ring-white/20 shrink-0"
               />
             ) : (
-              <div className="w-16 h-16 rounded-full bg-indigo-500/30 text-white font-bold flex items-center justify-center text-xl shrink-0">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-indigo-500/30 text-white font-bold flex items-center justify-center text-xl shrink-0">
                 {teacher.name.charAt(0).toUpperCase()}
               </div>
             )}
-            <div>
-              <h2 className="text-xl sm:text-2xl font-bold leading-tight tracking-tight">
+            <div className="min-w-0">
+              <h2 className="text-xl sm:text-2xl font-bold leading-tight tracking-tight break-words">
                 {teacher.name}
               </h2>
               {teacher.academyName && (
@@ -251,6 +270,44 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
                   <span>{teacher.academyName}</span>
                 </div>
               )}
+
+              {/* What they teach and how they score, before any scrolling.
+                  Wraps as one flow so long Kyrgyz category names cannot push
+                  into the share/close buttons. */}
+              <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                {teacher.category && (
+                  <span className="px-2.5 py-0.5 rounded-full bg-slate-700/60 text-slate-200 text-2xs font-medium">
+                    {t.categories[teacher.category]}
+                  </span>
+                )}
+                {(teacher.subniches ?? []).map((sn) => (
+                  <span
+                    key={sn}
+                    className="px-2.5 py-0.5 rounded-full bg-slate-700/40 text-slate-300 text-2xs font-medium"
+                  >
+                    {t.subniches[sn as keyof typeof t.subniches] ?? sn}
+                  </span>
+                ))}
+
+                {teacher.reviewCount > 0 && (
+                  <>
+                    <span
+                      className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-2xs font-bold ${HEADER_RATING_CLASS[headerTone]}`}
+                    >
+                      <Star className={`w-3 h-3 ${HEADER_STAR_CLASS[headerTone]}`} />
+                      {teacher.averageRating.toFixed(1)}
+                      <span className="font-medium opacity-80">({teacher.reviewCount})</span>
+                    </span>
+                    <span
+                      className={`px-2.5 py-0.5 rounded-full text-2xs font-semibold ${HEADER_RATING_CLASS[headerTone]}`}
+                    >
+                      {headerTone === 'danger'
+                        ? t.analytics.flaggedLabel
+                        : `${teacher.recommendPercent}% ${t.courseCard.recommendRate}`}
+                    </span>
+                  </>
+                )}
+              </div>
               {(teacher.instagramUrl || teacher.youtubeUrl) && (
                 <div className="flex items-center gap-2 mt-2">
                   {teacher.instagramUrl && (
@@ -303,8 +360,11 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
           </div>
         </div>
 
-        {/* Modal Scrollable Body */}
-        <div className="overflow-y-auto p-5 sm:p-7 space-y-6">
+        {/* The bug: a flex child defaults to min-height:auto, so this never
+            shrank below its content. The body grew past the container, which
+            clips — taking the reviews and the footer with it. flex-1 with
+            min-h-0 is what makes it scroll instead. */}
+        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] p-5 sm:p-7 space-y-6">
           {/* Approved instructor statements that aren't tied to one review */}
           {responses
             .filter((resp) => !resp.reviewId)
@@ -349,32 +409,6 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
               <span>{t.courseCard.addReview}</span>
             </button>
           </div>
-
-          {/* Instructor's way in. This used to be a grey text link in the footer,
-              below every review, which is why nobody had ever used it. Hidden
-              once a statement is published, since only one ever can be. */}
-          {responses.length === 0 && (
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-5 bg-amber-50 rounded-2xl border border-amber-200">
-              <div>
-                <h4 className="text-sm font-bold text-amber-950 flex items-center gap-1.5">
-                  <ShieldCheck className="w-4 h-4 shrink-0" />
-                  {t.responseModal.claimTitle}
-                </h4>
-                <p className="text-xs text-amber-900/80 mt-0.5 leading-relaxed">
-                  {t.responseModal.claimBody}
-                </p>
-              </div>
-              <button
-                type="button"
-                id="detail-modal-claim-profile-btn"
-                onClick={() => setIsRespondOpen(true)}
-                className="inline-flex items-center gap-2 px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs sm:text-sm rounded-full transition-colors shadow-xs shrink-0 cursor-pointer"
-              >
-                <MessageSquareReply className="w-4 h-4" />
-                <span>{t.responseModal.claimBtn}</span>
-              </button>
-            </div>
-          )}
 
           {teacher.bio && (
             <div className="text-sm text-slate-600 leading-relaxed bg-slate-50 p-4 rounded-xl border border-slate-200">
@@ -746,19 +780,30 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
         </div>
 
         {/* Modal Footer */}
-        <div className="p-4 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3">
-          <button
-            type="button"
-            onClick={() => setIsRespondOpen(true)}
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-indigo-700 cursor-pointer"
-          >
-            <MessageSquareReply className="w-4 h-4" />
-            {t.responseModal.buttonLabel}
-          </button>
+        <div className="shrink-0 p-3 sm:p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-3">
+          {/* Secondary by design: this is the reviewed instructor's action, not
+              the reader's. The primary "write a review" CTA lives in the body,
+              next to the reviews it belongs to. */}
+          {responses.length === 0 ? (
+            <button
+              type="button"
+              id="detail-modal-claim-profile-btn"
+              onClick={() => setIsRespondOpen(true)}
+              className="inline-flex items-center gap-1.5 min-w-0 px-3 py-1.5 rounded-full border border-slate-300 bg-white text-slate-600 hover:text-indigo-700 hover:border-indigo-300 text-xs font-semibold transition-colors cursor-pointer"
+            >
+              <MessageSquareReply className="w-3.5 h-3.5 shrink-0" />
+              <span className="truncate">{t.responseModal.buttonLabel}</span>
+            </button>
+          ) : (
+            <span />
+          )}
+
+          {/* The header already carries an ✕; on phones this would only eat
+              vertical space next to it. */}
           <button
             type="button"
             onClick={onClose}
-            className="px-6 py-2 rounded-full bg-slate-200 hover:bg-slate-300 text-slate-700 text-sm font-semibold transition-colors cursor-pointer"
+            className="hidden sm:inline-flex items-center px-5 py-2 rounded-full border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 text-sm font-semibold transition-colors cursor-pointer shrink-0"
           >
             {t.detailModal.close}
           </button>
