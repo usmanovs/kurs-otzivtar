@@ -1,7 +1,8 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { CourseCategory, Teacher, TeacherGender } from '../types';
 import { SupportedLang, TRANSLATIONS } from '../translations';
 import { ratingTone, RATING_BADGE_CLASS } from '../lib/ratingTone';
+import { SortOption } from '../lib/subniches';
 import { GraduationCap, Star, PlusCircle, Building2, Pencil, Instagram, Youtube, MessageSquarePlus, X } from 'lucide-react';
 
 interface TeachersSectionProps {
@@ -92,6 +93,8 @@ export const TeachersSection: React.FC<TeachersSectionProps> = ({
   const [selectedGender, setSelectedGender] = useState<TeacherGender | 'all'>('all');
   const [onlyWithPhoto, setOnlyWithPhoto] = useState(true);
   const [onlyWithReviews, setOnlyWithReviews] = useState(true);
+  const [selectedSubniche, setSelectedSubniche] = useState<string>('all');
+  const [sortBy, setSortBy] = useState<SortOption>('default');
 
   const baseTeachers = useMemo(() => {
     return teachers.filter((tch) => {
@@ -100,6 +103,22 @@ export const TeachersSection: React.FC<TeachersSectionProps> = ({
       return true;
     });
   }, [teachers, onlyWithPhoto, onlyWithReviews]);
+
+  // Only offer sub-niches that actually exist in the current category scope,
+  // so the row never shows a chip that would yield an empty result.
+  const availableSubniches = useMemo(() => {
+    const found = new Set<string>();
+    baseTeachers.forEach((tch) => {
+      if (selectedCategory !== 'all' && tch.category !== selectedCategory) return;
+      (tch.subniches ?? []).forEach((sn) => found.add(sn));
+    });
+    return Array.from(found).sort((a, b) =>
+      (t.subniches[a as keyof typeof t.subniches] ?? a).localeCompare(
+        t.subniches[b as keyof typeof t.subniches] ?? b,
+        'ru'
+      )
+    );
+  }, [baseTeachers, selectedCategory, t]);
 
   const availableLetters = useMemo(() => {
     const letters = new Set<string>();
@@ -111,23 +130,53 @@ export const TeachersSection: React.FC<TeachersSectionProps> = ({
   }, [baseTeachers]);
 
   const displayedTeachers = useMemo(() => {
-    return baseTeachers.filter((tch) => {
+    const filtered = baseTeachers.filter((tch) => {
       if (selectedLetter !== 'all' && tch.name.trim().charAt(0).toUpperCase() !== selectedLetter) return false;
       if (selectedGender !== 'all' && tch.gender !== selectedGender) return false;
       if (selectedCategory !== 'all' && tch.category !== selectedCategory) return false;
+      if (selectedSubniche !== 'all' && !(tch.subniches ?? []).includes(selectedSubniche)) return false;
       return true;
     });
-  }, [baseTeachers, selectedLetter, selectedGender, selectedCategory]);
+
+    // Teachers with no reviews have an averageRating of 0, which would other-
+    // wise park them at the top of a "highest rated" sort, so they sort last.
+    const sorted = [...filtered];
+    switch (sortBy) {
+      case 'most_reviewed':
+        sorted.sort((a, b) => b.reviewCount - a.reviewCount || b.averageRating - a.averageRating);
+        break;
+      case 'highest_rated':
+        sorted.sort((a, b) => {
+          if (a.reviewCount === 0 && b.reviewCount === 0) return 0;
+          if (a.reviewCount === 0) return 1;
+          if (b.reviewCount === 0) return -1;
+          return b.averageRating - a.averageRating || b.reviewCount - a.reviewCount;
+        });
+        break;
+      case 'newest':
+        sorted.sort((a, b) => (b.createdAt ?? '').localeCompare(a.createdAt ?? ''));
+        break;
+      default:
+        break;
+    }
+    return sorted;
+  }, [baseTeachers, selectedLetter, selectedGender, selectedCategory, selectedSubniche, sortBy]);
+
+  useEffect(() => {
+    setSelectedSubniche('all');
+  }, [selectedCategory]);
 
   const isFiltered =
     searchQuery.trim().length > 0 ||
     selectedLetter !== 'all' ||
     selectedGender !== 'all' ||
-    selectedCategory !== 'all';
+    selectedCategory !== 'all' ||
+    selectedSubniche !== 'all';
 
   const handleClearAll = () => {
     setSelectedLetter('all');
     setSelectedGender('all');
+    setSelectedSubniche('all');
     onSelectCategory('all');
     onClearSearch();
   };
@@ -177,6 +226,19 @@ export const TeachersSection: React.FC<TeachersSectionProps> = ({
               ))}
           </select>
 
+          <select
+            id="teacher-sort"
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as SortOption)}
+            aria-label={t.teacherSort.label}
+            className="px-3 py-2 bg-white border border-slate-200 rounded-full text-xs sm:text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 shadow-2xs cursor-pointer"
+          >
+            <option value="default">{t.teacherSort.default}</option>
+            <option value="most_reviewed">{t.teacherSort.most_reviewed}</option>
+            <option value="highest_rated">{t.teacherSort.highest_rated}</option>
+            <option value="newest">{t.teacherSort.newest}</option>
+          </select>
+
           <button
             type="button"
             id="add-teacher-btn"
@@ -203,6 +265,39 @@ export const TeachersSection: React.FC<TeachersSectionProps> = ({
           label={t.teachersSection.onlyWithReviews}
         />
       </div>
+
+      {availableSubniches.length > 0 && (
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 mb-3 no-scrollbar">
+          <span className="shrink-0 text-xs font-medium text-slate-400 pr-1">
+            {t.subnicheFilter.label}
+          </span>
+          <button
+            type="button"
+            onClick={() => setSelectedSubniche('all')}
+            className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors cursor-pointer ${
+              selectedSubniche === 'all'
+                ? 'bg-indigo-600 text-white'
+                : 'bg-white text-slate-600 border border-slate-200 hover:border-indigo-300 hover:text-indigo-600'
+            }`}
+          >
+            {t.subnicheFilter.all}
+          </button>
+          {availableSubniches.map((sn) => (
+            <button
+              key={sn}
+              type="button"
+              onClick={() => setSelectedSubniche(sn)}
+              className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors cursor-pointer ${
+                selectedSubniche === sn
+                  ? 'bg-indigo-600 text-white'
+                  : 'bg-white text-slate-600 border border-slate-200 hover:border-indigo-300 hover:text-indigo-600'
+              }`}
+            >
+              {t.subniches[sn as keyof typeof t.subniches] ?? sn}
+            </button>
+          ))}
+        </div>
+      )}
 
       {availableLetters.length > 0 && (
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 mb-4 no-scrollbar">

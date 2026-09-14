@@ -2,6 +2,7 @@ import React, { useRef, useState } from 'react';
 import { CourseCategory, Teacher, TeacherGender } from '../types';
 import { SupportedLang, TRANSLATIONS } from '../translations';
 import { useEscapeKey } from '../hooks/useEscapeKey';
+import { SUBNICHES_BY_CATEGORY } from '../lib/subniches';
 import { X, UserPlus, Upload, Trash2, Instagram, Youtube } from 'lucide-react';
 
 interface AddTeacherModalProps {
@@ -28,12 +29,25 @@ export const AddTeacherModal: React.FC<AddTeacherModalProps> = ({
   const [name, setName] = useState(editingTeacher?.name || '');
   const [academyName, setAcademyName] = useState(editingTeacher?.academyName || '');
   const [category, setCategory] = useState<CourseCategory | ''>(editingTeacher?.category || '');
+  const [subniches, setSubniches] = useState<string[]>(editingTeacher?.subniches ?? []);
   const [gender, setGender] = useState<TeacherGender | ''>(editingTeacher?.gender || '');
   const [bio, setBio] = useState(editingTeacher?.bio || '');
   const [photoUrl, setPhotoUrl] = useState(editingTeacher?.photoUrl || '');
   const [instagramUrl, setInstagramUrl] = useState(editingTeacher?.instagramUrl || '');
   const [youtubeUrl, setYoutubeUrl] = useState(editingTeacher?.youtubeUrl || '');
   const [error, setError] = useState('');
+
+  const availableSubniches = category ? SUBNICHES_BY_CATEGORY[category] ?? [] : [];
+
+  const handleCategoryChange = (next: CourseCategory | '') => {
+    setCategory(next);
+    const allowed = next ? SUBNICHES_BY_CATEGORY[next] ?? [] : [];
+    setSubniches((prev) => prev.filter((sn) => allowed.includes(sn)));
+  };
+
+  const toggleSubniche = (sn: string) => {
+    setSubniches((prev) => (prev.includes(sn) ? prev.filter((x) => x !== sn) : [...prev, sn]));
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -59,6 +73,7 @@ export const AddTeacherModal: React.FC<AddTeacherModalProps> = ({
         name: name.trim(),
         academyName: academyName.trim() || undefined,
         category: category || undefined,
+        subniches,
         gender: gender || undefined,
         bio: bio.trim() || undefined,
         photoUrl: photoUrl.trim() || undefined,
@@ -180,7 +195,7 @@ export const AddTeacherModal: React.FC<AddTeacherModalProps> = ({
             <select
               id="new-teacher-category-select"
               value={category}
-              onChange={(e) => setCategory(e.target.value as CourseCategory | '')}
+              onChange={(e) => handleCategoryChange(e.target.value as CourseCategory | '')}
               className="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
             >
               <option value="">{t.addTeacherModal.categoryNone}</option>
@@ -192,6 +207,36 @@ export const AddTeacherModal: React.FC<AddTeacherModalProps> = ({
                   </option>
                 ))}
             </select>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">
+              {t.subnicheFilter.modalLabel}
+            </label>
+            {availableSubniches.length === 0 ? (
+              <p className="text-xs text-slate-400">{t.subnicheFilter.selectCategoryFirst}</p>
+            ) : (
+              <div className="flex flex-wrap gap-1.5">
+                {availableSubniches.map((sn) => {
+                  const active = subniches.includes(sn);
+                  return (
+                    <button
+                      key={sn}
+                      type="button"
+                      onClick={() => toggleSubniche(sn)}
+                      aria-pressed={active}
+                      className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-colors cursor-pointer ${
+                        active
+                          ? 'bg-indigo-600 text-white'
+                          : 'bg-white text-slate-600 border border-slate-200 hover:border-indigo-300 hover:text-indigo-600'
+                      }`}
+                    >
+                      {t.subniches[sn as keyof typeof t.subniches] ?? sn}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           <div>

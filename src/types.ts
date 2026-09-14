@@ -66,7 +66,9 @@ export interface Teacher {
   bio?: string;
   academyName?: string;
   category?: CourseCategory;
+  subniches?: string[];
   gender?: TeacherGender;
+  createdAt?: string;
   photoUrl?: string;
   instagramUrl?: string;
   youtubeUrl?: string;
