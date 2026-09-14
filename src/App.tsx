@@ -537,6 +537,25 @@ export default function App() {
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         {/* Hero Section */}
         <section className="text-center pb-4 max-w-2xl mx-auto space-y-5">
+          {siteStats && (siteStats.visitsLast24h > 0 || siteStats.reviewsLast7Days > 0) && (
+            <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 text-xs text-slate-500">
+              {siteStats.visitsLast24h > 0 && (
+                <span className="flex items-center gap-1.5">
+                  <span className="relative flex w-2 h-2">
+                    <span className="animate-ping absolute inline-flex w-full h-full rounded-full bg-emerald-400 opacity-75" />
+                    <span className="relative inline-flex w-2 h-2 rounded-full bg-emerald-500" />
+                  </span>
+                  <span className="font-semibold text-slate-700">{siteStats.visitsLast24h}</span> {t.hero.liveVisitors}
+                </span>
+              )}
+              {siteStats.reviewsLast7Days > 0 && (
+                <span>
+                  <span className="font-semibold text-slate-700">{siteStats.reviewsLast7Days}</span> {t.hero.liveReviewsWeek}
+                </span>
+              )}
+            </div>
+          )}
+
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium bg-white text-slate-700 border border-slate-200 shadow-2xs">
             <ShieldCheck className="w-3.5 h-3.5 text-indigo-600" />
             <span>{t.hero.badge}</span>
@@ -657,25 +676,6 @@ export default function App() {
             </button>
 
           </div>
-
-          {siteStats && (siteStats.visitsLast24h > 0 || siteStats.reviewsLast7Days > 0) && (
-            <div className="pt-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 text-xs text-slate-500">
-              {siteStats.visitsLast24h > 0 && (
-                <span className="flex items-center gap-1.5">
-                  <span className="relative flex w-2 h-2">
-                    <span className="animate-ping absolute inline-flex w-full h-full rounded-full bg-emerald-400 opacity-75" />
-                    <span className="relative inline-flex w-2 h-2 rounded-full bg-emerald-500" />
-                  </span>
-                  <span className="font-semibold text-slate-700">{siteStats.visitsLast24h}</span> {t.hero.liveVisitors}
-                </span>
-              )}
-              {siteStats.reviewsLast7Days > 0 && (
-                <span>
-                  <span className="font-semibold text-slate-700">{siteStats.reviewsLast7Days}</span> {t.hero.liveReviewsWeek}
-                </span>
-              )}
-            </div>
-          )}
         </section>
 
         {/* Best & lowest rated teachers, based on real review averages */}
