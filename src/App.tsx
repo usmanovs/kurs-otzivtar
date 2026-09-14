@@ -31,6 +31,7 @@ import { ModerationPanel } from './components/ModerationPanel';
 import { TeachersSection } from './components/TeachersSection';
 import { TeacherLeaderboardSection } from './components/TeacherLeaderboardSection';
 import { RecentReviewPopup } from './components/RecentReviewPopup';
+import { ScrollFadeRow } from './components/ScrollFadeRow';
 
 // Lazy-loaded: only needed once a user opens one of these modals, so keeping
 // them out of the initial bundle shrinks first-load JS meaningfully.
@@ -625,19 +626,19 @@ export default function App() {
               reverts to a centred wrap once there's width for it. */}
           <div className="text-xs">
             <span className="block sm:hidden text-slate-400 mb-1.5">{t.hero.popularLabel}</span>
-            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap sm:justify-center sm:overflow-visible">
+            <ScrollFadeRow className="flex items-center gap-2 overflow-x-auto no-scrollbar -mx-4 px-4 snap-x snap-mandatory scroll-pl-4 sm:mx-0 sm:px-0 sm:flex-wrap sm:justify-center sm:overflow-visible sm:snap-none">
               <span className="hidden sm:inline text-slate-400 shrink-0">{t.hero.popularLabel}</span>
               {t.hero.popularTags.map((tag) => (
                 <button
                   key={tag}
                   type="button"
                   onClick={() => handlePopularTagClick(tag)}
-                  className="shrink-0 whitespace-nowrap px-3 py-1.5 bg-white border border-slate-200 rounded-full text-slate-600 hover:border-indigo-300 hover:text-indigo-600 transition-colors cursor-pointer"
+                  className="shrink-0 snap-start whitespace-nowrap inline-flex items-center min-h-[38px] sm:min-h-0 px-3.5 py-2 sm:py-1.5 bg-white border border-slate-200 rounded-full text-slate-600 hover:border-indigo-300 hover:text-indigo-600 transition-colors cursor-pointer"
                 >
                   {tag}
                 </button>
               ))}
-            </div>
+            </ScrollFadeRow>
           </div>
 
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium bg-white text-slate-700 border border-slate-200 shadow-2xs">

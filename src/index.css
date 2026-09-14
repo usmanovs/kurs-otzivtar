@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+/* One step below text-xs, for meta labels that sit under a primary line
+   (category under a name, caption under a stat). Used in ~20 places that
+   until now silently inherited their parent's size. */
+@theme {
+  --text-2xs: 0.6875rem; /* 11px */
+  --text-2xs--line-height: 0.9375rem; /* 15px */
+}
+
 /* Utilities referenced throughout the app that Tailwind doesn't ship.
    Without these the class names are silently inert: horizontal scroll rows
    show a native scrollbar, and modals/toasts pop in with no fade. */
