@@ -475,7 +475,7 @@ export default function App() {
     teacherName: string,
     reviewData: Omit<Review, 'id' | 'date' | 'helpfulCount' | 'unhelpfulCount'>,
     newTeacherCategory?: CourseCategory
-  ): Promise<string | null> => {
+  ): Promise<{ reviewId: string; teacherId: string } | null> => {
     const { whatsappNumber, ...reviewFields } = reviewData;
     try {
       const result = await submitReview(
@@ -505,9 +505,9 @@ export default function App() {
       });
 
       showToast('Сын-пикириңиз ийгиликтүү кошулду! Чынчыл пикириңиз үчүн чоң рахмат.');
-      // The id lets the modal's second step enrich this row instead of
-      // re-submitting it.
-      return result.review.id;
+      // The ids let the modal's second step enrich this row, and attach an
+      // enrolment proof to it, instead of re-submitting anything.
+      return { reviewId: result.review.id, teacherId: result.teacherId };
     } catch (e) {
       console.error('Failed to submit review', e);
       showToast('Ката кетти. Сын-пикирди сактай алган жокпуз, интернетиңизди текшерип кайра аракет кылыңыз.');

@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { CourseCategory, Review, StudentStatus, Teacher } from '../types';
 import { SupportedLang, TRANSLATIONS } from '../translations';
 import { useEscapeKey } from '../hooks/useEscapeKey';
-import { teacherNameKey, type ReviewEnrichment } from '../lib/api';
+import { teacherNameKey, submitVerificationProof, type ReviewEnrichment } from '../lib/api';
 import { NON_CREATABLE_CATEGORIES } from '../lib/subniches';
 import {
   PRO_TAGS,
@@ -21,6 +21,7 @@ import {
   CheckCircle2,
   Plus,
   Minus,
+  ShieldCheck,
 } from 'lucide-react';
 
 interface AddReviewModalProps {
@@ -33,7 +34,7 @@ interface AddReviewModalProps {
     teacherName: string,
     reviewData: Omit<Review, 'id' | 'date' | 'helpfulCount' | 'unhelpfulCount'>,
     newTeacherCategory?: CourseCategory
-  ) => Promise<string | null>;
+  ) => Promise<{ reviewId: string; teacherId: string } | null>;
   /** Patches a review that is already saved. */
   onEnrichReview: (
     reviewId: string,
@@ -57,6 +58,7 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
   // so abandoning it costs the reviewer nothing.
   const [step, setStep] = useState<1 | 2>(1);
   const [savedReviewId, setSavedReviewId] = useState<string | null>(null);
+  const [savedTeacherId, setSavedTeacherId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -82,6 +84,8 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
   const [authorStatus, setAuthorStatus] = useState<StudentStatus>('graduate');
   const [hasJobScamReport, setHasJobScamReport] = useState(false);
   const [whatsappNumber, setWhatsappNumber] = useState('');
+  const [proofFile, setProofFile] = useState<File | null>(null);
+  const [proofError, setProofError] = useState('');
 
   const knownTeacherNames = useMemo(
     () => teachers.map((teacher) => teacher.name.trim()).filter(Boolean).sort((a, b) => a.localeCompare(b)),
@@ -156,7 +160,7 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
     }
     setErrorMsg('');
     setBusy(true);
-    const reviewId = await onSubmitReview(
+    const saved = await onSubmitReview(
       teacherName.trim(),
       {
         authorName: 'Студент',
@@ -179,8 +183,9 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
       willCreateTeacher ? (newTeacherCategory as CourseCategory) : undefined
     );
     setBusy(false);
-    if (!reviewId) return; // App already surfaced the failure; keep their text on screen
-    setSavedReviewId(reviewId);
+    if (!saved) return; // App already surfaced the failure; keep their text on screen
+    setSavedReviewId(saved.reviewId);
+    setSavedTeacherId(saved.teacherId);
     setStep(2);
   };
 
@@ -207,6 +212,17 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
 
     setBusy(true);
     await onEnrichReview(savedReviewId, patch, whatsappNumber.trim() || undefined);
+    if (proofFile && savedTeacherId) {
+      try {
+        await submitVerificationProof(savedReviewId, savedTeacherId, proofFile);
+      } catch {
+        // The review and its details are already saved; only the badge request
+        // failed, so say so rather than discarding everything else.
+        setProofError(t.verifyModal.errorGeneric);
+        setBusy(false);
+        return;
+      }
+    }
     setBusy(false);
     onClose();
   };
@@ -425,6 +441,41 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
             <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800">
               <CheckCircle2 className="w-4 h-4 shrink-0" />
               <span className="text-xs sm:text-sm font-semibold">{t.addReviewModal.savedBanner}</span>
+            </div>
+
+            {/* The only moment the review's actual author is identifiable. The
+                per-review link in the profile is shown to every visitor of an
+                anonymous review, so nobody can meaningfully use it — which is
+                why no proof has ever been submitted. */}
+            <div className="rounded-2xl border border-emerald-200 bg-emerald-50/70 p-4">
+              <label className="flex items-center gap-1.5 text-xs font-bold text-emerald-900 mb-1">
+                <ShieldCheck className="w-4 h-4 shrink-0" />
+                {t.addReviewModal.proofLabel}
+              </label>
+              <p className="text-2xs text-emerald-900/80 mb-2 leading-relaxed">
+                {t.addReviewModal.proofHint}
+              </p>
+              <input
+                type="file"
+                id="review-proof-input"
+                accept="image/*,application/pdf"
+                onChange={(e) => {
+                  setProofFile(e.target.files?.[0] ?? null);
+                  setProofError('');
+                }}
+                className="w-full text-xs text-slate-700 file:mr-3 file:px-3 file:py-1.5 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-emerald-100 file:text-emerald-900 hover:file:bg-emerald-200 file:cursor-pointer cursor-pointer"
+              />
+              {proofFile && (
+                <p className="text-2xs text-emerald-900 mt-1.5 font-medium">
+                  {proofFile.name} — {(proofFile.size / 1024).toFixed(0)} KB
+                </p>
+              )}
+              <p className="text-2xs text-emerald-900/70 mt-1.5 leading-relaxed">
+                {t.verifyModal.privacyNote}
+              </p>
+              {proofError && (
+                <p className="text-2xs text-red-600 mt-1.5 font-semibold">{proofError}</p>
+              )}
             </div>
 
             <div>
