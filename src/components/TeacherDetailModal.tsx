@@ -414,16 +414,18 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
           )}
 
           {/* Overall Ratings — one unified panel instead of separate side-by-side cards */}
-          <div className="bg-white border border-slate-200 rounded-2xl shadow-2xs p-5 sm:p-6">
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8">
+          <div className="bg-white border border-slate-200/80 rounded-2xl shadow-sm p-3.5 sm:p-5">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-8">
               {/* Score and the review CTA share one row: two full-width
                   blocks stacked used most of a phone screen before the first
                   review. */}
               <div className="md:col-span-4 md:border-r md:border-slate-100 md:pr-8">
-                <div className="flex items-center justify-between gap-3 md:flex-col md:text-center md:gap-4">
-                  <div className="flex items-center gap-3 min-w-0 md:flex-col md:gap-1.5">
+                <div className="flex items-center justify-between gap-3 md:flex-col md:text-center md:gap-3">
+                  {/* Score, stars and sentiment as one tight group, so the row
+                      stays two columns down to 360px. */}
+                  <div className="flex items-center gap-2.5 min-w-0 md:flex-col md:gap-1.5">
                     <div
-                      className={`text-4xl sm:text-5xl font-bold leading-none shrink-0 ${
+                      className={`text-3xl sm:text-4xl font-extrabold leading-none shrink-0 tabular-nums ${
                         teacher.averageRating >= 4
                           ? 'text-emerald-600'
                           : teacher.averageRating >= 3
@@ -434,24 +436,26 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
                       {teacher.averageRating.toFixed(1)}
                     </div>
                     <div className="min-w-0 md:flex md:flex-col md:items-center">
-                      {renderStars(teacher.averageRating, 'w-4 h-4 sm:w-5 sm:h-5')}
-                      <div className="text-2xs sm:text-xs text-slate-500 font-semibold mt-1">
+                      {renderStars(teacher.averageRating, 'w-3.5 h-3.5 sm:w-4 sm:h-4')}
+                      <div className="text-2xs text-slate-500 mt-0.5 truncate">
                         {teacher.reviewCount} {t.courseCard.reviewsCount} негизинде
                       </div>
                       {teacher.reviewCount > 0 && (
                         <span
-                          className={`inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 rounded-full text-2xs font-bold ${
+                          className={`inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded-full text-2xs font-semibold border ${
                             teacher.recommendPercent >= 70
-                              ? 'bg-emerald-100 text-emerald-800'
-                              : 'bg-red-100 text-red-800'
+                              ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
+                              : 'bg-red-50 text-red-700 border-red-100'
                           }`}
                         >
                           {teacher.recommendPercent >= 70 ? (
-                            <ThumbsUp className="w-3 h-3" />
+                            <ThumbsUp className="w-3 h-3 shrink-0" />
                           ) : (
-                            <ThumbsDown className="w-3 h-3" />
+                            <ThumbsDown className="w-3 h-3 shrink-0" />
                           )}
-                          {teacher.recommendPercent}% {t.courseCard.recommendRate}
+                          <span className="whitespace-nowrap">
+                            {teacher.recommendPercent}% {t.courseCard.recommendRate}
+                          </span>
                         </span>
                       )}
                     </div>
@@ -465,7 +469,7 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
                         onClose();
                         onOpenAddReview(teacher);
                       }}
-                      className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm rounded-xl transition-colors shadow-xs cursor-pointer md:w-full"
+                      className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm rounded-xl transition-colors shadow-sm cursor-pointer md:w-full whitespace-nowrap"
                     >
                       <PlusCircle className="w-4 h-4 shrink-0" />
                       <span>{t.courseCard.addReview}</span>
