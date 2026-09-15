@@ -1,27 +1,47 @@
-export type RatingTone = 'danger' | 'warning' | 'success';
+export type RatingTone = 'danger' | 'warning' | 'success' | 'neutral';
 
+/**
+ * Score -> colour band.
+ *
+ *   < 2.0   critical    rose
+ *   < 3.5   mixed       amber
+ *   >= 3.5  positive    emerald
+ *
+ * The green boundary sits at 3.5 rather than 4.0 so the middle band stops
+ * covering most of the usable scale. HEALTHY_THRESHOLD stays at 4 — that one
+ * feeds counted statistics, and moving it would restate published numbers.
+ */
 export function ratingTone(rating: number): RatingTone {
-  if (rating <= 2) return 'danger';
-  if (rating < 4) return 'warning';
+  if (rating < 2) return 'danger';
+  if (rating < 3.5) return 'warning';
   return 'success';
 }
 
+/** Like ratingTone, but "no reviews yet" is its own state rather than a score. */
+export function scoreTone(averageRating: number, reviewCount: number): RatingTone {
+  if (reviewCount === 0) return 'neutral';
+  return ratingTone(averageRating);
+}
+
 export const RATING_BADGE_CLASS: Record<RatingTone, string> = {
-  danger: 'bg-red-600',
+  danger: 'bg-rose-600',
   warning: 'bg-amber-500',
   success: 'bg-emerald-600',
+  neutral: 'bg-slate-500',
 };
 
 export const RATING_STAR_CLASS: Record<RatingTone, string> = {
-  danger: 'fill-red-500 text-red-500',
+  danger: 'fill-rose-500 text-rose-500',
   warning: 'fill-amber-400 text-amber-400',
   success: 'fill-emerald-500 text-emerald-500',
+  neutral: 'fill-slate-300 text-slate-300',
 };
 
 export const RATING_TEXT_CLASS: Record<RatingTone, string> = {
-  danger: 'text-red-600',
+  danger: 'text-rose-600',
   warning: 'text-amber-600',
   success: 'text-emerald-600',
+  neutral: 'text-slate-500',
 };
 
 // A teacher is "flagged" (needs caution) at or below this average. Shared by

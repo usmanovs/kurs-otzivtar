@@ -87,6 +87,7 @@ function mapTeacherRow(row: any): Teacher {
     photoUrl: row.photo_url ?? undefined,
     instagramUrl: row.instagram_url ?? undefined,
     youtubeUrl: row.youtube_url ?? undefined,
+    tiktokUrl: row.tiktok_url ?? undefined,
     reviews,
   });
 }
@@ -152,7 +153,7 @@ export async function insertTeacher(
     .from('teachers')
     .insert({
       id: `teacher-${Date.now()}`,
-      name: teacher.name,
+      name: normalizeDisplayName(teacher.name),
       bio: teacher.bio ?? null,
       academy_name: teacher.academyName ?? null,
       category: teacher.category ?? null,
@@ -161,6 +162,7 @@ export async function insertTeacher(
       photo_url: teacher.photoUrl ?? null,
       instagram_url: teacher.instagramUrl ?? null,
       youtube_url: teacher.youtubeUrl ?? null,
+      tiktok_url: teacher.tiktokUrl ?? null,
     })
     .select()
     .single();
@@ -175,7 +177,7 @@ export async function updateTeacher(
   const { error } = await supabase
     .from('teachers')
     .update({
-      name: teacher.name,
+      name: normalizeDisplayName(teacher.name),
       bio: teacher.bio ?? null,
       academy_name: teacher.academyName ?? null,
       category: teacher.category ?? null,
@@ -184,6 +186,7 @@ export async function updateTeacher(
       photo_url: teacher.photoUrl ?? null,
       instagram_url: teacher.instagramUrl ?? null,
       youtube_url: teacher.youtubeUrl ?? null,
+      tiktok_url: teacher.tiktokUrl ?? null,
     })
     .eq('id', id);
   if (error) throw error;
@@ -201,6 +204,27 @@ export async function updateTeacher(
  * AddReviewModal decides whether to prompt for a category with this same
  * function, so the prompt can never disagree with what the insert does.
  */
+/**
+ * Normalises a shouted name for display: "СЕЙИТБЕК УСМАНОВ" -> "Сейитбек
+ * Усманов". People type their own name in caps often enough that it reaches
+ * the directory that way and then sits beside every other name in sentence
+ * case, reading like a shout.
+ *
+ * Only fully-uppercase names are touched, so a deliberate mixed spelling
+ * ("ordox.youtube", "Айгерим Миллион") and short acronyms survive untouched.
+ */
+export function normalizeDisplayName(raw: string): string {
+  const name = raw.trim().replace(/\s+/g, ' ');
+  if (name.length < 4) return name;
+  if (name !== name.toUpperCase() || !/\p{L}/u.test(name)) return name;
+  return name
+    .split(' ')
+    .map((word) =>
+      word.length > 1 ? word[0].toUpperCase() + word.slice(1).toLowerCase() : word
+    )
+    .join(' ');
+}
+
 export function teacherNameKey(name: string): string {
   return name.trim().replace(/\s+/g, ' ').toLowerCase();
 }
@@ -310,7 +334,7 @@ export async function submitReview(
     // nobody — creating a profile with a name and nothing else is what left
     // most of the directory uncategorised.
     const created = await insertTeacher({
-      name: teacherName.trim(),
+      name: normalizeDisplayName(teacherName),
       category: newTeacherCategory,
     });
     teacherId = created.id;

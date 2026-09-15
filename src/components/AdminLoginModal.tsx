@@ -2,13 +2,20 @@ import React, { useState } from 'react';
 import { X, ShieldCheck, Send, KeyRound } from 'lucide-react';
 import { ADMIN_EMAIL, sendAdminLoginCode, verifyAdminLoginCode } from '../lib/auth';
 import { useEscapeKey } from '../hooks/useEscapeKey';
+import { SupportedLang, TRANSLATIONS } from '../translations';
 
 interface AdminLoginModalProps {
+  currentLang: SupportedLang;
   onClose: () => void;
   onSuccess: () => void;
 }
 
-export const AdminLoginModal: React.FC<AdminLoginModalProps> = ({ onClose, onSuccess }) => {
+export const AdminLoginModal: React.FC<AdminLoginModalProps> = ({
+  currentLang,
+  onClose,
+  onSuccess,
+}) => {
+  const t = TRANSLATIONS[currentLang];
   useEscapeKey(onClose);
   const [step, setStep] = useState<'request' | 'verify'>('request');
   const [code, setCode] = useState('');
@@ -56,7 +63,7 @@ export const AdminLoginModal: React.FC<AdminLoginModalProps> = ({ onClose, onSuc
         <div className="p-6 bg-slate-900 text-white flex items-start justify-between gap-4">
           <div className="flex items-center gap-2">
             <ShieldCheck className="w-5 h-5 text-indigo-300" />
-            <h2 className="text-lg font-bold">Admin кирүү</h2>
+            <h2 className="text-lg font-bold">{t.adminAuth.signIn}</h2>
           </div>
           <button
             type="button"

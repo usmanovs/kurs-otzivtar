@@ -5,7 +5,9 @@ interface ScrollFadeRowProps {
   children: React.ReactNode;
 }
 
-const FADE = 28; // px
+// Narrow on purpose: at 28px the fade washed out the leading letters of the
+// next pill, which read as truncated text rather than as "keep scrolling".
+const FADE = 14; // px
 
 /**
  * Horizontal scroller that fades whichever edge still has content behind it.

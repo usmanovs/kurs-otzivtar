@@ -2,6 +2,7 @@ import React, { useRef, useState } from 'react';
 import { CourseCategory, Teacher, TeacherGender } from '../types';
 import { SupportedLang, TRANSLATIONS } from '../translations';
 import { useEscapeKey } from '../hooks/useEscapeKey';
+import { TikTokIcon } from './TikTokIcon';
 import { SUBNICHES_BY_CATEGORY, NON_CREATABLE_CATEGORIES } from '../lib/subniches';
 import { X, UserPlus, Upload, Trash2, Instagram, Youtube } from 'lucide-react';
 
@@ -35,6 +36,7 @@ export const AddTeacherModal: React.FC<AddTeacherModalProps> = ({
   const [photoUrl, setPhotoUrl] = useState(editingTeacher?.photoUrl || '');
   const [instagramUrl, setInstagramUrl] = useState(editingTeacher?.instagramUrl || '');
   const [youtubeUrl, setYoutubeUrl] = useState(editingTeacher?.youtubeUrl || '');
+  const [tiktokUrl, setTiktokUrl] = useState(editingTeacher?.tiktokUrl || '');
   const [error, setError] = useState('');
 
   const availableSubniches = category ? SUBNICHES_BY_CATEGORY[category] ?? [] : [];
@@ -83,6 +85,7 @@ export const AddTeacherModal: React.FC<AddTeacherModalProps> = ({
         photoUrl: photoUrl.trim() || undefined,
         instagramUrl: instagramUrl.trim() || undefined,
         youtubeUrl: youtubeUrl.trim() || undefined,
+        tiktokUrl: tiktokUrl.trim() || undefined,
       },
       editingTeacher?.id
     );
@@ -305,6 +308,21 @@ export const AddTeacherModal: React.FC<AddTeacherModalProps> = ({
                 value={youtubeUrl}
                 onChange={(e) => setYoutubeUrl(e.target.value)}
                 placeholder="https://youtube.com/@..."
+                className="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1 flex items-center gap-1.5">
+                <TikTokIcon className="w-3.5 h-3.5 text-slate-500" />
+                {t.addTeacherModal.tiktok}
+              </label>
+              <input
+                type="url"
+                id="new-teacher-tiktok-input"
+                value={tiktokUrl}
+                onChange={(e) => setTiktokUrl(e.target.value)}
+                placeholder="https://tiktok.com/@..."
                 className="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
               />
             </div>

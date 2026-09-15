@@ -7,21 +7,25 @@ import {
   HEALTHY_THRESHOLD,
   bayesianRating,
 } from '../lib/ratingTone';
-import { Users, BarChart3, ThumbsUp, ListChecks } from 'lucide-react';
-import { DonutChart, DonutSlice } from './DonutChart';
+import { BarChart3, ThumbsUp, ListChecks, ShieldAlert, Wallet, FileCheck, Upload } from 'lucide-react';
+import { DonutChart } from './DonutChart';
+import { countedComplaintKeys } from '../lib/complaintTags';
 
-// Gender is categorical (identity); rating health is a status scale, so it
-// keeps the reserved good/warning/critical palette the bars already used
-// rather than borrowing categorical hues.
-// Indigo with a muted rose rather than a neon pink: the two stay clearly
-// distinct without the hot-pink arc shouting over the rest of the card.
-const GENDER_COLORS = ['#6366f1', '#fb7ea8', '#cbd5e1'];
-const GENDER_CHIPS = ['bg-indigo-500', 'bg-[#fb7ea8]', 'bg-slate-300'];
+// Rating health is a status scale, so it keeps the reserved
+// good/warning/critical palette rather than borrowing categorical hues.
 const HEALTH_COLORS = { success: '#10b981', warning: '#f59e0b', danger: '#ef4444' } as const;
+
+// Reuses the review vocabulary from lib/complaintTags so the analytics bars
+// and the cards on the directory can never name the same complaint differently.
+const RISK_KEYS = [
+  'fraud', 'no_result', 'no_job', 'credit_pressure', 'no_contact', 'no_refund',
+] as const;
 
 interface StatsSectionProps {
   teachers: Teacher[];
   currentLang: SupportedLang;
+  /** Opens the review form, where proof is attached. */
+  onOpenAddReview?: () => void;
 }
 
 const TONE_BAR_CLASS: Record<'success' | 'warning' | 'danger', string> = {
@@ -58,19 +62,23 @@ const BarRow: React.FC<BarRowProps> = ({ label, count, percent, barClassName = '
   </div>
 );
 
-export const StatsSection: React.FC<StatsSectionProps> = ({ teachers, currentLang }) => {
+export const StatsSection: React.FC<StatsSectionProps> = ({
+  teachers,
+  currentLang,
+  onOpenAddReview,
+}) => {
   const t = TRANSLATIONS[currentLang];
 
   const stats = useMemo(() => {
     const total = teachers.length;
 
-    // Gender
-    const maleCount = teachers.filter((tch) => tch.gender === 'male').length;
-    const femaleCount = teachers.filter((tch) => tch.gender === 'female').length;
-    const unspecifiedGenderCount = total - maleCount - femaleCount;
-
-    // Category
-    const categoryKeys = Object.keys(t.categories).filter((k) => k !== 'all') as CourseCategory[];
+    // Category. 'unknown' is excluded from the named subjects and folded in
+    // with the profiles that carry no category at all: a curated "we looked and
+    // could not tell" and a blank field are the same fact to a reader, and as
+    // two slices they read as two different subjects.
+    const categoryKeys = Object.keys(t.categories).filter(
+      (k) => k !== 'all' && k !== 'unknown'
+    ) as CourseCategory[];
     const categoryCounts = categoryKeys
       .map((cat) => ({
         key: cat,
@@ -97,20 +105,59 @@ export const StatsSection: React.FC<StatsSectionProps> = ({ teachers, currentLan
     // Directory coverage
     const withPhoto = teachers.filter((tch) => tch.photoUrl).length;
     const withReviews = teachers.filter((tch) => tch.reviewCount > 0).length;
-    const withSocial = teachers.filter((tch) => tch.instagramUrl || tch.youtubeUrl).length;
+    const withSocial = teachers.filter((tch) => tch.instagramUrl || tch.youtubeUrl || tch.tiktokUrl).length;
 
     return {
       total,
-      gender: [
-        { label: t.analytics.genderMale, count: maleCount },
-        { label: t.analytics.genderFemale, count: femaleCount },
-        ...(unspecifiedGenderCount > 0
-          ? [{ label: t.analytics.genderUnspecified, count: unspecifiedGenderCount }]
-          : []),
-      ].map((g) => ({ ...g, percent: total > 0 ? (g.count / total) * 100 : 0 })),
+      watchdog: (() => {
+        // Only reviews that both rate badly AND name a figure. A price from a
+        // happy reviewer is not money in dispute, and most reviews name no
+        // figure at all — so this is "reported by dissatisfied students",
+        // never a claim about total losses or money the site recovered.
+        const lowRated = allReviews.filter((rev) => rev.overallRating <= 2);
+        const priced = lowRated.filter((rev) => (rev.pricePaidKGS ?? 0) > 0);
+        const amounts = priced.map((rev) => rev.pricePaidKGS as number).sort((x, y) => x - y);
+        const sumKGS = amounts.reduce((acc, v) => acc + v, 0);
+        const medianKGS = amounts.length > 0 ? amounts[Math.floor(amounts.length / 2)] : 0;
+
+        const withCons = allReviews.filter((rev) => (rev.cons ?? []).length > 0);
+        const tallied = new Map<string, number>();
+        withCons.forEach((rev) => {
+          countedComplaintKeys(rev.cons ?? []).forEach((key) =>
+            tallied.set(key, (tallied.get(key) ?? 0) + 1)
+          );
+        });
+        const risks = RISK_KEYS.map((key) => {
+          const count = tallied.get(key) ?? 0;
+          return {
+            key,
+            label: t.complaintTags[key],
+            count,
+            percent: withCons.length > 0 ? (count / withCons.length) * 100 : 0,
+          };
+        })
+          .filter((rk) => rk.count > 0)
+          .sort((x, y) => y.count - x.count);
+
+        return {
+          sumKGS,
+          medianKGS,
+          pricedCount: priced.length,
+          consCount: withCons.length,
+          risks,
+          // Admin-checked proof, which is a different and much stronger claim
+          // than the reviewer ticking "I really studied here".
+          proofVerified: allReviews.filter((rev) => rev.proofVerified).length,
+          selfDeclared: allReviews.filter((rev) => rev.isVerified).length,
+        };
+      })(),
       categories: [
         ...categoryCounts,
-        ...(noCategoryCount > 0 ? [{ key: 'none', label: t.analytics.categoryUnspecified, count: noCategoryCount }] : []),
+        // A null category and a curated 'unknown' both mean "we don't know",
+        // so they share one slice. As two they read as two distinct subjects.
+        ...(noCategoryCount > 0
+          ? [{ key: 'none', label: t.categories.unknown, count: noCategoryCount }]
+          : []),
       ].map((c) => ({ ...c, percent: total > 0 ? (c.count / total) * 100 : 0 })),
       ratingHealth: {
         reviewedTotal,
@@ -145,24 +192,78 @@ export const StatsSection: React.FC<StatsSectionProps> = ({ teachers, currentLan
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        {/* Gender breakdown */}
+        {/* Consumer-protection panel. Replaced a gender split, which said
+            nothing a reader could act on before paying for a course. */}
         <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden p-5">
           <div className="flex items-center gap-2.5 mb-4">
-            <Users className="w-4 h-4 text-indigo-600" />
-            <h3 className="text-sm font-bold text-slate-900">{t.analytics.genderTitle}</h3>
+            <ShieldAlert className="w-4 h-4 text-indigo-600" />
+            <h3 className="text-sm font-bold text-slate-900">{t.analytics.watchdogTitle}</h3>
           </div>
-          <DonutChart
-            ariaLabel={t.analytics.genderTitle}
-            centerValue={String(stats.total)}
-            centerLabel={t.analytics.donutTeachers}
-            slices={stats.gender.map<DonutSlice>((g, i) => ({
-              label: g.label,
-              count: g.count,
-              percent: g.percent,
-              color: GENDER_COLORS[i % GENDER_COLORS.length],
-              chipClass: GENDER_CHIPS[i % GENDER_CHIPS.length],
-            }))}
-          />
+
+          <div className="grid grid-cols-2 gap-3 mb-5">
+            <div className="rounded-xl border border-rose-200/70 bg-rose-50/60 p-3">
+              <div className="flex items-center gap-1.5 text-2xs font-semibold text-rose-700">
+                <Wallet className="w-3.5 h-3.5" />
+                {t.analytics.disputedLabel}
+              </div>
+              <div className="mt-1 text-xl font-extrabold text-rose-700 tabular-nums leading-tight">
+                {stats.watchdog.sumKGS.toLocaleString('ru-RU')}
+                <span className="text-xs font-bold"> сом</span>
+              </div>
+              <p className="mt-1 text-[11px] leading-snug text-rose-900/60">
+                {t.analytics.disputedNote.replace('{n}', String(stats.watchdog.pricedCount))}
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3">
+              <div className="flex items-center gap-1.5 text-2xs font-semibold text-slate-600">
+                <FileCheck className="w-3.5 h-3.5" />
+                {t.analytics.provenLabel}
+              </div>
+              <div className="mt-1 text-xl font-extrabold text-slate-800 tabular-nums leading-tight">
+                {stats.watchdog.proofVerified}
+              </div>
+              {/* Zero is the true figure today, and saying so is the point —
+                  a self-ticked box is not proof, and merging the two would
+                  advertise a verification this site has not performed. */}
+              <p className="mt-1 text-[11px] leading-snug text-slate-500">
+                {stats.watchdog.proofVerified === 0
+                  ? t.analytics.provenNone
+                  : t.analytics.provenSelfNote.replace('{n}', String(stats.watchdog.selfDeclared))}
+              </p>
+              {/* A zero here is a gap the reader can close, not just a fact to
+                  report — so the number comes with the way to change it. */}
+              {onOpenAddReview && (
+                <button
+                  type="button"
+                  id="stats-upload-proof-btn"
+                  onClick={onOpenAddReview}
+                  className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white shadow-xs transition-colors hover:bg-blue-700 cursor-pointer"
+                >
+                  <Upload className="w-3.5 h-3.5" />
+                  {t.analytics.provenCta}
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-baseline justify-between gap-2 mb-3">
+            <h4 className="text-xs font-bold text-slate-700">{t.analytics.risksTitle}</h4>
+            <span className="text-2xs text-slate-400">
+              {t.analytics.risksNote.replace('{n}', String(stats.watchdog.consCount))}
+            </span>
+          </div>
+          <div className="space-y-2.5">
+            {stats.watchdog.risks.map((risk) => (
+              <BarRow
+                key={risk.key}
+                label={risk.label}
+                count={risk.count}
+                percent={risk.percent}
+                barClassName="bg-rose-500"
+              />
+            ))}
+          </div>
         </div>
 
         {/* Rating health */}

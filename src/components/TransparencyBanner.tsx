@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { SupportedLang, TRANSLATIONS } from '../translations';
+import { plural } from '../lib/plural';
 import { AlertTriangle, ChevronDown, ChevronUp, CheckCircle2, FileText, UserX, ShieldAlert } from 'lucide-react';
 
 interface TransparencyBannerProps {
@@ -29,12 +30,12 @@ export const TransparencyBanner: React.FC<TransparencyBannerProps> = ({
               {warningCoursesCount > 0 && (
                 <span className="inline-flex items-center gap-1 px-3 py-1 text-xs font-semibold text-red-700 bg-red-50 rounded-full border border-red-200">
                   <AlertTriangle className="w-3.5 h-3.5" />
-                  {warningCoursesCount} шектүү курс белгиленген
+                  {t.banner.flaggedCount.replace('{n}', plural(warningCoursesCount, t.plurals.course, currentLang))}
                 </span>
               )}
             </div>
             <p className="text-sm text-slate-500 mt-0.5">
-              Кыргызстанда сапатсыз жана жалган убада берген курстар көбөйүүдө. Чынчыл билим алуу үчүн төмөнкү эрежелерди билиңиз.
+              {t.banner.description}
             </p>
           </div>
         </div>
@@ -45,7 +46,7 @@ export const TransparencyBanner: React.FC<TransparencyBannerProps> = ({
           onClick={() => setIsExpanded(!isExpanded)}
           className="inline-flex items-center gap-1 text-xs sm:text-sm font-medium text-slate-700 hover:text-indigo-600 px-4 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 transition-colors self-start md:self-auto shrink-0 cursor-pointer"
         >
-          <span>{isExpanded ? 'Жашыруу' : 'Эрежелерди окуу'}</span>
+          <span>{isExpanded ? t.banner.hideRules : t.banner.readRules}</span>
           {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
         </button>
       </div>
@@ -55,7 +56,7 @@ export const TransparencyBanner: React.FC<TransparencyBannerProps> = ({
           <div className="flex items-start gap-3 bg-slate-50 p-4 rounded-xl border border-slate-100">
             <UserX className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
             <div>
-              <strong className="block text-slate-900 font-semibold mb-1">1. Жалган убадаларга алданбаңыз</strong>
+              <strong className="block text-slate-900 font-semibold mb-1">{t.banner.point1Title}</strong>
               <span>{t.warningBannerPoint1}</span>
             </div>
           </div>
@@ -63,7 +64,7 @@ export const TransparencyBanner: React.FC<TransparencyBannerProps> = ({
           <div className="flex items-start gap-3 bg-slate-50 p-4 rounded-xl border border-slate-100">
             <FileText className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
             <div>
-              <strong className="block text-slate-900 font-semibold mb-1">2. Келишим жана акча кайтаруу</strong>
+              <strong className="block text-slate-900 font-semibold mb-1">{t.banner.point2Title}</strong>
               <span>{t.warningBannerPoint2}</span>
             </div>
           </div>
@@ -71,7 +72,7 @@ export const TransparencyBanner: React.FC<TransparencyBannerProps> = ({
           <div className="flex items-start gap-3 bg-slate-50 p-4 rounded-xl border border-slate-100">
             <CheckCircle2 className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
             <div>
-              <strong className="block text-slate-900 font-semibold mb-1">3. Мугалимди текшерүү</strong>
+              <strong className="block text-slate-900 font-semibold mb-1">{t.banner.point3Title}</strong>
               <span>{t.warningBannerPoint3}</span>
             </div>
           </div>

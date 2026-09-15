@@ -116,7 +116,7 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
       className="max-w-xl mx-auto flex flex-col sm:flex-row gap-2 pt-2"
     >
       <div className="relative flex-1" ref={wrapRef}>
-        <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+        <Search className="w-5 h-5 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
         <input
           type="text"
           id="hero-search-input"
@@ -135,9 +135,9 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
           aria-controls="hero-search-listbox"
           aria-autocomplete="list"
           aria-activedescendant={activeIndex >= 0 ? `hero-suggestion-${activeIndex}` : undefined}
-          className="w-full pl-11 pr-20 sm:pr-12 py-3 bg-white border border-slate-200 rounded-full text-sm shadow-xs focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-slate-900 placeholder:text-slate-400"
+          className={`w-full pl-11 ${value ? 'pr-10' : 'pr-4'} py-3 bg-white border border-slate-200 rounded-full text-sm sm:text-base shadow-xs focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-slate-900 placeholder:text-slate-400`}
         />
-        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+        <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center">
           {value && (
             <button
               type="button"
@@ -146,22 +146,12 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
                 onChange('');
                 setIsOpen(false);
               }}
-              aria-label="Тазалоо"
+              aria-label={t.teachersSection.clearSearch}
               className="p-1.5 text-slate-400 hover:text-slate-600 cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
           )}
-          {/* Phones submit from inside the field (or the keyboard's search
-              key); the full-width button below cost a fold. */}
-          <button
-            type="submit"
-            id="hero-search-inline-btn"
-            aria-label={t.hero.searchBtn}
-            className="sm:hidden p-2 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white transition-colors cursor-pointer"
-          >
-            <Search className="w-4 h-4" />
-          </button>
         </div>
 
         {showList && (

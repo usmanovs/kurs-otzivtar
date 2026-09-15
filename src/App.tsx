@@ -23,9 +23,12 @@ import {
   SiteStats,
 } from './lib/api';
 import { isFlaggedRating } from './lib/ratingTone';
+import { teacherMatches } from './lib/teacherSearch';
+import { plural, pluralForm } from './lib/plural';
 import { SupportedLang, TRANSLATIONS } from './translations';
 import { Navbar } from './components/Navbar';
 import { TransparencyBanner } from './components/TransparencyBanner';
+import { TopRatedSection } from './components/TopRatedSection';
 import { FeaturedVideosSection } from './components/FeaturedVideosSection';
 import { ReportScamSection } from './components/ReportScamSection';
 import { StatsBar } from './components/StatsBar';
@@ -147,12 +150,9 @@ export default function App() {
 
         fetchMostRecentReview()
           .then((review) => {
-            if (!cancelled && review) {
-              setRecentReview(review);
-              setTimeout(() => {
-                if (!cancelled) setRecentReview(null);
-              }, 6000);
-            }
+            // The pill times itself out so its slide-out can play; a timer
+            // here could only yank it mid-animation.
+            if (!cancelled && review) setRecentReview(review);
           })
           .catch((e) => console.error('Failed to load most recent review', e));
       } catch (e) {
@@ -375,22 +375,22 @@ export default function App() {
     scrollToTeachers();
   };
 
+  // The pill shows the head of the category name but searches the whole one:
+  // "IT жана Программалоо" is 161px of a 375px row, while a bare "IT" as the
+  // query would also match any academy with "digital" in its name.
+  const shortTag = (tag: string) => tag.split(/\s+(?:жана|и)\s+/i)[0];
+
   const handlePopularTagClick = (tag: string) => {
     setSearchQuery(tag);
     scrollToTeachers();
   };
 
   // Filtered teachers — searched by name, academy, bio, or specialty category
+  // Shares its rules with both search boxes (see lib/teacherSearch), so the
+  // dropdown can never offer someone this list has already filtered away.
   const filteredTeachers = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
-    if (!q) return teachers;
-    return teachers.filter((tch) => {
-      const matchName = tch.name.toLowerCase().includes(q);
-      const matchAcademy = tch.academyName?.toLowerCase().includes(q) ?? false;
-      const matchBio = tch.bio?.toLowerCase().includes(q) ?? false;
-      const matchCategory = tch.category ? t.categories[tch.category].toLowerCase().includes(q) : false;
-      return matchName || matchAcademy || matchBio || matchCategory;
-    });
+    if (!searchQuery.trim()) return teachers;
+    return teachers.filter((tch) => teacherMatches(tch, searchQuery, t));
   }, [teachers, searchQuery, t]);
 
   // Voting on a teacher review — optimistic local update, persisted to Supabase
@@ -602,7 +602,7 @@ export default function App() {
       {/* Main Content */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         {/* Hero Section */}
-        <section className="text-center pb-4 max-w-2xl mx-auto space-y-5">
+        <section className="text-center pb-1 max-w-2xl mx-auto space-y-3.5">
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-slate-900 leading-[1.1]">
             {t.hero.headlineLine1}
             <br />
@@ -613,10 +613,64 @@ export default function App() {
             {t.hero.subtitle}
           </p>
 
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-            <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
-            <span>{t.trustBadge}</span>
-          </div>
+          {siteStats &&
+            (siteStats.onlineNow > 0 ||
+              siteStats.visitsLast24h > 0 ||
+              siteStats.pageViewsLast24h > 0 ||
+              siteStats.reviewsLast7Days > 0) && (
+              <div className="flex justify-center">
+                <div className="inline-flex flex-wrap items-center justify-center gap-x-1.5 sm:gap-x-2.5 gap-y-1 px-2.5 py-1 rounded-full bg-white/70 border border-slate-200/70 text-[10px] sm:text-[11px] text-slate-500 whitespace-nowrap">
+                  {siteStats.onlineNow > 0 && (
+                    <span className="inline-flex items-center gap-1.5">
+                      <span className="relative flex w-1.5 h-1.5">
+                        <span className="animate-ping absolute inline-flex w-full h-full rounded-full bg-emerald-400 opacity-75" />
+                        <span className="relative inline-flex w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                      </span>
+                      <span className="font-bold text-emerald-600">{siteStats.onlineNow}</span>
+                      {t.hero.tickerOnline}
+                    </span>
+                  )}
+                  {siteStats.visitsLast24h > 0 && (
+                    <>
+                      {siteStats.onlineNow > 0 && (
+                        <span className="text-slate-300" aria-hidden="true">|</span>
+                      )}
+                      <span
+                        className="inline-flex items-center gap-1"
+                        title={`${siteStats.visitsLast24h} ${t.hero.liveVisitors}`}
+                      >
+                        <Users className="w-3 h-3 shrink-0" aria-hidden="true" />
+                        <span className="font-bold text-slate-700">{siteStats.visitsLast24h}</span>
+                        <span className="sr-only">{pluralForm(siteStats.visitsLast24h, t.plurals.guest, currentLang)}</span>
+                      </span>
+                    </>
+                  )}
+                  {siteStats.pageViewsLast24h > 0 && (
+                    <>
+                      <span className="text-slate-300" aria-hidden="true">|</span>
+                      <span
+                        className="inline-flex items-center gap-1"
+                        title={`${siteStats.pageViewsLast24h} ${t.hero.livePageViews}`}
+                      >
+                        <Eye className="w-3 h-3 shrink-0" aria-hidden="true" />
+                        <span className="font-bold text-slate-700">{siteStats.pageViewsLast24h}</span>
+                        <span className="sr-only">{pluralForm(siteStats.pageViewsLast24h, t.plurals.view, currentLang)}</span>
+                        <span aria-hidden="true">{t.hero.tickerWindow24h}</span>
+                      </span>
+                    </>
+                  )}
+                  {siteStats.reviewsLast7Days > 0 && (
+                    <>
+                      <span className="text-slate-300" aria-hidden="true">|</span>
+                      <span className="inline-flex items-center gap-1">
+                        <span className="font-bold text-slate-700">+{siteStats.reviewsLast7Days}</span>
+                        {t.hero.tickerReviews}
+                      </span>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
 
           <HeroSearch
             teachers={teachers}
@@ -638,135 +692,83 @@ export default function App() {
                   key={tag}
                   type="button"
                   onClick={() => handlePopularTagClick(tag)}
-                  className="shrink-0 snap-start whitespace-nowrap inline-flex items-center min-h-[38px] sm:min-h-0 px-3.5 py-2 sm:py-1.5 bg-white border border-slate-200 rounded-full text-slate-600 hover:border-indigo-300 hover:text-indigo-600 transition-colors cursor-pointer"
+                  className="shrink-0 snap-start whitespace-nowrap inline-flex items-center px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-full text-slate-700 transition-colors cursor-pointer"
                 >
-                  {tag}
+                  {shortTag(tag)}
                 </button>
               ))}
             </ScrollFadeRow>
           </div>
 
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium bg-white text-slate-700 border border-slate-200 shadow-2xs">
-            <ShieldCheck className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
-            <span>{t.hero.badge}</span>
-          </div>
+          {/* Social proof and the CTA were three stacked blocks — a trust
+              pill, an avatar cluster with its own caption, and a button row —
+              costing most of the fold. One unit now: faces, the two numbers
+              that back them, and the action. */}
+          <div className="pt-1 flex flex-col items-center gap-3">
+            <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2">
+              {featuredTeacherAvatars.length > 0 && (
+                <button
+                  type="button"
+                  onClick={scrollToTeachers}
+                  className="group inline-flex items-center gap-2.5 rounded-full border border-slate-200/80 bg-slate-50 px-3.5 py-1.5 text-xs text-slate-700 transition-colors hover:border-indigo-200 cursor-pointer"
+                >
+                  {/* shrink-0 is load-bearing: without it flex compressed this
+                      span while the images kept their size, so the cluster
+                      spilled 30px over the label and ate the "1" of "157". */}
+                  <span className="flex -space-x-2 mr-1 shrink-0">
+                    {featuredTeacherAvatars.map((tch) => (
+                      <img
+                        key={tch.id}
+                        src={tch.photoUrl}
+                        alt=""
+                        width={28}
+                        height={28}
+                        className="w-7 h-7 rounded-full object-cover ring-2 ring-white shadow-sm"
+                      />
+                    ))}
+                  </span>
+                  <span className="font-medium group-hover:text-indigo-600 transition-colors">
+                    {totalReviewsCount > 0 ? (
+                      <>
+                        {/* Each count and its noun is one unbreakable unit, so
+                            the only place this can wrap is the bullet — it was
+                            leaving "мугалим" stranded on a line of its own. */}
+                        <span className="whitespace-nowrap">
+                          <span className="font-bold text-slate-900 group-hover:text-indigo-600">
+                            {totalReviewsCount}
+                          </span>{' '}
+                          {pluralForm(totalReviewsCount, t.plurals.review, currentLang)}
+                        </span>
+                        <span className="mx-1.5 text-slate-300">•</span>
+                        <span className="whitespace-nowrap">
+                          <span className="font-bold text-slate-900 group-hover:text-indigo-600">
+                            {teachers.length}
+                          </span>{' '}
+                          {pluralForm(teachers.length, t.plurals.teacher, currentLang)}
+                        </span>
+                      </>
+                    ) : (
+                      t.hero.socialProofLabel
+                    )}
+                  </span>
+                </button>
+              )}
 
-          {featuredTeacherAvatars.length > 0 && (
-            <button
-              type="button"
-              onClick={scrollToTeachers}
-              className="flex flex-col items-center gap-2 pt-4 w-full cursor-pointer group"
-            >
-              <div className="flex items-center">
-                {featuredTeacherAvatars.map((tch, i) => (
-                  <img
-                    key={tch.id}
-                    src={tch.photoUrl}
-                    alt={tch.name}
-                    width={40}
-                    height={40}
-                    className="w-10 h-10 rounded-full object-cover ring-2 ring-white shadow-sm transition-transform group-hover:scale-105"
-                    style={{ marginLeft: i === 0 ? 0 : -12, zIndex: featuredTeacherAvatars.length - i }}
-                  />
-                ))}
-                {teachers.length > featuredTeacherAvatars.length && (
-                  <div
-                    className="w-10 h-10 rounded-full bg-slate-100 text-slate-600 text-2xs font-bold flex items-center justify-center ring-2 ring-white shadow-sm"
-                    style={{ marginLeft: -12 }}
-                  >
-                    +{teachers.length - featuredTeacherAvatars.length}
-                  </div>
-                )}
-              </div>
-              <span className="text-xs text-slate-500 font-medium group-hover:text-indigo-600 transition-colors">
-                {totalReviewsCount > 0 ? (
-                  <>
-                    <span className="text-sm font-bold text-slate-800 group-hover:text-indigo-600">
-                      {totalReviewsCount}
-                    </span>{' '}
-                    {t.stats.reviewsCount}
-                  </>
-                ) : (
-                  t.hero.socialProofLabel
-                )}
-              </span>
-            </button>
-          )}
-
-          <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
-            <button
-              type="button"
-              id="hero-add-review-btn"
-              onClick={() => {
-                setReviewPreselectedTeacher(null);
-                setIsAddReviewOpen(true);
-              }}
-              className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-sm rounded-full transition-all shadow-xs cursor-pointer"
-            >
-              {t.submitReviewBtn}
-            </button>
+              <button
+                type="button"
+                id="hero-add-review-btn"
+                onClick={() => {
+                  setReviewPreselectedTeacher(null);
+                  setIsAddReviewOpen(true);
+                }}
+                className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm rounded-full transition-all shadow-xs cursor-pointer shrink-0"
+              >
+                {t.submitReviewBtn}
+              </button>
+            </div>
 
           </div>
         </section>
-
-        {siteStats &&
-          (siteStats.onlineNow > 0 ||
-            siteStats.visitsLast24h > 0 ||
-            siteStats.pageViewsLast24h > 0 ||
-            siteStats.reviewsLast7Days > 0) && (
-            <div className="mb-6 flex justify-center">
-              <div className="inline-flex flex-wrap items-center justify-center gap-x-1.5 sm:gap-x-2.5 gap-y-1 px-3 py-1.5 rounded-full bg-white border border-slate-200 shadow-2xs text-[11px] sm:text-xs text-slate-500 whitespace-nowrap">
-                {siteStats.onlineNow > 0 && (
-                  <span className="inline-flex items-center gap-1.5">
-                    <span className="relative flex w-1.5 h-1.5">
-                      <span className="animate-ping absolute inline-flex w-full h-full rounded-full bg-emerald-400 opacity-75" />
-                      <span className="relative inline-flex w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                    </span>
-                    <span className="font-bold text-emerald-600">{siteStats.onlineNow}</span>
-                    {t.hero.tickerOnline}
-                  </span>
-                )}
-                {siteStats.visitsLast24h > 0 && (
-                  <>
-                    {siteStats.onlineNow > 0 && (
-                      <span className="text-slate-300" aria-hidden="true">|</span>
-                    )}
-                    <span
-                      className="inline-flex items-center gap-1"
-                      title={`${siteStats.visitsLast24h} ${t.hero.liveVisitors}`}
-                    >
-                      <Users className="w-3 h-3 shrink-0" aria-hidden="true" />
-                      <span className="font-bold text-slate-700">{siteStats.visitsLast24h}</span>
-                      <span className="sr-only">{t.hero.tickerVisitors}</span>
-                    </span>
-                  </>
-                )}
-                {siteStats.pageViewsLast24h > 0 && (
-                  <>
-                    <span className="text-slate-300" aria-hidden="true">|</span>
-                    <span
-                      className="inline-flex items-center gap-1"
-                      title={`${siteStats.pageViewsLast24h} ${t.hero.livePageViews}`}
-                    >
-                      <Eye className="w-3 h-3 shrink-0" aria-hidden="true" />
-                      <span className="font-bold text-slate-700">{siteStats.pageViewsLast24h}</span>
-                      <span className="sr-only">{t.hero.tickerPageViews}</span>
-                      <span aria-hidden="true">{t.hero.tickerWindow24h}</span>
-                    </span>
-                  </>
-                )}
-                {siteStats.reviewsLast7Days > 0 && (
-                  <>
-                    <span className="text-slate-300" aria-hidden="true">|</span>
-                    <span className="inline-flex items-center gap-1">
-                      <span className="font-bold text-slate-700">+{siteStats.reviewsLast7Days}</span>
-                      {t.hero.tickerReviews}
-                    </span>
-                  </>
-                )}
-              </div>
-            </div>
-          )}
 
         {/* Best & lowest rated teachers, based on real review averages */}
         <TeacherLeaderboardSection
@@ -775,11 +777,21 @@ export default function App() {
           onViewTeacher={(teacher) => navigate(`/teacher/${teacher.id}`)}
         />
 
+        {/* Directly under the caution list, on purpose: the two panels are
+            the same evidence standard pointed in opposite directions. */}
+        <TopRatedSection
+          teachers={teachers}
+          currentLang={currentLang}
+          onViewTeacher={(teacher) => navigate(`/teacher/${teacher.id}`)}
+        />
+
         {/* Teachers & Mentors Directory */}
         <TeachersSection
           teachers={filteredTeachers}
+          allTeachers={teachers}
           totalCount={teachers.length}
           searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
           onClearSearch={() => setSearchQuery('')}
           selectedCategory={selectedCategory}
           onSelectCategory={handleSelectCategory}
@@ -821,7 +833,14 @@ export default function App() {
         />
 
         {/* Teacher analytics: gender/category breakdown, rating health, etc. */}
-        <StatsSection teachers={teachers} currentLang={currentLang} />
+        <StatsSection
+          teachers={teachers}
+          currentLang={currentLang}
+          onOpenAddReview={() => {
+            setReviewPreselectedTeacher(null);
+            setIsAddReviewOpen(true);
+          }}
+        />
 
       </main>
 
@@ -833,18 +852,18 @@ export default function App() {
               <div className="flex items-center gap-2.5">
                 <span className="text-lg font-bold text-slate-900 tracking-tight">Kursotzyv.org</span>
                 <span className="text-2xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100 px-2.5 py-0.5 rounded-full">
-                  Кыргызстан
+                  {t.footer.country}
                 </span>
               </div>
               <p className="text-xs text-slate-500 mt-1.5 max-w-md">
-                Кыргызстандагы билим берүү рыногундагы ачыктыкты жана чынчылдыкты камсыздоо үчүн түзүлгөн эркин сын-пикир платформасы.
+                {t.footer.mission}
               </p>
             </div>
 
             <div className="text-xs text-slate-400 text-center md:text-right">
-              <div>© {new Date().getFullYear()} Kursotzyv.org. Бардык укуктар корголгон.</div>
+              <div>{t.footer.copyright.replace('{year}', String(new Date().getFullYear()))}</div>
               <div className="mt-1">
-                Эгер шектүү курска же алдамчылыкка туш болсоңуз, сын-пикир калтырып элге эскертиңиз!
+                {t.footer.callToAction}
               </div>
               <div className="mt-2">
                 {isAdmin ? (
@@ -863,7 +882,7 @@ export default function App() {
                       className="inline-flex items-center gap-1 text-slate-400 hover:text-red-600 transition-colors cursor-pointer"
                     >
                       <LogOut className="w-3 h-3" />
-                      <span>Admin чыгуу</span>
+                      <span>{t.adminAuth.signOut}</span>
                     </button>
                   </div>
                 ) : (
@@ -873,7 +892,7 @@ export default function App() {
                     className="inline-flex items-center gap-1 text-slate-300 hover:text-slate-500 transition-colors cursor-pointer"
                   >
                     <ShieldCheck className="w-3 h-3" />
-                    <span>Admin кирүү</span>
+                    <span>{t.adminAuth.signIn}</span>
                   </button>
                 )}
               </div>
@@ -898,6 +917,7 @@ export default function App() {
       <Suspense fallback={null}>
         {isAdminLoginOpen && (
           <AdminLoginModal
+            currentLang={currentLang}
             onClose={() => setIsAdminLoginOpen(false)}
             onSuccess={() => showToast('Admin катары ийгиликтүү кирдиңиз.')}
           />

@@ -8,6 +8,7 @@ import { fetchReviewIpLog, fetchApprovedResponses, TeacherResponse } from '../li
 import { VerifyReviewModal } from './VerifyReviewModal';
 import { TeacherResponseModal } from './TeacherResponseModal';
 import { CountryTag } from './CountryTag';
+import { TikTokIcon } from './TikTokIcon';
 import { buildHeaderTags } from '../lib/headerTags';
 import {
   X,
@@ -281,7 +282,7 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
         {/* Modal Header — one metadata row, not four. Name, then a single
             wrap container carrying academy, category, sub-niches, score,
             status and social links together. */}
-        <div className="px-4 py-3 sm:px-6 sm:py-4 bg-slate-900 text-white flex items-start justify-between gap-3 shrink-0">
+        <div className="px-4 py-3 bg-slate-900 text-white flex items-start justify-between gap-3 shrink-0">
           {/* min-w-0 all the way down, or a long name refuses to shrink and
               shoves the share/close buttons off the edge on a phone. */}
           <div className="flex items-start gap-3 sm:gap-3.5 min-w-0">
@@ -358,6 +359,17 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
                     <Youtube className="w-3.5 h-3.5" />
                   </a>
                 )}
+                {teacher.tiktokUrl && (
+                  <a
+                    href={teacher.tiktokUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="TikTok"
+                    className="text-slate-400 hover:text-white transition-colors"
+                  >
+                    <TikTokIcon className="w-3.5 h-3.5" />
+                  </a>
+                )}
               </div>
             </div>
           </div>
@@ -367,7 +379,7 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
               type="button"
               id="share-teacher-btn"
               onClick={handleShare}
-              className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"
+              className="w-11 h-11 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 active:bg-white/30 text-white transition-colors cursor-pointer shrink-0"
               aria-label={t.detailModal.share}
               title={copied ? t.detailModal.linkCopied : t.detailModal.share}
             >
@@ -377,7 +389,7 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
               type="button"
               id="close-teacher-detail-modal-btn"
               onClick={onClose}
-              className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"
+              className="w-11 h-11 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 active:bg-white/30 text-white transition-colors cursor-pointer shrink-0"
               aria-label={t.detailModal.close}
             >
               <X className="w-5 h-5" />
@@ -389,7 +401,7 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
             shrank below its content. The body grew past the container, which
             clips — taking the reviews and the footer with it. flex-1 with
             min-h-0 is what makes it scroll instead. */}
-        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] p-5 sm:p-7 pb-8 space-y-6">
+        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] p-5 sm:p-7 pb-0 space-y-6">
           {/* Approved instructor statements that aren't tied to one review */}
           {responses
             .filter((resp) => !resp.reviewId)
@@ -659,12 +671,14 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
                   <div
                     key={review.id}
                     id={`review-item-${review.id}`}
-                    className="rounded-2xl border border-slate-200 bg-white p-5"
+                    className="rounded-2xl border border-slate-200 bg-white p-3.5 sm:p-4"
                   >
-                    {/* Reviewer Header */}
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="w-9 h-9 rounded-full bg-slate-100 text-slate-600 font-bold flex items-center justify-center text-sm shrink-0">
+                    {/* Two columns: everything identifying the reviewer on the
+                        left, the score alone on the right. This used to be
+                        four stacked rows before the headline was reached. */}
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-start gap-2.5 min-w-0">
+                        <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-600 font-bold flex items-center justify-center text-xs shrink-0">
                           {review.authorName.charAt(0).toUpperCase()}
                         </div>
                         <div className="min-w-0">
@@ -725,105 +739,119 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
                       </div>
                     </div>
 
-                    <h4 className="text-base font-bold text-slate-900 mt-3 mb-1">
+                    <h4 className="text-sm font-bold text-slate-900 leading-tight mt-2">
                       {review.title}
                     </h4>
-                    <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-line">
+                    <p className="text-xs sm:text-sm text-slate-700 leading-relaxed whitespace-pre-line mt-1">
                       {review.fullReview}
                     </p>
 
-                    {/* Pros & Cons Section */}
-                    {(review.pros.length > 0 || review.cons.length > 0) && (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1 mt-3 text-sm text-slate-700">
-                        {review.pros.map((p, idx) => (
-                          <div key={`pro-${idx}`} className="flex items-start gap-1.5">
-                            <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                            <span>{p}</span>
-                          </div>
-                        ))}
-                        {review.cons.map((c, idx) => (
-                          <div key={`con-${idx}`} className="flex items-start gap-1.5">
-                            <X className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
-                            <span>{c}</span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                    {/* One chip strip instead of four stacked blocks: the
+                        recommendation line, the pros/cons grid (one row per
+                        item) and the scam flag each used to claim their own
+                        band of the card. */}
+                    {(() => {
+                      const chip =
+                        'inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] font-medium border';
+                      return (
+                        <div className="flex flex-wrap items-center gap-1.5 mt-2.5">
+                          <span
+                            className={`${chip} ${
+                              review.wouldRecommend
+                                ? 'bg-emerald-50 text-emerald-700 border-emerald-200/60'
+                                : 'bg-rose-50 text-rose-700 border-rose-200/60'
+                            }`}
+                          >
+                            {review.wouldRecommend ? (
+                              <ThumbsUp className="w-3 h-3" />
+                            ) : (
+                              <ThumbsDown className="w-3 h-3" />
+                            )}
+                            {review.wouldRecommend
+                              ? t.detailModal.recommendYes
+                              : t.detailModal.recommendNo}
+                          </span>
+
+                          {review.hasJobScamReport && (
+                            <span className={`${chip} bg-red-50 text-red-700 border-red-200 font-semibold`}>
+                              <AlertTriangle className="w-3 h-3" />
+                              {t.detailModal.scamWarningReported}
+                            </span>
+                          )}
+
+                          {review.pros.map((pro, idx) => (
+                            <span
+                              key={`pro-${idx}`}
+                              className={`${chip} bg-emerald-50 text-emerald-700 border-emerald-200/60`}
+                            >
+                              <Check className="w-3 h-3 shrink-0" />
+                              {pro}
+                            </span>
+                          ))}
+                          {review.cons.map((con, idx) => (
+                            <span
+                              key={`con-${idx}`}
+                              className={`${chip} bg-rose-50 text-rose-700 border-rose-200/60`}
+                            >
+                              <X className="w-3 h-3 shrink-0" />
+                              {con}
+                            </span>
+                          ))}
+                        </div>
+                      );
+                    })()}
 
                     {review.adviceForNewcomers && (
-                      <p className="mt-3 text-sm text-slate-600 flex items-start gap-1.5">
-                        <Lightbulb className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
-                        <span>{review.adviceForNewcomers}</span>
+                      <p className="mt-2 text-xs text-slate-600 flex items-start gap-1.5">
+                        <Lightbulb className="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" />
+                        <span className="leading-relaxed">{review.adviceForNewcomers}</span>
                       </p>
                     )}
 
-                    {/* Recommendation & scam flag — plain text, no colored boxes */}
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-3 text-xs text-slate-500">
-                      {review.wouldRecommend ? (
-                        <span className="inline-flex items-center gap-1">
-                          <ThumbsUp className="w-3.5 h-3.5" />
-                          {t.detailModal.recommendYes}
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1">
-                          <ThumbsDown className="w-3.5 h-3.5" />
-                          {t.detailModal.recommendNo}
-                        </span>
-                      )}
-
-                      {review.hasJobScamReport && (
-                        <span className="inline-flex items-center gap-1 font-semibold text-red-600">
-                          <AlertTriangle className="w-3.5 h-3.5" />
-                          {t.detailModal.scamWarningReported}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Helpful votes footer */}
-                    <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-                      <span>{t.detailModal.helpfulQuestion}</span>
-                      <div className="flex items-center gap-2">
+                    {/* Votes and the proof link share one row; the proof link
+                        used to sit below the footer as a ninth block. */}
+                    <div className="flex items-center justify-between gap-2 text-xs text-slate-500 pt-2.5 mt-2.5 border-t border-slate-100">
+                      <div className="flex items-center gap-1.5">
                         <button
                           type="button"
                           id={`vote-helpful-${review.id}`}
                           onClick={() => onVoteReview(teacher.id, review.id, 'helpful')}
-                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border text-xs font-semibold transition-colors cursor-pointer ${
+                          className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg border text-[11px] font-semibold transition-colors cursor-pointer ${
                             review.userVoted === 'helpful'
                               ? 'bg-emerald-50 text-emerald-700 border-emerald-300'
                               : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
                           }`}
                         >
-                          <ThumbsUp className="w-3.5 h-3.5" />
-                          <span>Пайдалуу ({review.helpfulCount})</span>
+                          <ThumbsUp className="w-3 h-3" />
+                          <span>{review.helpfulCount}</span>
                         </button>
 
                         <button
                           type="button"
                           id={`vote-unhelpful-${review.id}`}
                           onClick={() => onVoteReview(teacher.id, review.id, 'unhelpful')}
-                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border text-xs font-semibold transition-colors cursor-pointer ${
+                          className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg border text-[11px] font-semibold transition-colors cursor-pointer ${
                             review.userVoted === 'unhelpful'
                               ? 'bg-red-50 text-red-700 border-red-300'
                               : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
                           }`}
                         >
-                          <ThumbsDown className="w-3.5 h-3.5" />
-                          <span>Жок ({review.unhelpfulCount})</span>
+                          <ThumbsDown className="w-3 h-3" />
+                          <span>{review.unhelpfulCount}</span>
                         </button>
                       </div>
-                    </div>
 
-                    {/* Prove enrollment to earn the verified badge */}
-                    {!review.proofVerified && (
-                      <button
-                        type="button"
-                        onClick={() => setVerifyingReviewId(review.id)}
-                        className="mt-3 inline-flex items-center gap-1.5 text-2xs font-semibold text-indigo-600 hover:text-indigo-700 cursor-pointer"
-                      >
-                        <ShieldCheck className="w-3.5 h-3.5" />
-                        {t.verifyModal.buttonLabel}
-                      </button>
-                    )}
+                      {!review.proofVerified && (
+                        <button
+                          type="button"
+                          onClick={() => setVerifyingReviewId(review.id)}
+                          className="inline-flex items-center gap-1 text-[11px] font-semibold text-indigo-600 hover:text-indigo-700 cursor-pointer shrink-0"
+                        >
+                          <ShieldCheck className="w-3 h-3" />
+                          {t.verifyModal.buttonLabel}
+                        </button>
+                      )}
+                    </div>
 
                     {/* Instructor's approved response to this specific review */}
                     {responses
@@ -854,37 +882,27 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
               )}
             </div>
           </div>
-        </div>
 
-        {/* Modal Footer */}
-        <div className="shrink-0 p-3 sm:p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-3">
-          {/* Secondary by design: this is the reviewed instructor's action, not
-              the reader's. The primary "write a review" CTA lives in the body,
-              next to the reviews it belongs to. */}
-          {responses.length === 0 ? (
-            <button
-              type="button"
-              id="detail-modal-claim-profile-btn"
-              onClick={() => setIsRespondOpen(true)}
-              className="inline-flex items-center gap-1.5 min-w-0 px-3 py-1.5 rounded-full border border-slate-300 bg-white text-slate-600 hover:text-indigo-700 hover:border-indigo-300 text-xs font-semibold transition-colors cursor-pointer"
-            >
-              <MessageSquareReply className="w-3.5 h-3.5 shrink-0" />
-              <span className="truncate">{t.responseModal.buttonLabel}</span>
-            </button>
-          ) : (
-            <span />
+          {/* Sticky inside the scroll container, not a fixed bar outside it:
+              that is what lets the last reviews pass under the blur instead of
+              stopping short of a solid strip. As the final child it also comes
+              to rest naturally at full scroll, so no extra bottom padding is
+              needed to clear it. */}
+          {responses.length === 0 && (
+            <div className="sticky bottom-0 left-0 right-0 z-20 -mx-5 sm:-mx-7 mt-6 flex justify-center border-t border-slate-200/80 bg-white/90 p-3 backdrop-blur-md">
+              <button
+                type="button"
+                id="detail-modal-claim-profile-btn"
+                onClick={() => setIsRespondOpen(true)}
+                className="inline-flex min-w-0 items-center gap-1.5 rounded-full border border-slate-300 bg-white px-4 py-2 text-xs font-semibold text-slate-700 shadow-xs transition-colors hover:bg-slate-50 cursor-pointer"
+              >
+                <MessageSquareReply className="w-3.5 h-3.5 shrink-0" />
+                <span className="truncate">{t.responseModal.buttonLabel}</span>
+              </button>
+            </div>
           )}
-
-          {/* The header already carries an ✕; on phones this would only eat
-              vertical space next to it. */}
-          <button
-            type="button"
-            onClick={onClose}
-            className="hidden sm:inline-flex items-center px-5 py-2 rounded-full border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 text-sm font-semibold transition-colors cursor-pointer shrink-0"
-          >
-            {t.detailModal.close}
-          </button>
         </div>
+
       </div>
 
       {verifyingReviewId && (

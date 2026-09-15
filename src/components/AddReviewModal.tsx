@@ -23,6 +23,7 @@ import {
   Plus,
   Minus,
   ShieldCheck,
+  UploadCloud,
 } from 'lucide-react';
 
 interface AddReviewModalProps {
@@ -78,6 +79,7 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
   // verified review needs to see it while writing, not after.
   const [wantsProof, setWantsProof] = useState(false);
   const [proofFile, setProofFile] = useState<File | null>(null);
+  const [proofDragging, setProofDragging] = useState(false);
   const [proofError, setProofError] = useState('');
 
   // --- step 2 ---
@@ -472,13 +474,40 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
                   <p className="text-2xs text-emerald-900/80 mb-2 leading-relaxed">
                     {t.addReviewModal.wantProofHint}
                   </p>
-                  <input
-                    type="file"
-                    id="review-proof-input"
-                    accept="image/*,application/pdf"
-                    onChange={(e) => setProofFile(e.target.files?.[0] ?? null)}
-                    className="w-full text-xs text-slate-700 file:mr-3 file:px-3 file:py-1.5 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-emerald-100 file:text-emerald-900 hover:file:bg-emerald-200 file:cursor-pointer cursor-pointer"
-                  />
+                  {/* A drop target as well as a picker: a receipt is usually
+                      already sitting on the desktop or in the downloads
+                      folder, and dragging it across beats a file dialog. */}
+                  <label
+                    htmlFor="review-proof-input"
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      setProofDragging(true);
+                    }}
+                    onDragLeave={() => setProofDragging(false)}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      setProofDragging(false);
+                      const dropped = e.dataTransfer.files?.[0];
+                      if (dropped) setProofFile(dropped);
+                    }}
+                    className={`flex flex-col items-center justify-center gap-1.5 rounded-lg border-2 border-dashed px-3 py-4 text-center transition-colors cursor-pointer ${
+                      proofDragging
+                        ? 'border-emerald-500 bg-emerald-100/70'
+                        : 'border-emerald-300 bg-white/60 hover:border-emerald-400'
+                    }`}
+                  >
+                    <UploadCloud className="w-5 h-5 text-emerald-600" />
+                    <span className="text-2xs font-semibold text-emerald-900">
+                      {t.addReviewModal.dropzoneCta}
+                    </span>
+                    <input
+                      type="file"
+                      id="review-proof-input"
+                      accept="image/*,application/pdf"
+                      onChange={(e) => setProofFile(e.target.files?.[0] ?? null)}
+                      className="sr-only"
+                    />
+                  </label>
                   {proofFile && (
                     <p className="text-2xs text-emerald-900 mt-1.5 font-medium">
                       {proofFile.name} — {(proofFile.size / 1024).toFixed(0)} KB
@@ -696,6 +725,31 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
                 {t.addReviewModal.scamWarningCheckbox}
               </span>
             </label>
+
+            {/* A high rating and a scam report together are almost always a
+                mis-tap on the big red label above — it sits right under the
+                phone field. The combination can be genuine (good teaching,
+                refund refused), so this confirms rather than blocks, and shows
+                exactly what would be published on a named person's profile. */}
+            {hasJobScamReport && overallRating >= 4 && (
+              <div className="mt-2 rounded-xl border border-amber-300 bg-amber-50 p-3">
+                <p className="text-xs font-semibold text-amber-900 leading-snug">
+                  {t.addReviewModal.scamWarningConflict.replace('{n}', String(overallRating))}
+                </p>
+                <p className="mt-1.5 inline-flex items-start gap-1.5 text-2xs text-red-700">
+                  <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-px" />
+                  <span>{t.detailModal.scamWarningReported}</span>
+                </p>
+                <button
+                  type="button"
+                  id="scam-warning-undo-btn"
+                  onClick={() => setHasJobScamReport(false)}
+                  className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-amber-300 bg-white px-2.5 py-1 text-2xs font-semibold text-amber-900 hover:bg-amber-100 transition-colors cursor-pointer"
+                >
+                  {t.addReviewModal.scamWarningUndo}
+                </button>
+              </div>
+            )}
 
             <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200">
               <button

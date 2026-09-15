@@ -118,11 +118,11 @@ export const Navbar: React.FC<NavbarProps> = ({
               type="button"
               id="submit-review-header-btn"
               onClick={onOpenAddReview}
-              className="inline-flex items-center gap-1.5 px-3 sm:px-5 py-2 text-xs sm:text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 rounded-full transition-colors shadow-sm whitespace-nowrap cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm font-semibold text-indigo-600 bg-transparent border border-indigo-200 hover:bg-indigo-50 active:bg-indigo-100 rounded-full transition-colors whitespace-nowrap cursor-pointer"
             >
-              <PenLine className="w-4 h-4 shrink-0" />
+              <PenLine className="w-3.5 h-3.5 shrink-0" />
               <span className="hidden sm:inline">{t.submitReviewBtn}</span>
-              <span className="sm:hidden">Пикир</span>
+              <span className="sm:hidden">{t.headerReviewBtn}</span>
             </button>
 
             <button
@@ -203,7 +203,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     className="w-full text-left px-5 py-3.5 text-sm font-medium text-slate-500 hover:bg-red-50 hover:text-red-600 transition-colors cursor-pointer inline-flex items-center gap-2"
                   >
                     <LogOut className="w-4 h-4 shrink-0" />
-                    <span>Admin чыгуу</span>
+                    <span>{t.adminAuth.signOut}</span>
                   </button>
                 </>
               ) : (
@@ -216,7 +216,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   className="w-full text-left px-5 py-3.5 text-sm font-medium text-slate-400 hover:bg-slate-50 hover:text-slate-600 transition-colors cursor-pointer inline-flex items-center gap-2"
                 >
                   <ShieldCheck className="w-4 h-4 shrink-0" />
-                  <span>Admin кирүү</span>
+                  <span>{t.adminAuth.signIn}</span>
                 </button>
               )}
             </nav>

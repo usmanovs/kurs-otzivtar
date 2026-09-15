@@ -54,7 +54,7 @@ export const StatsBar: React.FC<StatsBarProps> = ({
           <CheckCircle className="w-5 h-5" />
         </div>
         <div>
-          <div className="text-sm font-bold text-slate-900 leading-tight">Ачык коомчулук</div>
+          <div className="text-sm font-bold text-slate-900 leading-tight">{t.openCommunity}</div>
           <div className="text-xs text-slate-500 font-medium">{t.stats.independentNotice}</div>
         </div>
       </div>

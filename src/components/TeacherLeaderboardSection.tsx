@@ -11,7 +11,9 @@ import {
   MIN_REVIEWS_FOR_WATCHLIST,
   bayesianRating,
 } from '../lib/ratingTone';
-import { Award, TrendingUp, TrendingDown, Star, ChevronDown, ChevronUp, ListOrdered } from 'lucide-react';
+import { TrendingUp, ShieldAlert, Star, ChevronDown, ChevronUp, Info } from 'lucide-react';
+import { topComplaintTags } from '../lib/complaintTags';
+import { plural } from '../lib/plural';
 
 interface TeacherLeaderboardSectionProps {
   teachers: Teacher[];
@@ -46,6 +48,109 @@ const RowAvatar: React.FC<{ teacher: Teacher }> = ({ teacher }) => {
   );
 };
 
+/** Keeps the column header aligned with the rows below it. */
+const ColumnHeader: React.FC<{ label: string; bordered?: boolean }> = ({ label, bordered = false }) => (
+  <div
+    className={`flex items-center pl-4 pr-5 py-1.5 text-2xs font-semibold text-slate-400 ${
+      bordered ? 'border-y' : 'border-b'
+    } border-slate-100`}
+  >
+    <span className="w-4 shrink-0 mr-3" />
+    <span className="w-9 shrink-0 mr-3" />
+    <span className="max-w-[220px] flex-[1000_1_0%]" />
+    <span className="flex-1" />
+    <span className="w-[78px] shrink-0" />
+    <span className="flex-1" />
+    <span className="w-6 shrink-0 whitespace-nowrap capitalize text-center overflow-visible">{label}</span>
+    <span className="flex-1" />
+  </div>
+);
+
+/**
+ * One entry on the caution list.
+ *
+ * A card rather than a table row: a row can only say that someone scored 1.1,
+ * which on its own reads as a verdict handed down by the site. The card has
+ * room for what the reviewers actually complained about, which is the part a
+ * reader can weigh for themselves.
+ */
+const WatchlistCard: React.FC<{
+  teacher: Teacher;
+  rank: number;
+  currentLang: SupportedLang;
+  onViewTeacher: (teacher: Teacher) => void;
+}> = ({ teacher, rank, currentLang, onViewTeacher }) => {
+  const t = TRANSLATIONS[currentLang];
+  const tags = topComplaintTags(teacher);
+  const unrated = teacher.reviewCount === 0;
+
+  return (
+    <button
+      type="button"
+      onClick={() => onViewTeacher(teacher)}
+      aria-label={teacher.name}
+      className="w-full text-left p-4 bg-white border border-slate-200 rounded-xl shadow-sm transition-transform hover:shadow-md active:scale-[0.99] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 focus-visible:ring-offset-amber-50"
+    >
+      <div className="flex items-start gap-3">
+        <span className="shrink-0 mt-0.5 rounded bg-slate-100 px-1.5 py-0.5 font-mono text-xs font-medium tabular-nums text-slate-500">
+          #{String(rank).padStart(2, '0')}
+        </span>
+
+        <div className="shrink-0">
+          <RowAvatar teacher={teacher} />
+        </div>
+
+        <div className="min-w-0 flex-1">
+          {/* Wraps instead of truncating. "Бактыгүл Мырзабе…" beside a
+              complaint is the wrong person named. */}
+          <div className="text-base font-semibold leading-snug text-slate-900 break-words">
+            {teacher.name}
+          </div>
+          {teacher.category && (
+            <span className="mt-1 inline-block rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-2xs font-semibold text-slate-600">
+              {t.categories[teacher.category]}
+            </span>
+          )}
+        </div>
+
+        <div className="shrink-0 text-right">
+          {unrated ? (
+            <span className="text-xs text-slate-400">{t.leaderboard.noRating}</span>
+          ) : (
+            <>
+              <span className="inline-flex items-center gap-1 rounded-lg border border-red-200 bg-red-50 px-2 py-1 text-sm font-bold tabular-nums text-red-600">
+                <Star className="h-3.5 w-3.5 fill-current" />
+                {teacher.averageRating.toFixed(1)}
+              </span>
+              <div className="mt-1 text-xs text-slate-500 tabular-nums">
+                {teacher.reviewCount} {t.leaderboard.reviewsSuffix}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Only rendered when this teacher's own reviewers actually raised
+          these; there is no filler set. */}
+      {tags.length > 0 && (
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          {tags.map((tag) => (
+            <span
+              key={tag.key}
+              className="inline-flex items-center gap-1 rounded-md border border-rose-200/60 bg-rose-50 px-2 py-0.5 text-xs font-medium text-rose-700"
+            >
+              «{t.complaintTags[tag.key as keyof typeof t.complaintTags] ?? tag.key}»
+              {tag.count > 1 && (
+                <span className="font-bold tabular-nums text-rose-500">{tag.count}</span>
+              )}
+            </span>
+          ))}
+        </div>
+      )}
+    </button>
+  );
+};
+
 const LeaderboardRow: React.FC<{
   teacher: Teacher;
   rank: number;
@@ -61,7 +166,7 @@ const LeaderboardRow: React.FC<{
     <button
       type="button"
       onClick={() => onViewTeacher(teacher)}
-      className="relative w-full flex items-center pl-4 pr-5 py-3 hover:bg-slate-50 transition-colors text-left border-b border-slate-100 last:border-b-0 cursor-pointer"
+      className="relative w-full flex items-center pl-4 pr-5 py-3 text-left border-b border-slate-100 last:border-b-0 cursor-pointer transition-colors hover:bg-slate-50 active:bg-slate-100"
     >
       <span
         className={`absolute inset-y-0 left-0 w-1 ${unrated ? 'bg-slate-200' : RATING_BADGE_CLASS[tone]}`}
@@ -117,7 +222,6 @@ export const TeacherLeaderboardSection: React.FC<TeacherLeaderboardSectionProps>
 }) => {
   const t = TRANSLATIONS[currentLang];
   const [isExpanded, setIsExpanded] = useState(false);
-  const [isAllOpen, setIsAllOpen] = useState(false);
 
   const topRated = useMemo(
     () =>
@@ -159,33 +263,12 @@ export const TeacherLeaderboardSection: React.FC<TeacherLeaderboardSectionProps>
     };
   }, [teachers, isExpanded]);
 
-  // The whole directory as one ranked table. Ranked by the same shrunk score
-  // the watchlist uses, so both panels agree about who is above whom; teachers
-  // with no reviews have no rating to rank and go last, alphabetically.
-  const allRanked = useMemo(() => {
-    const score = (tch: Teacher) => bayesianRating(tch.averageRating, tch.reviewCount);
-    const rated = teachers.filter((tch) => tch.reviewCount > 0);
-    const unrated = teachers.filter((tch) => tch.reviewCount === 0);
-    return [
-      ...rated.sort((a2, b2) => score(b2) - score(a2) || b2.reviewCount - a2.reviewCount),
-      ...unrated.sort((a2, b2) => a2.name.localeCompare(b2.name)),
-    ];
-  }, [teachers]);
-
   if (topRated.length === 0 && flagged.length === 0) return null;
 
+  // No section heading here: the dossier card below carries its own, and two
+  // titles stacked read as a stutter before the list.
   return (
-    <section id="leaderboard-section" className="mb-10 scroll-mt-20">
-      <div className="flex flex-col items-center text-center gap-2 mb-5">
-        <div className="p-2.5 rounded-xl bg-indigo-50 text-indigo-600 shrink-0">
-          <Award className="w-5 h-5" />
-        </div>
-        <div>
-          <h2 className="text-lg font-bold text-slate-900">{t.leaderboard.title}</h2>
-          <p className="text-sm text-slate-500 mt-0.5">{t.leaderboard.subtitle}</p>
-        </div>
-      </div>
-
+    <section id="leaderboard-section" className="mt-6 mb-10 scroll-mt-20">
       <div className={`grid grid-cols-1 gap-5 ${SHOW_TOP_RATED ? 'md:grid-cols-2' : 'max-w-xl mx-auto'}`}>
         {topRated.length > 0 && (
           <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
@@ -195,16 +278,7 @@ export const TeacherLeaderboardSection: React.FC<TeacherLeaderboardSectionProps>
               </div>
               <h3 className="text-sm font-bold text-slate-900">{t.leaderboard.topTitle}</h3>
             </div>
-            <div className="flex items-center pl-4 pr-5 py-1.5 border-b border-slate-100 text-2xs font-semibold text-slate-400">
-              <span className="w-4 shrink-0 mr-3" />
-              <span className="w-9 shrink-0 mr-3" />
-              <span className="max-w-[220px] flex-[1000_1_0%]" />
-              <span className="flex-1" />
-              <span className="w-[78px] shrink-0" />
-              <span className="flex-1" />
-              <span className="w-6 shrink-0 whitespace-nowrap capitalize text-center overflow-visible">{t.leaderboard.reviewsSuffix}</span>
-              <span className="flex-1" />
-            </div>
+            <ColumnHeader label={t.leaderboard.reviewsSuffix} />
             <div>
               {topRated.map((tch, i) => (
                 <LeaderboardRow
@@ -219,27 +293,39 @@ export const TeacherLeaderboardSection: React.FC<TeacherLeaderboardSectionProps>
           </div>
         )}
 
+        {/* Deliberately not a white card like the directory below it. This
+            list names people as a consumer warning, and it has to read as one
+            at a glance rather than as another ranking widget. */}
         {flagged.length > 0 && (
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
-            <div className="flex items-center gap-2.5 px-5 py-4 border-b border-slate-100 bg-red-50/40">
-              <div className="w-8 h-8 rounded-lg bg-red-100 text-red-600 flex items-center justify-center shrink-0">
-                <TrendingDown className="w-4 h-4" />
+          <div className="bg-amber-50/40 rounded-2xl border border-amber-200/70 shadow-sm p-4 sm:p-6">
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 ring-1 ring-amber-200/70">
+                <ShieldAlert className="w-4 h-4" />
               </div>
-              <h3 className="text-sm font-bold text-slate-900">{t.leaderboard.flaggedTitle}</h3>
+              <div className="min-w-0 flex-1">
+                {/* Names the list's standing before it names any person: this
+                    is a published warning, not the site's private opinion. */}
+                <span className="inline-block mb-1.5 rounded-full bg-amber-100/70 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-800">
+                  {t.leaderboard.flaggedDossier}
+                </span>
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                  <h3 className="text-base font-bold text-slate-900 leading-snug">
+                    {t.leaderboard.flaggedTitle}
+                  </h3>
+                  <span className="inline-flex items-center rounded-full border border-amber-300/70 bg-amber-100 px-2 py-0.5 text-2xs font-bold text-amber-900 tabular-nums">
+                    {t.leaderboard.flaggedCount.replace('{n}', plural(flaggedTotal, t.plurals.teacher, currentLang))}
+                  </span>
+                </div>
+                {/* Says what put someone here, so the list reads as a criterion
+                    rather than an opinion. */}
+                <p className="text-2xs text-amber-900/75 mt-1 leading-snug">
+                  {t.leaderboard.flaggedCriterion}
+                </p>
+              </div>
             </div>
-            <div className="flex items-center pl-4 pr-5 py-1.5 border-b border-slate-100 text-2xs font-semibold text-slate-400">
-              <span className="w-4 shrink-0 mr-3" />
-              <span className="w-9 shrink-0 mr-3" />
-              <span className="max-w-[220px] flex-[1000_1_0%]" />
-              <span className="flex-1" />
-              <span className="w-[78px] shrink-0" />
-              <span className="flex-1" />
-              <span className="w-6 shrink-0 whitespace-nowrap capitalize text-center overflow-visible">{t.leaderboard.reviewsSuffix}</span>
-              <span className="flex-1" />
-            </div>
-            <div>
+            <div className="mt-4 space-y-3">
               {flagged.map((tch, i) => (
-                <LeaderboardRow
+                <WatchlistCard
                   key={tch.id}
                   teacher={tch}
                   rank={i + 1}
@@ -254,7 +340,7 @@ export const TeacherLeaderboardSection: React.FC<TeacherLeaderboardSectionProps>
                 id="leaderboard-expand-btn"
                 onClick={() => setIsExpanded((v) => !v)}
                 aria-expanded={isExpanded}
-                className="w-full flex items-center justify-center gap-1.5 px-5 py-3 border-t border-slate-100 text-xs font-semibold text-indigo-600 hover:bg-indigo-50/60 transition-colors cursor-pointer"
+                className="w-full flex items-center justify-center gap-1.5 mt-3 px-5 py-2.5 rounded-lg border border-amber-200/70 bg-white/60 text-xs font-semibold text-amber-900 hover:bg-amber-100/60 transition-colors cursor-pointer"
               >
                 {isExpanded ? (
                   <>
@@ -269,69 +355,14 @@ export const TeacherLeaderboardSection: React.FC<TeacherLeaderboardSectionProps>
                 )}
               </button>
             )}
-            <p className="text-2xs text-slate-400 px-5 py-3 border-t border-slate-100 bg-slate-50/50">
-              {t.leaderboard.lowReviewNotice}
+            <p className="flex items-start gap-1.5 mt-4 pt-3 border-t border-amber-200/60 text-xs text-amber-800/80">
+              <Info className="w-3.5 h-3.5 shrink-0 mt-px" />
+              <span className="leading-snug">{t.leaderboard.lowReviewNotice}</span>
             </p>
           </div>
         )}
       </div>
 
-      {/* Separate panel on purpose: the watchlist above is a caution list, and
-          filing every instructor under that heading would accuse the good ones. */}
-      <div className={`mt-5 ${SHOW_TOP_RATED ? '' : 'max-w-xl mx-auto'}`}>
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
-          <button
-            type="button"
-            id="leaderboard-all-toggle"
-            onClick={() => setIsAllOpen((v) => !v)}
-            aria-expanded={isAllOpen}
-            className="w-full flex items-center gap-2.5 px-5 py-4 hover:bg-slate-50 transition-colors cursor-pointer text-left"
-          >
-            <div className="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
-              <ListOrdered className="w-4 h-4" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <h3 className="text-sm font-bold text-slate-900">{t.leaderboard.allTitle}</h3>
-              <p className="text-2xs text-slate-400 mt-0.5">
-                {t.leaderboard.allSubtitle.replace('{n}', String(allRanked.length))}
-              </p>
-            </div>
-            {isAllOpen ? (
-              <ChevronUp className="w-4 h-4 text-slate-400 shrink-0" />
-            ) : (
-              <ChevronDown className="w-4 h-4 text-slate-400 shrink-0" />
-            )}
-          </button>
-
-          {isAllOpen && (
-            <>
-              <div className="flex items-center pl-4 pr-5 py-1.5 border-y border-slate-100 text-2xs font-semibold text-slate-400">
-                <span className="w-4 shrink-0 mr-3" />
-                <span className="w-9 shrink-0 mr-3" />
-                <span className="max-w-[220px] flex-[1000_1_0%]" />
-                <span className="flex-1" />
-                <span className="w-[78px] shrink-0" />
-                <span className="flex-1" />
-                <span className="w-6 shrink-0 whitespace-nowrap capitalize text-center overflow-visible">
-                  {t.leaderboard.reviewsSuffix}
-                </span>
-                <span className="flex-1" />
-              </div>
-              <div className="max-h-[460px] overflow-y-auto">
-                {allRanked.map((tch, i) => (
-                  <LeaderboardRow
-                    key={tch.id}
-                    teacher={tch}
-                    rank={i + 1}
-                    currentLang={currentLang}
-                    onViewTeacher={onViewTeacher}
-                  />
-                ))}
-              </div>
-            </>
-          )}
-        </div>
-      </div>
     </section>
   );
 };
