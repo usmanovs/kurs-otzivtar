@@ -21,6 +21,7 @@ import {
   recordSiteVisit,
   fetchSiteStats,
   SiteStats,
+  type NewTeacherSocials,
 } from './lib/api';
 import { isFlaggedRating } from './lib/ratingTone';
 import { teacherMatches } from './lib/teacherSearch';
@@ -475,7 +476,8 @@ export default function App() {
   const handleSubmitReview = async (
     teacherName: string,
     reviewData: Omit<Review, 'id' | 'date' | 'helpfulCount' | 'unhelpfulCount'>,
-    newTeacherCategory?: CourseCategory
+    newTeacherCategory?: CourseCategory,
+    newTeacherSocials?: NewTeacherSocials
   ): Promise<{ reviewId: string; teacherId: string; editToken: string } | null> => {
     const { whatsappNumber, ...reviewFields } = reviewData;
     try {
@@ -487,7 +489,8 @@ export default function App() {
         reviewFields,
         whatsappNumber,
         newTeacherCategory,
-        editToken
+        editToken,
+        newTeacherSocials
       );
 
       setTeachers((prev) => {

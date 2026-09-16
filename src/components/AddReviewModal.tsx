@@ -3,8 +3,14 @@ import { CourseCategory, Review, StudentStatus, Teacher } from '../types';
 import { SupportedLang, TRANSLATIONS } from '../translations';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
-import { teacherNameKey, submitVerificationProof, type ReviewEnrichment } from '../lib/api';
+import {
+  teacherNameKey,
+  submitVerificationProof,
+  type ReviewEnrichment,
+  type NewTeacherSocials,
+} from '../lib/api';
 import { sendReviewEmailCode, verifyReviewEmailCode } from '../lib/auth';
+import { TikTokIcon } from './TikTokIcon';
 import { NON_CREATABLE_CATEGORIES } from '../lib/subniches';
 import {
   PRO_TAGS,
@@ -26,6 +32,8 @@ import {
   ShieldCheck,
   UploadCloud,
   Mail,
+  Instagram,
+  Youtube,
 } from 'lucide-react';
 
 interface AddReviewModalProps {
@@ -37,7 +45,8 @@ interface AddReviewModalProps {
   onSubmitReview: (
     teacherName: string,
     reviewData: Omit<Review, 'id' | 'date' | 'helpfulCount' | 'unhelpfulCount'>,
-    newTeacherCategory?: CourseCategory
+    newTeacherCategory?: CourseCategory,
+    newTeacherSocials?: NewTeacherSocials
   ) => Promise<{ reviewId: string; teacherId: string; editToken: string } | null>;
   /** Patches a review that is already saved. */
   onEnrichReview: (
@@ -73,6 +82,9 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
   // --- step 1 ---
   const [teacherName, setTeacherName] = useState(preSelectedTeacher?.name || '');
   const [newTeacherCategory, setNewTeacherCategory] = useState<CourseCategory | ''>('');
+  const [newTeacherInstagram, setNewTeacherInstagram] = useState('');
+  const [newTeacherYoutube, setNewTeacherYoutube] = useState('');
+  const [newTeacherTiktok, setNewTeacherTiktok] = useState('');
   const [overallRating, setOverallRating] = useState<number>(0);
   const [wouldRecommend, setWouldRecommend] = useState<boolean>(true);
   const [fullReview, setFullReview] = useState('');
@@ -168,6 +180,15 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
       setErrorMsg(t.addReviewModal.errorNewTeacherCategory);
       return;
     }
+    if (
+      willCreateTeacher &&
+      !newTeacherInstagram.trim() &&
+      !newTeacherYoutube.trim() &&
+      !newTeacherTiktok.trim()
+    ) {
+      setErrorMsg(t.addReviewModal.errorNewTeacherSocial);
+      return;
+    }
     if (overallRating === 0) {
       setErrorMsg('Жалпы бааны тандаңыз — жылдыздардын бирин басыңыз.');
       return;
@@ -252,7 +273,14 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
         pros: [],
         cons: [],
       },
-      willCreateTeacher ? (newTeacherCategory as CourseCategory) : undefined
+      willCreateTeacher ? (newTeacherCategory as CourseCategory) : undefined,
+      willCreateTeacher
+        ? {
+            instagramUrl: newTeacherInstagram.trim() || undefined,
+            youtubeUrl: newTeacherYoutube.trim() || undefined,
+            tiktokUrl: newTeacherTiktok.trim() || undefined,
+          }
+        : undefined
     );
     if (!saved) {
       setBusy(false);
@@ -407,6 +435,53 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
                       </option>
                     ))}
                 </select>
+
+                {/* A name and a category alone gave no way to tell a real
+                    instructor from a typo or a settled score, and no way for
+                    the person named to ever find this and respond. At least
+                    one real, checkable handle is required — any one of the
+                    three, since not every instructor is on all of them. */}
+                <label className="block text-xs font-bold text-amber-950 mt-3 mb-1">
+                  {t.addReviewModal.newTeacherSocial} *
+                </label>
+                <p className="text-2xs text-amber-800/80 mb-2">
+                  {t.addReviewModal.newTeacherSocialHint}
+                </p>
+                <div className="space-y-2">
+                  <div className="relative">
+                    <Instagram className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-amber-700/50" />
+                    <input
+                      type="text"
+                      id="new-review-teacher-instagram"
+                      value={newTeacherInstagram}
+                      onChange={(e) => setNewTeacherInstagram(e.target.value)}
+                      placeholder="Instagram (instagram.com/...)"
+                      className="w-full pl-9 pr-3 py-2 bg-white border border-amber-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500"
+                    />
+                  </div>
+                  <div className="relative">
+                    <Youtube className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-amber-700/50" />
+                    <input
+                      type="text"
+                      id="new-review-teacher-youtube"
+                      value={newTeacherYoutube}
+                      onChange={(e) => setNewTeacherYoutube(e.target.value)}
+                      placeholder="YouTube (youtube.com/@...)"
+                      className="w-full pl-9 pr-3 py-2 bg-white border border-amber-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500"
+                    />
+                  </div>
+                  <div className="relative">
+                    <TikTokIcon className="w-3.5 h-3.5 absolute left-3.5 top-1/2 -translate-y-1/2 text-amber-700/50" />
+                    <input
+                      type="text"
+                      id="new-review-teacher-tiktok"
+                      value={newTeacherTiktok}
+                      onChange={(e) => setNewTeacherTiktok(e.target.value)}
+                      placeholder="TikTok (tiktok.com/@...)"
+                      className="w-full pl-9 pr-3 py-2 bg-white border border-amber-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500"
+                    />
+                  </div>
+                </div>
               </div>
             )}
 

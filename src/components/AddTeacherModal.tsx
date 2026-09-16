@@ -73,6 +73,13 @@ export const AddTeacherModal: React.FC<AddTeacherModalProps> = ({
       setError(t.addTeacherModal.errorCategory);
       return;
     }
+    // Only for a brand-new profile — existing ones predate this rule, and
+    // routine edits (fixing a category, adding a photo) shouldn't suddenly
+    // demand a social link nobody asked for when the profile was created.
+    if (!isEditing && !instagramUrl.trim() && !youtubeUrl.trim() && !tiktokUrl.trim()) {
+      setError(t.addTeacherModal.errorSocial);
+      return;
+    }
 
     onSubmit(
       {
@@ -281,6 +288,15 @@ export const AddTeacherModal: React.FC<AddTeacherModalProps> = ({
             />
           </div>
 
+          {/* Required only for a brand-new profile — a name and a category
+              alone gave no way to tell a real instructor from a typo or a
+              settled score, and no way for the person named to ever find
+              this and respond. */}
+          {!isEditing && (
+            <p className="text-2xs font-medium text-amber-700 -mb-1.5">
+              {t.addTeacherModal.socialRequiredHint} *
+            </p>
+          )}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1 flex items-center gap-1.5">

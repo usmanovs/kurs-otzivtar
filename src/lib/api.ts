@@ -312,13 +312,20 @@ async function hashToken(token: string): Promise<string> {
     .join('');
 }
 
+export interface NewTeacherSocials {
+  instagramUrl?: string;
+  youtubeUrl?: string;
+  tiktokUrl?: string;
+}
+
 export async function submitReview(
   teacherName: string,
   existingTeachers: Teacher[],
   reviewData: Omit<Review, 'id' | 'date' | 'helpfulCount' | 'unhelpfulCount'>,
   whatsappNumber?: string,
   newTeacherCategory?: CourseCategory,
-  editToken?: string
+  editToken?: string,
+  newTeacherSocials?: NewTeacherSocials
 ): Promise<{ teacherId: string; review: Review; isNewTeacher: boolean; newTeacher?: Teacher }> {
   const normalized = teacherNameKey(teacherName);
   const existing = existingTeachers.find((t) => teacherNameKey(t.name) === normalized);
@@ -332,10 +339,16 @@ export async function submitReview(
   } else {
     // The reviewer is asked for this in the modal whenever the name matches
     // nobody — creating a profile with a name and nothing else is what left
-    // most of the directory uncategorised.
+    // most of the directory uncategorised. A social handle is required for
+    // the same reason: a name and a category alone gave no way to tell a
+    // real instructor from someone's typo or a settled score, and no way
+    // for the person named to ever find and respond to it.
     const created = await insertTeacher({
       name: normalizeDisplayName(teacherName),
       category: newTeacherCategory,
+      instagramUrl: newTeacherSocials?.instagramUrl,
+      youtubeUrl: newTeacherSocials?.youtubeUrl,
+      tiktokUrl: newTeacherSocials?.tiktokUrl,
     });
     teacherId = created.id;
     newTeacher = created;
