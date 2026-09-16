@@ -4,6 +4,7 @@ import { SupportedLang, TRANSLATIONS } from '../translations';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
 import { teacherNameKey, submitVerificationProof, type ReviewEnrichment } from '../lib/api';
+import { sendReviewEmailCode, verifyReviewEmailCode } from '../lib/auth';
 import { NON_CREATABLE_CATEGORIES } from '../lib/subniches';
 import {
   PRO_TAGS,
@@ -24,6 +25,7 @@ import {
   Minus,
   ShieldCheck,
   UploadCloud,
+  Mail,
 } from 'lucide-react';
 
 interface AddReviewModalProps {
@@ -82,6 +84,14 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
   const [proofDragging, setProofDragging] = useState(false);
   const [proofError, setProofError] = useState('');
 
+  // A 3+ star review needs a confirmed inbox before it saves — someone
+  // faking praise for themselves or a friend has to also control an email
+  // account for it. Below 3 stars none of this renders or runs; a complaint
+  // stays exactly as frictionless as it was before this feature existed.
+  const [reviewerEmail, setReviewerEmail] = useState('');
+  const [emailCode, setEmailCode] = useState('');
+  const [emailStage, setEmailStage] = useState<'collect' | 'code-sent' | 'verified'>('collect');
+
   // --- step 2 ---
   const [proTags, setProTags] = useState<string[]>([]);
   const [conTags, setConTags] = useState<string[]>([]);
@@ -109,6 +119,8 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
     if (!normalized) return false;
     return !teachers.some((teacher) => teacherNameKey(teacher.name) === normalized);
   }, [teacherName, teachers]);
+
+  const needsEmailConfirmation = overallRating >= 3;
 
   const getRatingDesc = (val: number) =>
     ['', 'Өтө начар / Шектүү курс', 'Начар / Көңүл калтырган', 'Орточо / Кемчиликтери бар', 'Жакшы / Сапаттуу', 'Мыкты / Толук акталды'][val] || '';
@@ -177,6 +189,47 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
       setErrorMsg(t.verifyModal.errorSize);
       return;
     }
+
+    // The rest of the form is valid. For 3+ stars, this same submit button
+    // now drives the email checkpoint instead of saving directly — first
+    // click sends the code, second click verifies it and, on success, falls
+    // straight through into the save below so confirming doesn't cost a
+    // third click.
+    if (needsEmailConfirmation && emailStage !== 'verified') {
+      if (emailStage === 'collect') {
+        if (!/^\S+@\S+\.\S+$/.test(reviewerEmail.trim())) {
+          setErrorMsg(t.addReviewModal.errorEmailInvalid);
+          return;
+        }
+        setErrorMsg('');
+        setBusy(true);
+        try {
+          await sendReviewEmailCode(reviewerEmail.trim());
+          setEmailStage('code-sent');
+        } catch {
+          setErrorMsg(t.addReviewModal.errorEmailSendFailed);
+        }
+        setBusy(false);
+        return;
+      }
+
+      if (!emailCode.trim()) {
+        setErrorMsg(t.addReviewModal.errorEmailCodeRequired);
+        return;
+      }
+      setErrorMsg('');
+      setBusy(true);
+      try {
+        await verifyReviewEmailCode(reviewerEmail.trim(), emailCode.trim());
+      } catch {
+        setErrorMsg(t.addReviewModal.errorEmailCodeInvalid);
+        setBusy(false);
+        return;
+      }
+      setEmailStage('verified');
+      // busy stays true — the save below continues in this same click.
+    }
+
     setErrorMsg('');
     setBusy(true);
     const saved = await onSubmitReview(
@@ -449,6 +502,87 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
               </span>
             </label>
 
+            {/* Only a positive rating (3+) triggers this — a complaint stays
+                exactly as easy to file as before. Faking praise for yourself
+                or a friend now also requires controlling a real inbox. */}
+            {needsEmailConfirmation && emailStage !== 'verified' && (
+              <div className="rounded-xl border border-indigo-200 bg-indigo-50/70 p-3.5 animate-fade-in">
+                <div className="flex items-start gap-2">
+                  <Mail className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-semibold text-indigo-900">
+                      {t.addReviewModal.emailConfirmTitle}
+                    </p>
+                    <p className="text-2xs text-indigo-900/70 mt-0.5 leading-relaxed">
+                      {t.addReviewModal.emailConfirmHint}
+                    </p>
+
+                    {emailStage === 'collect' ? (
+                      <input
+                        type="text"
+                        inputMode="email"
+                        autoComplete="email"
+                        id="review-email-input"
+                        value={reviewerEmail}
+                        onChange={(e) => setReviewerEmail(e.target.value)}
+                        placeholder={t.addReviewModal.emailPlaceholder}
+                        aria-label={t.addReviewModal.emailLabel}
+                        className="w-full mt-2.5 px-3.5 py-2 bg-white border border-indigo-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                      />
+                    ) : (
+                      <>
+                        <div className="flex items-center justify-between gap-2 mt-2.5">
+                          <p className="text-2xs font-medium text-indigo-900 truncate">
+                            {t.addReviewModal.codeSentTo.replace('{email}', reviewerEmail.trim())}
+                          </p>
+                          <button
+                            type="button"
+                            id="review-email-change-btn"
+                            onClick={() => {
+                              setEmailStage('collect');
+                              setEmailCode('');
+                              setErrorMsg('');
+                            }}
+                            className="text-2xs font-semibold text-indigo-600 hover:text-indigo-800 cursor-pointer shrink-0"
+                          >
+                            {t.addReviewModal.changeEmailBtn}
+                          </button>
+                        </div>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          id="review-email-code-input"
+                          value={emailCode}
+                          onChange={(e) => setEmailCode(e.target.value)}
+                          placeholder={t.addReviewModal.codePlaceholder}
+                          aria-label={t.addReviewModal.codeLabel}
+                          className="w-full mt-2 px-3.5 py-2 bg-white border border-indigo-200 rounded-xl text-sm tracking-widest focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                        />
+                        <button
+                          type="button"
+                          id="review-email-resend-btn"
+                          disabled={busy}
+                          onClick={async () => {
+                            setErrorMsg('');
+                            setBusy(true);
+                            try {
+                              await sendReviewEmailCode(reviewerEmail.trim());
+                            } catch {
+                              setErrorMsg(t.addReviewModal.errorEmailSendFailed);
+                            }
+                            setBusy(false);
+                          }}
+                          className="mt-1.5 text-2xs font-semibold text-indigo-600 hover:text-indigo-800 disabled:opacity-60 cursor-pointer"
+                        >
+                          {t.addReviewModal.resendCodeBtn}
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Collapsed by default so the fast path stays fast, but visible
                 to anyone who came here specifically to submit a verified
                 review — which is what they were looking for and not finding. */}
@@ -534,8 +668,22 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
                 disabled={busy}
                 className="inline-flex items-center gap-2 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-bold rounded-full shadow-xs transition-colors cursor-pointer"
               >
-                <Send className="w-4 h-4" />
-                {t.addReviewModal.saveReviewBtn}
+                {needsEmailConfirmation && emailStage === 'collect' ? (
+                  <>
+                    <Mail className="w-4 h-4" />
+                    {t.addReviewModal.sendCodeBtn}
+                  </>
+                ) : needsEmailConfirmation && emailStage === 'code-sent' ? (
+                  <>
+                    <ShieldCheck className="w-4 h-4" />
+                    {t.addReviewModal.confirmAndPublishBtn}
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-4 h-4" />
+                    {t.addReviewModal.saveReviewBtn}
+                  </>
+                )}
               </button>
             </div>
           </form>
