@@ -3,7 +3,7 @@ import { CourseCategory, Teacher } from '../types';
 import { SupportedLang, TRANSLATIONS } from '../translations';
 import { scoreTone, RATING_BADGE_CLASS } from '../lib/ratingTone';
 import { topComplaintTags, topPositiveTags } from '../lib/complaintTags';
-import { GraduationCap, PlusCircle, Pencil, Instagram, Youtube, MessageSquarePlus, X, SlidersHorizontal } from 'lucide-react';
+import { GraduationCap, PlusCircle, Pencil, Instagram, Youtube, MessageSquarePlus, X, SlidersHorizontal, Globe } from 'lucide-react';
 import { FilterDrawer, DirectoryFilters, DEFAULT_FILTERS, activeFilterCount } from './FilterDrawer';
 import { DirectorySearch } from './DirectorySearch';
 import { TikTokIcon } from './TikTokIcon';
@@ -509,6 +509,18 @@ export const TeachersSection: React.FC<TeachersSectionProps> = ({
                     className="hidden sm:flex w-8 h-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-900 transition-colors"
                   >
                     <TikTokIcon className="w-4 h-4" />
+                  </a>
+                )}
+                {teacher.websiteUrl && (
+                  <a
+                    href={teacher.websiteUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Website"
+                    onClick={(e) => e.stopPropagation()}
+                    className="hidden sm:flex w-8 h-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-900 transition-colors"
+                  >
+                    <Globe className="w-4 h-4" />
                   </a>
                 )}
 

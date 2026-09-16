@@ -4,6 +4,7 @@ import {BrowserRouter, Routes, Route} from 'react-router-dom';
 import {Analytics} from '@vercel/analytics/react';
 import {SpeedInsights} from '@vercel/speed-insights/react';
 import App from './App.tsx';
+import { AboutFeaturesPage } from './components/AboutFeaturesPage.tsx';
 import './index.css';
 
 if ('serviceWorker' in navigator) {
@@ -18,6 +19,7 @@ createRoot(document.getElementById('root')!).render(
       <Routes>
         <Route path="/teacher/:teacherId" element={<App />} />
         <Route path="/category/:categorySlug" element={<App />} />
+        <Route path="/about" element={<AboutFeaturesPage />} />
         <Route path="/" element={<App />} />
       </Routes>
     </BrowserRouter>

@@ -134,6 +134,7 @@ function mapTeacherRow(row: any): Teacher {
     instagramUrl: row.instagram_url ?? undefined,
     youtubeUrl: row.youtube_url ?? undefined,
     tiktokUrl: row.tiktok_url ?? undefined,
+    websiteUrl: row.website_url ?? undefined,
     reviews,
   });
 }
@@ -209,6 +210,7 @@ export async function insertTeacher(
       instagram_url: teacher.instagramUrl ?? null,
       youtube_url: teacher.youtubeUrl ?? null,
       tiktok_url: teacher.tiktokUrl ?? null,
+      website_url: teacher.websiteUrl ?? null,
     })
     .select()
     .single();
@@ -233,6 +235,7 @@ export async function updateTeacher(
       instagram_url: teacher.instagramUrl ?? null,
       youtube_url: teacher.youtubeUrl ?? null,
       tiktok_url: teacher.tiktokUrl ?? null,
+      website_url: teacher.websiteUrl ?? null,
     })
     .eq('id', id);
   if (error) throw error;

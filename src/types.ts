@@ -83,6 +83,7 @@ export interface Teacher {
   instagramUrl?: string;
   youtubeUrl?: string;
   tiktokUrl?: string;
+  websiteUrl?: string;
   reviews: Review[];
   // Calculated metrics
   averageRating: number;

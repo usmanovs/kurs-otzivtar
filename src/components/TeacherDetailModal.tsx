@@ -22,6 +22,7 @@ import {
   Check,
   Instagram,
   Youtube,
+  Globe,
   Share2,
   ShieldAlert,
   ShieldCheck,
@@ -368,6 +369,17 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
                     className="text-slate-400 hover:text-white transition-colors"
                   >
                     <TikTokIcon className="w-3.5 h-3.5" />
+                  </a>
+                )}
+                {teacher.websiteUrl && (
+                  <a
+                    href={teacher.websiteUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Website"
+                    className="text-slate-400 hover:text-white transition-colors"
+                  >
+                    <Globe className="w-3.5 h-3.5" />
                   </a>
                 )}
               </div>

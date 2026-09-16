@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { SupportedLang, TRANSLATIONS } from '../translations';
-import { PenLine, Globe, Menu, X, ShieldCheck, LogOut, User, MessageSquareText } from 'lucide-react';
+import { PenLine, Globe, Menu, X, ShieldCheck, LogOut, User, MessageSquareText, Sparkles } from 'lucide-react';
 
 interface NavbarProps {
   currentLang: SupportedLang;
@@ -100,6 +101,13 @@ export const Navbar: React.FC<NavbarProps> = ({
                 {link.label}
               </button>
             ))}
+            <Link
+              to="/about"
+              id="navlink-about"
+              className="shrink-0 px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition-colors whitespace-nowrap"
+            >
+              {t.navAbout}
+            </Link>
           </nav>
 
           {/* Core utilities: language, primary CTA, menu */}
@@ -188,6 +196,15 @@ export const Navbar: React.FC<NavbarProps> = ({
                   {link.label}
                 </button>
               ))}
+              <Link
+                to="/about"
+                id="drawer-navlink-about"
+                onClick={() => setIsDrawerOpen(false)}
+                className="block w-full text-left px-5 py-3.5 text-sm font-medium text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 transition-colors inline-flex items-center gap-2"
+              >
+                <Sparkles className="w-4 h-4 shrink-0" />
+                {t.navAbout}
+              </Link>
 
               <div className="my-2 border-t border-slate-100" />
 
