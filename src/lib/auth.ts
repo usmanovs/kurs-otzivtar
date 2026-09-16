@@ -58,3 +58,22 @@ export async function verifyReviewEmailCode(email: string, code: string) {
   // can't even momentarily see a non-admin email as anything but signed out.
   await supabase.auth.signOut();
 }
+
+/**
+ * The account version of the same code: this time the point IS to end up
+ * signed in, so unlike verifyReviewEmailCode the session is kept. Reuses
+ * sendReviewEmailCode to send it — sending is identical either way; only
+ * what happens after verifying differs.
+ */
+export async function verifySignInCode(email: string, code: string) {
+  const { error } = await supabase.auth.verifyOtp({
+    email,
+    token: code.trim(),
+    type: 'email',
+  });
+  if (error) throw error;
+}
+
+export async function signOutUser() {
+  await supabase.auth.signOut();
+}

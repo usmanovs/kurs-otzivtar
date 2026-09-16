@@ -4,7 +4,7 @@ import type { Session } from '@supabase/supabase-js';
 import { Course, CourseCategory, Review, Teacher, FeaturedVideo } from './types';
 import { calculateTeacherMetrics } from './data/teachers';
 import { supabase } from './lib/supabaseClient';
-import { ADMIN_EMAIL, signOutAdmin } from './lib/auth';
+import { ADMIN_EMAIL, signOutAdmin, signOutUser } from './lib/auth';
 import {
   fetchCourses,
   fetchTeachers,
@@ -47,6 +47,8 @@ const AddReviewModal = lazy(() => import('./components/AddReviewModal').then((m)
 const AddTeacherModal = lazy(() => import('./components/AddTeacherModal').then((m) => ({ default: m.AddTeacherModal })));
 const TeacherDetailModal = lazy(() => import('./components/TeacherDetailModal').then((m) => ({ default: m.TeacherDetailModal })));
 const AdminLoginModal = lazy(() => import('./components/AdminLoginModal').then((m) => ({ default: m.AdminLoginModal })));
+const UserSignInModal = lazy(() => import('./components/UserSignInModal').then((m) => ({ default: m.UserSignInModal })));
+const MyReviewsModal = lazy(() => import('./components/MyReviewsModal').then((m) => ({ default: m.MyReviewsModal })));
 import {
   CheckCircle,
   AlertTriangle,
@@ -185,6 +187,8 @@ export default function App() {
   const [isAddTeacherOpen, setIsAddTeacherOpen] = useState(false);
   const [editingTeacher, setEditingTeacher] = useState<Teacher | null>(null);
   const [isAdminLoginOpen, setIsAdminLoginOpen] = useState(false);
+  const [isUserSignInOpen, setIsUserSignInOpen] = useState(false);
+  const [isMyReviewsOpen, setIsMyReviewsOpen] = useState(false);
   const [isModerationOpen, setIsModerationOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
@@ -192,6 +196,11 @@ export default function App() {
   // enforced server-side by Supabase RLS. This just controls what the UI offers.
   const [session, setSession] = useState<Session | null>(null);
   const isAdmin = session?.user?.email === ADMIN_EMAIL;
+  // Any signed-in email, admin or not — this is what lets a positive review
+  // skip the per-review code, since the account itself is the verified
+  // identity at that point.
+  const isUserSignedIn = !!session;
+  const signedInEmail = session?.user?.email;
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
@@ -378,13 +387,33 @@ export default function App() {
 
   // The pill shows the head of the category name but searches the whole one:
   // "IT жана Программалоо" is 161px of a 375px row, while a bare "IT" as the
-  // query would also match any academy with "digital" in its name.
-  const shortTag = (tag: string) => tag.split(/\s+(?:жана|и)\s+/i)[0];
+  // query would also match any academy with "digital" in its name. Categories
+  // are now pulled live from the directory (see popularTags below), so this
+  // has to cope with whatever label shape shows up, not just the five that
+  // used to be hardcoded here — "/" catches names like "Чечендик өнөр /
+  // Ораторлук" that have no "жана"/"и" to split on at all.
+  const shortTag = (tag: string) => tag.split(/\s*\/\s*|\s+(?:жана|и)\s+/i)[0];
 
   const handlePopularTagClick = (tag: string) => {
     setSearchQuery(tag);
     scrollToTeachers();
   };
+
+  // Built from the directory itself rather than a fixed list, so this stays
+  // "most popular" as the mix of instructors actually changes instead of
+  // freezing on whatever was true the day someone hardcoded five names.
+  const popularTags = useMemo(() => {
+    const counts = new Map<CourseCategory, number>();
+    teachers.forEach((tch) => {
+      if (tch.category && tch.category !== 'unknown') {
+        counts.set(tch.category, (counts.get(tch.category) ?? 0) + 1);
+      }
+    });
+    return Array.from(counts.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([key]) => t.categories[key]);
+  }, [teachers, t]);
 
   // Filtered teachers — searched by name, academy, bio, or specialty category
   // Shares its rules with both search boxes (see lib/teacherSearch), so the
@@ -592,10 +621,15 @@ export default function App() {
       <Navbar
         currentLang={currentLang}
         isAdmin={isAdmin}
+        isUserSignedIn={isUserSignedIn}
+        signedInEmail={signedInEmail}
         onSelectLang={handleSelectLang}
         onOpenAdminLogin={() => setIsAdminLoginOpen(true)}
         onOpenModeration={() => setIsModerationOpen(true)}
         onSignOutAdmin={() => signOutAdmin()}
+        onOpenUserSignIn={() => setIsUserSignInOpen(true)}
+        onOpenMyReviews={() => setIsMyReviewsOpen(true)}
+        onSignOutUser={() => signOutUser()}
         onOpenAddReview={() => {
           setReviewPreselectedTeacher(null);
           setIsAddReviewOpen(true);
@@ -690,7 +724,7 @@ export default function App() {
             <span className="block sm:hidden text-slate-400 mb-1.5">{t.hero.popularLabel}</span>
             <ScrollFadeRow className="flex items-center gap-2 overflow-x-auto no-scrollbar -mx-4 px-4 snap-x snap-mandatory scroll-pl-4 sm:mx-0 sm:px-0 sm:flex-wrap sm:justify-center sm:overflow-visible sm:snap-none">
               <span className="hidden sm:inline text-slate-400 shrink-0">{t.hero.popularLabel}</span>
-              {t.hero.popularTags.map((tag) => (
+              {popularTags.map((tag) => (
                 <button
                   key={tag}
                   type="button"
@@ -926,6 +960,24 @@ export default function App() {
           />
         )}
 
+        {isUserSignInOpen && (
+          <UserSignInModal
+            currentLang={currentLang}
+            onClose={() => setIsUserSignInOpen(false)}
+            onSuccess={() => showToast(t.userAuth.signedInHint)}
+          />
+        )}
+
+        {isMyReviewsOpen && (
+          <MyReviewsModal
+            currentLang={currentLang}
+            onClose={() => setIsMyReviewsOpen(false)}
+            onSelectReview={(teacherId, reviewId) => {
+              navigate(`/teacher/${teacherId}#review-item-${reviewId}`);
+            }}
+          />
+        )}
+
         {selectedTeacherForDetail && (
           <TeacherDetailModal
             teacher={selectedTeacherForDetail}
@@ -966,6 +1018,8 @@ export default function App() {
             teachers={teachers}
             preSelectedTeacher={reviewPreselectedTeacher}
             currentLang={currentLang}
+            isUserSignedIn={isUserSignedIn}
+            signedInEmail={signedInEmail}
             onClose={() => {
               setIsAddReviewOpen(false);
               setReviewPreselectedTeacher(null);

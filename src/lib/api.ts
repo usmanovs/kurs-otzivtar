@@ -69,6 +69,52 @@ export async function fetchMostRecentReview(): Promise<RecentReviewSummary | nul
   };
 }
 
+export interface MyReviewSummary {
+  reviewId: string;
+  teacherId: string;
+  teacherName: string;
+  teacherPhotoUrl?: string;
+  overallRating: number;
+  title: string;
+  fullReview: string;
+  date: string;
+  isHidden: boolean;
+}
+
+/**
+ * Every review the signed-in account has ever submitted, newest first.
+ * Empty (not an error) when nobody is signed in — the caller decides what
+ * that means for its own UI rather than this throwing on a routine state.
+ */
+export async function fetchMyReviews(): Promise<MyReviewSummary[]> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  const { data, error } = await supabase
+    .from('reviews')
+    .select('id, teacher_id, overall_rating, title, full_review, review_date, is_hidden, teachers(name, photo_url)')
+    .eq('user_id', user.id)
+    .order('review_date', { ascending: false });
+  if (error) throw error;
+
+  return (data ?? []).map((row: any) => {
+    const teacher = Array.isArray(row.teachers) ? row.teachers[0] : row.teachers;
+    return {
+      reviewId: row.id,
+      teacherId: row.teacher_id,
+      teacherName: teacher?.name ?? '',
+      teacherPhotoUrl: teacher?.photo_url ?? undefined,
+      overallRating: Number(row.overall_rating),
+      title: row.title,
+      fullReview: row.full_review,
+      date: row.review_date,
+      isHidden: row.is_hidden,
+    };
+  });
+}
+
 function mapTeacherRow(row: any): Teacher {
   const reviews = (row.reviews ?? [])
     .filter((r: any) => !r.is_hidden)
@@ -312,6 +358,30 @@ async function hashToken(token: string): Promise<string> {
     .join('');
 }
 
+/**
+ * Asks the one question that has to be answered before a review is written,
+ * not after: has this same source already reviewed this teacher in the last
+ * 24 hours? The real IP only exists server-side, so this is a network call
+ * rather than something checkable from data already on the page.
+ *
+ * Fails open — a network hiccup here should never be the reason a genuine
+ * review is lost, so any failure resolves to "allowed."
+ */
+export async function checkReviewCooldown(teacherId: string): Promise<boolean> {
+  try {
+    const res = await fetch('/api/check-review-cooldown', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ teacherId }),
+    });
+    if (!res.ok) return true;
+    const data = (await res.json()) as { allowed?: boolean };
+    return data.allowed !== false;
+  } catch {
+    return true;
+  }
+}
+
 export interface NewTeacherSocials {
   instagramUrl?: string;
   youtubeUrl?: string;
@@ -357,11 +427,19 @@ export async function submitReview(
 
   const reviewId = `rev-${Date.now()}`;
 
+  // Recorded only when the reviewer is signed in — this is what "My Reviews"
+  // reads back later. An unauthenticated submission leaves it null, exactly
+  // like today; nothing about the anonymous/named review flow changes.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   const { data, error } = await supabase
     .from('reviews')
     .insert({
       id: reviewId,
       teacher_id: teacherId,
+      user_id: user?.id ?? null,
       author_name: reviewData.authorName,
       is_anonymous: reviewData.isAnonymous ?? false,
       author_status: reviewData.authorStatus,
@@ -404,7 +482,7 @@ export async function submitReview(
   fetch('/api/log-review-ip', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ reviewId }),
+    body: JSON.stringify({ reviewId, teacherId }),
   }).catch(() => {
     // Ignore — this is a secondary signal, not something the reviewer should ever see fail.
   });

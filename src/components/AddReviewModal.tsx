@@ -6,6 +6,7 @@ import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
 import {
   teacherNameKey,
   submitVerificationProof,
+  checkReviewCooldown,
   type ReviewEnrichment,
   type NewTeacherSocials,
 } from '../lib/api';
@@ -40,6 +41,10 @@ interface AddReviewModalProps {
   teachers: Teacher[];
   preSelectedTeacher: Teacher | null;
   currentLang: SupportedLang;
+  /** A signed-in account is already a verified identity — skips the
+   *  per-review email code entirely, admin included. */
+  isUserSignedIn: boolean;
+  signedInEmail?: string;
   onClose: () => void;
   /** Saves the review and resolves with its id, or null if the save failed. */
   onSubmitReview: (
@@ -61,6 +66,8 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
   teachers,
   preSelectedTeacher,
   currentLang,
+  isUserSignedIn,
+  signedInEmail,
   onClose,
   onSubmitReview,
   onEnrichReview,
@@ -103,6 +110,9 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
   const [reviewerEmail, setReviewerEmail] = useState('');
   const [emailCode, setEmailCode] = useState('');
   const [emailStage, setEmailStage] = useState<'collect' | 'code-sent' | 'verified'>('collect');
+  // Passed once, then remembered — handleSaveReview runs again on every step
+  // of the email dance, and this check shouldn't re-fire on each of those.
+  const [cooldownChecked, setCooldownChecked] = useState(false);
 
   // --- step 2 ---
   const [proTags, setProTags] = useState<string[]>([]);
@@ -132,7 +142,17 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
     return !teachers.some((teacher) => teacherNameKey(teacher.name) === normalized);
   }, [teacherName, teachers]);
 
-  const needsEmailConfirmation = overallRating >= 3;
+  // Only meaningful once the teacher already exists — nobody can have
+  // reviewed a profile in the last 24 hours that doesn't exist yet.
+  const matchedTeacherId = useMemo(() => {
+    const normalized = teacherNameKey(teacherName);
+    if (!normalized) return undefined;
+    return teachers.find((teacher) => teacherNameKey(teacher.name) === normalized)?.id;
+  }, [teacherName, teachers]);
+
+  // A signed-in account is already a verified inbox — asking for a fresh
+  // code on every review would just repeat a check already passed at sign-in.
+  const needsEmailConfirmation = overallRating >= 3 && !isUserSignedIn;
 
   const getRatingDesc = (val: number) =>
     ['', 'Өтө начар / Шектүү курс', 'Начар / Көңүл калтырган', 'Орточо / Кемчиликтери бар', 'Жакшы / Сапаттуу', 'Мыкты / Толук акталды'][val] || '';
@@ -209,6 +229,21 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
     if (proofFile && proofFile.size > 5 * 1024 * 1024) {
       setErrorMsg(t.verifyModal.errorSize);
       return;
+    }
+
+    // Checked before the email dance, not after — someone blocked by this
+    // shouldn't have to verify a code first only to be told no at the end.
+    // A brand-new teacher has no history to collide with, so this only
+    // applies once matchedTeacherId resolves to an existing profile.
+    if (matchedTeacherId && !cooldownChecked) {
+      setBusy(true);
+      const allowed = await checkReviewCooldown(matchedTeacherId);
+      setBusy(false);
+      if (!allowed) {
+        setErrorMsg(t.addReviewModal.errorCooldown);
+        return;
+      }
+      setCooldownChecked(true);
     }
 
     // The rest of the form is valid. For 3+ stars, this same submit button
@@ -576,6 +611,17 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
                 {t.addReviewModal.attestLabel} *
               </span>
             </label>
+
+            {/* Says explicitly why there's no code step, rather than the
+                panel below just silently not appearing — that would read as
+                a bug rather than as a benefit of being signed in. */}
+            {isUserSignedIn && overallRating >= 3 && (
+              <p className="text-2xs text-emerald-700 -mt-1 flex items-center gap-1.5">
+                <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
+                {t.userAuth.signedInAs.replace('{email}', signedInEmail || '')} —{' '}
+                {t.userAuth.signedInHint}
+              </p>
+            )}
 
             {/* Only a positive rating (3+) triggers this — a complaint stays
                 exactly as easy to file as before. Faking praise for yourself

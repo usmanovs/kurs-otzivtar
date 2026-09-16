@@ -11,7 +11,7 @@ export default async function handler(request: Request) {
     return new Response('Method not allowed', { status: 405 });
   }
 
-  let body: { reviewId?: unknown };
+  let body: { reviewId?: unknown; teacherId?: unknown };
   try {
     body = await request.json();
   } catch {
@@ -22,6 +22,10 @@ export default async function handler(request: Request) {
   if (typeof reviewId !== 'string' || !reviewId) {
     return new Response('Missing reviewId', { status: 400 });
   }
+  // Optional — older callers won't send it, and the cooldown check in
+  // check-review-cooldown.ts simply has nothing to match against for rows
+  // logged before this existed.
+  const teacherId = typeof body.teacherId === 'string' ? body.teacherId : null;
 
   const ip =
     request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
@@ -45,7 +49,7 @@ export default async function handler(request: Request) {
       await fetch(`${supabaseUrl}/rest/v1/review_ip_log`, {
         method: 'POST',
         headers: { ...headers, Prefer: 'return=minimal' },
-        body: JSON.stringify({ review_id: reviewId, ip_address: ip }),
+        body: JSON.stringify({ review_id: reviewId, ip_address: ip, teacher_id: teacherId }),
       });
     } catch (e) {
       console.error('Failed to log review IP', e);

@@ -1,25 +1,35 @@
 import React, { useEffect, useState } from 'react';
 import { SupportedLang, TRANSLATIONS } from '../translations';
-import { PenLine, Globe, Menu, X, ShieldCheck, LogOut } from 'lucide-react';
+import { PenLine, Globe, Menu, X, ShieldCheck, LogOut, User, MessageSquareText } from 'lucide-react';
 
 interface NavbarProps {
   currentLang: SupportedLang;
   isAdmin: boolean;
+  isUserSignedIn: boolean;
+  signedInEmail?: string;
   onSelectLang: (lang: SupportedLang) => void;
   onOpenAddReview: () => void;
   onOpenAdminLogin: () => void;
   onOpenModeration: () => void;
   onSignOutAdmin: () => void;
+  onOpenUserSignIn: () => void;
+  onSignOutUser: () => void;
+  onOpenMyReviews: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
   currentLang,
   isAdmin,
+  isUserSignedIn,
+  signedInEmail,
   onSelectLang,
   onOpenAddReview,
   onOpenAdminLogin,
   onOpenModeration,
   onSignOutAdmin,
+  onOpenUserSignIn,
+  onSignOutUser,
+  onOpenMyReviews,
 }) => {
   const t = TRANSLATIONS[currentLang];
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -206,18 +216,61 @@ export const Navbar: React.FC<NavbarProps> = ({
                     <span>{t.adminAuth.signOut}</span>
                   </button>
                 </>
+              ) : isUserSignedIn ? (
+                <>
+                  <div className="px-5 py-2 text-2xs text-slate-400 truncate">
+                    {t.userAuth.signedInAs.replace('{email}', signedInEmail || '')}
+                  </div>
+                  <button
+                    type="button"
+                    id="nav-my-reviews-btn"
+                    onClick={() => {
+                      setIsDrawerOpen(false);
+                      onOpenMyReviews();
+                    }}
+                    className="w-full text-left px-5 py-3.5 text-sm font-medium text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 transition-colors cursor-pointer inline-flex items-center gap-2"
+                  >
+                    <MessageSquareText className="w-4 h-4 shrink-0" />
+                    <span>{t.userAuth.myReviewsBtn}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsDrawerOpen(false);
+                      onSignOutUser();
+                    }}
+                    className="w-full text-left px-5 py-3.5 text-sm font-medium text-slate-500 hover:bg-red-50 hover:text-red-600 transition-colors cursor-pointer inline-flex items-center gap-2"
+                  >
+                    <LogOut className="w-4 h-4 shrink-0" />
+                    <span>{t.userAuth.signOutBtn}</span>
+                  </button>
+                </>
               ) : (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsDrawerOpen(false);
-                    onOpenAdminLogin();
-                  }}
-                  className="w-full text-left px-5 py-3.5 text-sm font-medium text-slate-400 hover:bg-slate-50 hover:text-slate-600 transition-colors cursor-pointer inline-flex items-center gap-2"
-                >
-                  <ShieldCheck className="w-4 h-4 shrink-0" />
-                  <span>{t.adminAuth.signIn}</span>
-                </button>
+                <>
+                  <button
+                    type="button"
+                    id="nav-user-signin-btn"
+                    onClick={() => {
+                      setIsDrawerOpen(false);
+                      onOpenUserSignIn();
+                    }}
+                    className="w-full text-left px-5 py-3.5 text-sm font-medium text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 transition-colors cursor-pointer inline-flex items-center gap-2"
+                  >
+                    <User className="w-4 h-4 shrink-0" />
+                    <span>{t.userAuth.signInBtn}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsDrawerOpen(false);
+                      onOpenAdminLogin();
+                    }}
+                    className="w-full text-left px-5 py-3.5 text-sm font-medium text-slate-400 hover:bg-slate-50 hover:text-slate-600 transition-colors cursor-pointer inline-flex items-center gap-2"
+                  >
+                    <ShieldCheck className="w-4 h-4 shrink-0" />
+                    <span>{t.adminAuth.signIn}</span>
+                  </button>
+                </>
               )}
             </nav>
           </div>

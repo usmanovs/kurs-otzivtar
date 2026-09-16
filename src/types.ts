@@ -16,6 +16,7 @@ export type CourseCategory =
   | 'arts_music'
   | 'ort_school'
   | 'public_speaking'
+  | 'sewing_fashion'
   // A curation outcome, not a subject: set when someone has looked and the
   // profile genuinely can't be placed. Distinct from category = null, which
   // means nobody has looked yet.
