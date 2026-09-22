@@ -10,6 +10,9 @@
 // stripped-down meta-only page would hurt indexing rather than help it.
 
 import { TRANSLATIONS } from './src/translations';
+import { ALL_CATEGORY_SLUGS_SET } from './src/lib/categories';
+import { HIDDEN_TEACHER_IDS } from './src/lib/hiddenTeachers';
+import { ABOUT_LASTMOD } from './src/lib/site';
 
 const BOT_USER_AGENT_PATTERN =
   /facebookexternalhit|facebot|twitterbot|whatsapp|telegrambot|linkedinbot|slackbot|discordbot|skypeuripreview|vkshare|pinterest|redditbot|embedly|quora link preview/i;
@@ -24,7 +27,7 @@ function escapeHtml(value: string): string {
     .replace(/"/g, '&quot;');
 }
 
-const SITE_URL = 'https://kursotzyv.org';
+const SITE_URL = 'https://www.kursotzyv.org';
 
 function buildPreviewHtml(opts: { title: string; description: string; image: string; url: string; ogType: string }): string {
   const { title, description, image, url, ogType } = opts;
@@ -48,42 +51,85 @@ function buildPreviewHtml(opts: { title: string; description: string; image: str
 </html>`;
 }
 
+interface RealSiteData {
+  /** id -> newest review date (YYYY-MM-DD) */
+  teachers: { id: string; lastmod: string }[];
+  /** slug -> newest review date among that category's teachers, '' if none */
+  categories: { slug: string; lastmod: string }[];
+  /** newest review date on the whole site */
+  lastmod: string;
+}
+
+const EMPTY_SITE_DATA: RealSiteData = { teachers: [], categories: [], lastmod: '' };
+
+const newest = (a: string, b: string) => (b > a ? b : a);
+
+// The one real-data query both the sitemap and the prerender build step run
+// (duplicated rather than imported — an edge function and a Node build
+// script don't share a module graph — but kept to the same two rules: a
+// category only counts once a teacher is actually assigned to it, and a
+// teacher only counts once they have at least one published review. A
+// profile with zero reviews is a stub with nothing for a crawler to index.
+// <lastmod> is the newest review_date, i.e. when the page's content last
+// actually changed — never the request time.
+async function fetchRealSiteData(supabaseUrl: string, supabaseAnonKey: string): Promise<RealSiteData> {
+  const headers = { apikey: supabaseAnonKey, Authorization: `Bearer ${supabaseAnonKey}` };
+  const res = await fetch(`${supabaseUrl}/rest/v1/teachers?select=id,category,reviews(review_date)`, { headers });
+  if (!res.ok) return EMPTY_SITE_DATA;
+
+  const rows = await res.json();
+  if (!Array.isArray(rows)) return EMPTY_SITE_DATA;
+
+  const teachers: { id: string; lastmod: string }[] = [];
+  const categoryLastmod = new Map<string, string>();
+  let siteLastmod = '';
+  for (const row of rows) {
+    if (!row?.id || HIDDEN_TEACHER_IDS.has(row.id)) continue;
+    const dates: string[] = Array.isArray(row.reviews)
+      ? row.reviews.map((r: { review_date?: string }) => String(r?.review_date ?? '').slice(0, 10)).filter(Boolean)
+      : [];
+    const lastmod = dates.reduce(newest, '');
+    if (dates.length > 0) {
+      teachers.push({ id: row.id, lastmod });
+      siteLastmod = newest(siteLastmod, lastmod);
+    }
+    if (row.category && ALL_CATEGORY_SLUGS_SET.has(row.category)) {
+      categoryLastmod.set(row.category, newest(categoryLastmod.get(row.category) ?? '', lastmod));
+    }
+  }
+
+  const categories = Array.from(ALL_CATEGORY_SLUGS_SET)
+    .filter((slug) => categoryLastmod.has(slug))
+    .map((slug) => ({ slug, lastmod: categoryLastmod.get(slug)! }));
+
+  return { teachers, categories, lastmod: siteLastmod };
+}
+
 async function handleSitemap(): Promise<Response> {
   const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  let teacherIds: string[] = [];
+  let data = EMPTY_SITE_DATA;
   if (supabaseUrl && supabaseAnonKey) {
     try {
-      const res = await fetch(`${supabaseUrl}/rest/v1/teachers?select=id`, {
-        headers: {
-          apikey: supabaseAnonKey,
-          Authorization: `Bearer ${supabaseAnonKey}`,
-        },
-      });
-      if (res.ok) {
-        const rows = await res.json();
-        if (Array.isArray(rows)) {
-          teacherIds = rows.map((r) => r.id).filter(Boolean);
-        }
-      }
+      data = await fetchRealSiteData(supabaseUrl, supabaseAnonKey);
     } catch {
-      // Ship a sitemap with just the homepage if the teacher lookup fails.
+      // Ship a sitemap with just the static pages if the lookup fails.
     }
   }
 
-  const categorySlugs = Object.keys(CATEGORY_NAMES).filter((slug) => slug !== 'all');
+  const entry = (loc: string, lastmod: string) =>
+    `  <url><loc>${loc}</loc>${lastmod ? `<lastmod>${lastmod}</lastmod>` : ''}</url>`;
 
+  // /about is static copy with no data behind it: its date is a constant
+  // that gets bumped when the copy changes (see ABOUT_LASTMOD).
   const urls = [
-    `  <url><loc>${SITE_URL}/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>`,
-    ...categorySlugs.map(
-      (slug) =>
-        `  <url><loc>${SITE_URL}/category/${slug}</loc><changefreq>weekly</changefreq><priority>0.6</priority></url>`
-    ),
-    ...teacherIds.map(
-      (id) =>
-        `  <url><loc>${SITE_URL}/teacher/${encodeURIComponent(id)}</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>`
-    ),
+    entry(`${SITE_URL}/`, data.lastmod),
+    entry(`${SITE_URL}/reviews`, data.lastmod),
+    entry(`${SITE_URL}/analytics`, data.lastmod),
+    entry(`${SITE_URL}/about`, ABOUT_LASTMOD),
+    ...data.categories.map((c) => entry(`${SITE_URL}/category/${c.slug}`, c.lastmod)),
+    ...data.teachers.map((tch) => entry(`${SITE_URL}/teacher/${encodeURIComponent(tch.id)}`, tch.lastmod)),
   ];
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
@@ -141,7 +187,8 @@ export default async function middleware(request: Request) {
   let description = 'Кыргызстандагы онлайн курстардын жана мугалимдердин чынчыл сын-пикирлери.';
   let image = fallbackImage;
 
-  if (supabaseUrl && supabaseAnonKey) {
+  // A hidden profile gets the generic site preview, never its name or photo.
+  if (supabaseUrl && supabaseAnonKey && !HIDDEN_TEACHER_IDS.has(teacherId)) {
     try {
       const res = await fetch(
         `${supabaseUrl}/rest/v1/teachers?id=eq.${encodeURIComponent(teacherId)}&select=name,bio,photo_url`,

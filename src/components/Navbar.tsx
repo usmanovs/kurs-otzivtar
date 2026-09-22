@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { SupportedLang, TRANSLATIONS } from '../translations';
-import { PenLine, Globe, Menu, X, ShieldCheck, LogOut, User, MessageSquareText, Sparkles } from 'lucide-react';
+import { PenLine, Globe, Menu, X, ShieldCheck, LogOut, User, MessageSquareText, Sparkles, BarChart3, Heart } from 'lucide-react';
+import { DONATE_URL } from '../lib/donate';
 
 interface NavbarProps {
   currentLang: SupportedLang;
@@ -10,7 +11,6 @@ interface NavbarProps {
   signedInEmail?: string;
   onSelectLang: (lang: SupportedLang) => void;
   onOpenAddReview: () => void;
-  onOpenAdminLogin: () => void;
   onOpenModeration: () => void;
   onSignOutAdmin: () => void;
   onOpenUserSignIn: () => void;
@@ -25,7 +25,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   signedInEmail,
   onSelectLang,
   onOpenAddReview,
-  onOpenAdminLogin,
   onOpenModeration,
   onSignOutAdmin,
   onOpenUserSignIn,
@@ -40,7 +39,6 @@ export const Navbar: React.FC<NavbarProps> = ({
     { id: 'teachers-section', label: t.navTeachers },
     { id: 'featured-videos-section', label: t.navVideos },
     { id: 'report-scam-section', label: t.navReportScam },
-    { id: 'stats-section', label: t.navStats },
   ];
 
   useEffect(() => {
@@ -75,7 +73,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             type="button"
             id="logo-scroll-top-btn"
             onClick={scrollToTop}
-            className="flex items-center gap-2.5 min-w-0 text-left cursor-pointer"
+            className="flex items-center gap-2.5 min-w-0 shrink-0 text-left cursor-pointer"
           >
             <div className="w-8 h-8 sm:w-9 sm:h-9 bg-gradient-to-br from-indigo-500 to-indigo-700 rounded-xl flex items-center justify-center text-white font-bold shadow-md ring-1 ring-indigo-600/20 shrink-0">
               <span>K</span>
@@ -84,27 +82,44 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span className="block text-sm sm:text-xl font-bold tracking-tight text-slate-800 uppercase truncate">
                 {t.siteTitle}
               </span>
-              <p className="text-xs text-slate-500 hidden lg:block truncate">{t.siteSubtitle}</p>
+              {/* Hidden again once the inline nav takes over (2xl) — the
+                  tagline and the nav links were fighting over the same
+                  space, and the nav links win that fight. */}
+              <p className="text-xs text-slate-500 hidden lg:block 2xl:hidden truncate">{t.siteSubtitle}</p>
             </div>
           </button>
 
           {/* Section links — desktop only; on smaller screens they live in the drawer */}
-          <nav className="hidden lg:flex items-center gap-1">
+          <nav className="hidden 2xl:flex items-center gap-0.5">
             {navLinks.map((link) => (
               <button
                 key={link.id}
                 type="button"
                 id={`navlink-${link.id}`}
                 onClick={() => scrollToSection(link.id)}
-                className="shrink-0 px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition-colors cursor-pointer whitespace-nowrap"
+                className="shrink-0 px-2.5 py-1.5 text-sm font-medium text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition-colors cursor-pointer whitespace-nowrap"
               >
                 {link.label}
               </button>
             ))}
             <Link
+              to="/reviews"
+              id="navlink-all-reviews"
+              className="shrink-0 px-2.5 py-1.5 text-sm font-medium text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition-colors whitespace-nowrap"
+            >
+              {t.navAllReviews}
+            </Link>
+            <Link
+              to="/analytics"
+              id="navlink-analytics"
+              className="shrink-0 px-2.5 py-1.5 text-sm font-medium text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition-colors whitespace-nowrap"
+            >
+              {t.navStats}
+            </Link>
+            <Link
               to="/about"
               id="navlink-about"
-              className="shrink-0 px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition-colors whitespace-nowrap"
+              className="shrink-0 px-2.5 py-1.5 text-sm font-medium text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition-colors whitespace-nowrap"
             >
               {t.navAbout}
             </Link>
@@ -149,7 +164,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               onClick={() => setIsDrawerOpen(true)}
               aria-label={t.navMenu.open}
               aria-expanded={isDrawerOpen}
-              className="lg:hidden p-2 -mr-1 rounded-full text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
+              className="2xl:hidden p-2 -mr-1 rounded-full text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
             >
               <Menu className="w-5 h-5" />
             </button>
@@ -160,7 +175,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     </header>
 
     {isDrawerOpen && (
-        <div className="lg:hidden fixed inset-0 z-50">
+        <div className="2xl:hidden fixed inset-0 z-50">
           <div
             className="absolute inset-0 bg-slate-900/50 backdrop-blur-xs animate-fade-in"
             onClick={() => setIsDrawerOpen(false)}
@@ -197,6 +212,24 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </button>
               ))}
               <Link
+                to="/reviews"
+                id="drawer-navlink-all-reviews"
+                onClick={() => setIsDrawerOpen(false)}
+                className="block w-full text-left px-5 py-3.5 text-sm font-medium text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 transition-colors inline-flex items-center gap-2"
+              >
+                <MessageSquareText className="w-4 h-4 shrink-0" />
+                {t.navAllReviews}
+              </Link>
+              <Link
+                to="/analytics"
+                id="drawer-navlink-analytics"
+                onClick={() => setIsDrawerOpen(false)}
+                className="block w-full text-left px-5 py-3.5 text-sm font-medium text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 transition-colors inline-flex items-center gap-2"
+              >
+                <BarChart3 className="w-4 h-4 shrink-0" />
+                {t.navStats}
+              </Link>
+              <Link
                 to="/about"
                 id="drawer-navlink-about"
                 onClick={() => setIsDrawerOpen(false)}
@@ -205,6 +238,17 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <Sparkles className="w-4 h-4 shrink-0" />
                 {t.navAbout}
               </Link>
+              <a
+                href={DONATE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                id="drawer-navlink-donate"
+                onClick={() => setIsDrawerOpen(false)}
+                className="block w-full text-left px-5 py-3.5 text-sm font-medium text-rose-600 hover:bg-rose-50 transition-colors inline-flex items-center gap-2"
+              >
+                <Heart className="w-4 h-4 shrink-0 fill-rose-100" />
+                {t.navDonate}
+              </a>
 
               <div className="my-2 border-t border-slate-100" />
 
@@ -275,17 +319,6 @@ export const Navbar: React.FC<NavbarProps> = ({
                   >
                     <User className="w-4 h-4 shrink-0" />
                     <span>{t.userAuth.signInBtn}</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsDrawerOpen(false);
-                      onOpenAdminLogin();
-                    }}
-                    className="w-full text-left px-5 py-3.5 text-sm font-medium text-slate-400 hover:bg-slate-50 hover:text-slate-600 transition-colors cursor-pointer inline-flex items-center gap-2"
-                  >
-                    <ShieldCheck className="w-4 h-4 shrink-0" />
-                    <span>{t.adminAuth.signIn}</span>
                   </button>
                 </>
               )}

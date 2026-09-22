@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { Teacher } from '../types';
 import { SupportedLang, TRANSLATIONS } from '../translations';
 import { topPositiveTags } from '../lib/complaintTags';
@@ -114,10 +115,10 @@ export const TopRatedSection: React.FC<TopRatedSectionProps> = ({
           {top.map((teacher) => {
             const tags = topPositiveTags(teacher, 2);
             return (
-              <button
+              <Link
                 key={teacher.id}
-                type="button"
-                onClick={() => onViewTeacher(teacher)}
+                to={`/teacher/${teacher.id}`}
+                state={{ modal: true }}
                 aria-label={teacher.name}
                 className="w-full text-left flex items-center gap-3 p-3.5 bg-white border border-slate-200/80 rounded-xl shadow-sm transition-transform hover:shadow-md active:scale-[0.99] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 focus-visible:ring-offset-emerald-50"
               >
@@ -156,7 +157,7 @@ export const TopRatedSection: React.FC<TopRatedSectionProps> = ({
                   <Star className="w-3.5 h-3.5 fill-current" />
                   {teacher.averageRating.toFixed(1)}
                 </span>
-              </button>
+              </Link>
             );
           })}
         </div>

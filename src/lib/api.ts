@@ -1,39 +1,7 @@
 import { supabase } from './supabaseClient';
 import { Course, CourseCategory, FeaturedVideo, Review, StudentStatus, Teacher } from '../types';
-import { calculateTeacherMetrics } from '../data/teachers';
-
-function mapReviewRow(row: any): Review {
-  return {
-    id: row.id,
-    authorName: row.author_name,
-    isAnonymous: row.is_anonymous,
-    authorStatus: row.author_status,
-    isVerified: row.is_verified,
-    proofVerified: row.proof_verified ?? false,
-    source: row.source ?? 'submitted',
-    date: row.review_date,
-    createdAt: row.created_at ?? undefined,
-    country: row.country ?? undefined,
-    city: row.city ?? undefined,
-    overallRating: Number(row.overall_rating),
-    teacherRating: Number(row.teacher_rating),
-    practiceRating: Number(row.practice_rating),
-    jobSupportRating: Number(row.job_support_rating),
-    valueRating: Number(row.value_rating),
-    wouldRecommend: row.would_recommend,
-    pricePaidKGS: row.price_paid_kgs ?? undefined,
-    durationMonths: row.duration_months ?? undefined,
-    cohortYear: row.cohort_year ?? undefined,
-    title: row.title,
-    fullReview: row.full_review,
-    pros: row.pros ?? [],
-    cons: row.cons ?? [],
-    adviceForNewcomers: row.advice_for_newcomers ?? undefined,
-    hasJobScamReport: row.has_job_scam_report,
-    helpfulCount: row.helpful_count,
-    unhelpfulCount: row.unhelpful_count,
-  };
-}
+import { mapReviewRow, mapTeacherRow } from './mappers';
+import { HIDDEN_TEACHER_IDS, hiddenTeacherIdsFilter } from './hiddenTeachers';
 
 export interface RecentReviewSummary {
   reviewId: string;
@@ -51,6 +19,7 @@ export async function fetchMostRecentReview(): Promise<RecentReviewSummary | nul
     .from('reviews')
     .select('id, teacher_id, author_name, is_anonymous, overall_rating, title, teachers(name, photo_url)')
     .eq('is_hidden', false)
+    .not('teacher_id', 'in', hiddenTeacherIdsFilter() ?? '("")')
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle();
@@ -115,31 +84,130 @@ export async function fetchMyReviews(): Promise<MyReviewSummary[]> {
   });
 }
 
-function mapTeacherRow(row: any): Teacher {
-  const reviews = (row.reviews ?? [])
-    .filter((r: any) => !r.is_hidden)
-    .map(mapReviewRow)
-    .sort((a: Review, b: Review) => b.date.localeCompare(a.date));
-
-  return calculateTeacherMetrics({
-    id: row.id,
-    name: row.name,
-    bio: row.bio ?? undefined,
-    academyName: row.academy_name ?? undefined,
-    category: row.category ?? undefined,
-    subniches: row.subniches ?? [],
-    gender: row.gender ?? undefined,
-    createdAt: row.created_at ?? undefined,
-    photoUrl: row.photo_url ?? undefined,
-    instagramUrl: row.instagram_url ?? undefined,
-    youtubeUrl: row.youtube_url ?? undefined,
-    tiktokUrl: row.tiktok_url ?? undefined,
-    websiteUrl: row.website_url ?? undefined,
-    reviews,
-  });
+export interface FeedReviewSummary extends Review {
+  teacherId: string;
+  teacherName: string;
+  teacherPhotoUrl?: string;
 }
 
-function mapCourseRow(row: any): Course {
+export const REVIEWS_FEED_PAGE_SIZE = 20;
+
+export interface ReviewsFeedFilters {
+  ratingFilter?: 'recommended' | 'critical' | 'verified';
+  sort?: 'newest' | 'helpful';
+  search?: string;
+}
+
+/**
+ * A sitewide page of reviews across every teacher, for the public "all
+ * reviews" feed — filtered and sorted server-side so "load more" keeps
+ * applying the same criteria instead of only ever filtering the first page.
+ */
+export async function fetchAllReviews(
+  page = 0,
+  filters: ReviewsFeedFilters = {}
+): Promise<{ reviews: FeedReviewSummary[]; hasMore: boolean }> {
+  const from = page * REVIEWS_FEED_PAGE_SIZE;
+  const to = from + REVIEWS_FEED_PAGE_SIZE - 1;
+
+  let query = supabase
+    .from('reviews')
+    .select('*, teachers(id, name, photo_url)')
+    .eq('is_hidden', false)
+    .not('teacher_id', 'in', hiddenTeacherIdsFilter() ?? '("")');
+
+  if (filters.ratingFilter === 'recommended') query = query.gte('overall_rating', 4);
+  else if (filters.ratingFilter === 'critical') query = query.lte('overall_rating', 2);
+  else if (filters.ratingFilter === 'verified') query = query.eq('proof_verified', true);
+
+  const search = filters.search?.trim();
+  if (search) {
+    // Escape characters that would otherwise be read as PostgREST filter
+    // syntax (%, comma, parens) rather than literal search text.
+    const escaped = search.replace(/[%,()]/g, '');
+    const { data: matchingTeachers } = await supabase
+      .from('teachers')
+      .select('id')
+      .ilike('name', `%${escaped}%`);
+    const teacherIds = (matchingTeachers ?? []).map((t: { id: string }) => t.id);
+    const orParts = [`title.ilike.%${escaped}%`, `full_review.ilike.%${escaped}%`];
+    if (teacherIds.length > 0) orParts.push(`teacher_id.in.(${teacherIds.join(',')})`);
+    query = query.or(orParts.join(','));
+  }
+
+  query =
+    filters.sort === 'helpful'
+      ? query.order('helpful_count', { ascending: false }).order('created_at', { ascending: false, nullsFirst: false })
+      : query.order('created_at', { ascending: false, nullsFirst: false });
+
+  const { data, error } = await query.range(from, to);
+  if (error) throw error;
+
+  const rows = data ?? [];
+  const reviews = rows.map((row: any) => {
+    const teacher = Array.isArray(row.teachers) ? row.teachers[0] : row.teachers;
+    return {
+      ...mapReviewRow(row),
+      teacherId: row.teacher_id,
+      teacherName: teacher?.name ?? '',
+      teacherPhotoUrl: teacher?.photo_url ?? undefined,
+    };
+  });
+
+  return { reviews, hasMore: rows.length === REVIEWS_FEED_PAGE_SIZE };
+}
+
+export interface ReviewsFeedCounts {
+  all: number;
+  recommended: number;
+  critical: number;
+  verified: number;
+}
+
+/**
+ * Counts behind each filter pill on the "all reviews" feed, so a reader can
+ * see how many results a filter yields before tapping it. Scoped to the
+ * current search term (if any) but not to the currently selected rating
+ * filter — otherwise every pill but the active one would count itself out.
+ */
+export async function fetchReviewsFeedCounts(search?: string): Promise<ReviewsFeedCounts> {
+  const trimmed = search?.trim();
+  let orFilter: string | undefined;
+  if (trimmed) {
+    const escaped = trimmed.replace(/[%,()]/g, '');
+    const { data: matchingTeachers } = await supabase
+      .from('teachers')
+      .select('id')
+      .ilike('name', `%${escaped}%`);
+    const teacherIds = (matchingTeachers ?? []).map((t: { id: string }) => t.id);
+    const orParts = [`title.ilike.%${escaped}%`, `full_review.ilike.%${escaped}%`];
+    if (teacherIds.length > 0) orParts.push(`teacher_id.in.(${teacherIds.join(',')})`);
+    orFilter = orParts.join(',');
+  }
+
+  const countFor = async (build: (q: any) => any): Promise<number> => {
+    let query = supabase
+      .from('reviews')
+      .select('id', { count: 'exact', head: true })
+      .eq('is_hidden', false)
+      .not('teacher_id', 'in', hiddenTeacherIdsFilter() ?? '("")');
+    query = build(query);
+    if (orFilter) query = query.or(orFilter);
+    const { count } = await query;
+    return count ?? 0;
+  };
+
+  const [all, recommended, critical, verified] = await Promise.all([
+    countFor((q) => q),
+    countFor((q) => q.gte('overall_rating', 4)),
+    countFor((q) => q.lte('overall_rating', 2)),
+    countFor((q) => q.eq('proof_verified', true)),
+  ]);
+
+  return { all, recommended, critical, verified };
+}
+
+export function mapCourseRow(row: any): Course {
   return {
     id: row.id,
     name: row.name,
@@ -161,7 +229,19 @@ export async function fetchTeachers(): Promise<Teacher[]> {
     .select('*, reviews(*)')
     .order('created_at', { ascending: false });
   if (error) throw error;
-  return (data ?? []).map(mapTeacherRow);
+  return (data ?? []).filter((row: any) => !HIDDEN_TEACHER_IDS.has(row.id)).map(mapTeacherRow);
+}
+
+/** One profile with its published reviews; null when missing or hidden. */
+export async function fetchTeacherById(id: string): Promise<Teacher | null> {
+  if (HIDDEN_TEACHER_IDS.has(id)) return null;
+  const { data, error } = await supabase
+    .from('teachers')
+    .select('*, reviews(*)')
+    .eq('id', id)
+    .maybeSingle();
+  if (error) throw error;
+  return data ? mapTeacherRow(data) : null;
 }
 
 export async function fetchCourses(): Promise<Course[]> {
@@ -173,7 +253,7 @@ export async function fetchCourses(): Promise<Course[]> {
   return (data ?? []).map(mapCourseRow);
 }
 
-function mapFeaturedVideoRow(row: any): FeaturedVideo {
+export function mapFeaturedVideoRow(row: any): FeaturedVideo {
   return {
     id: row.id,
     title: row.title,
@@ -524,6 +604,50 @@ export async function updateReviewVoteCounts(
   if (error) throw error;
 }
 
+// ─────────────────────────────────────────────────────────────
+// Admin: full review list with rating correction
+// ─────────────────────────────────────────────────────────────
+
+export interface AdminReviewSummary extends Review {
+  teacherId: string;
+  teacherName: string;
+  isHidden: boolean;
+}
+
+// Every review, hidden or not — is_hidden is only ever an app-level display
+// filter (fetchAllReviews applies it explicitly), never an RLS boundary, so
+// this plain select already returns everything the admin needs to see.
+export async function fetchAllReviewsForAdmin(): Promise<AdminReviewSummary[]> {
+  const { data, error } = await supabase
+    .from('reviews')
+    .select('*, teachers(id, name)')
+    .order('created_at', { ascending: false, nullsFirst: false })
+    .limit(1000);
+  if (error) throw error;
+
+  return (data ?? []).map((row: any) => {
+    const teacher = Array.isArray(row.teachers) ? row.teachers[0] : row.teachers;
+    return {
+      ...mapReviewRow(row),
+      teacherId: row.teacher_id,
+      teacherName: teacher?.name ?? '',
+      isHidden: row.is_hidden,
+    };
+  });
+}
+
+// overall_rating isn't grantable to anon or ordinary signed-in users (see
+// enrich_review) — this definer function re-checks the caller is the admin
+// before touching it. Run the migration in supabase/admin_update_review_rating.sql
+// once before calling this.
+export async function adminUpdateReviewRating(reviewId: string, newRating: number): Promise<void> {
+  const { error } = await supabase.rpc('admin_update_review_rating', {
+    p_review_id: reviewId,
+    p_new_rating: newRating,
+  });
+  if (error) throw error;
+}
+
 const VISITOR_ID_KEY = 'kursotzyv_visitor_id';
 
 function getOrCreateVisitorId(): string {
@@ -549,6 +673,36 @@ export async function recordSiteVisit(isHeartbeat = false): Promise<void> {
     });
   } catch {
     // Ignore — this is a secondary signal, not something a visitor should ever see fail.
+  }
+}
+
+export type ReviewFunnelEvent =
+  | 'opened'
+  | 'rating_selected'
+  | 'email_required'
+  | 'submitted'
+  | 'closed';
+
+// Lightweight funnel instrumentation for the review form — specifically to
+// answer "are people quitting at the email confirmation step?", which
+// nothing else records. Nothing here is awaited or allowed to affect the
+// form: a dropped event just means one blind spot in a report, never a
+// broken submission.
+export function logReviewFunnelEvent(event: ReviewFunnelEvent, rating?: number, teacherId?: string): void {
+  try {
+    const visitorId = getOrCreateVisitorId();
+    supabase
+      .from('review_funnel_events')
+      .insert({
+        id: `funnel-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        event,
+        rating: rating ?? null,
+        teacher_id: teacherId ?? null,
+        visitor_id: visitorId,
+      })
+      .then(() => {}, () => {});
+  } catch {
+    // Best-effort — see comment above.
   }
 }
 
@@ -791,13 +945,59 @@ export async function decideTeacherResponse(responseId: string, approve: boolean
   if (error) throw error;
 }
 
-/** True when this instructor already has a published rebuttal. */
-export async function teacherHasApprovedResponse(teacherId: string): Promise<boolean> {
-  const { count, error } = await supabase
-    .from('teacher_responses')
-    .select('id', { count: 'exact', head: true })
-    .eq('teacher_id', teacherId)
-    .eq('status', 'approved');
-  if (error) return false;
-  return (count ?? 0) > 0;
+// ─────────────────────────────────────────────────────────────
+// Contact form (About page) — anyone can insert, only the admin can read.
+// ─────────────────────────────────────────────────────────────
+
+export async function submitContactMessage(name: string, email: string, message: string): Promise<void> {
+  const trimmedName = name.trim();
+  const trimmedEmail = email.trim();
+  const trimmedMessage = message.trim();
+
+  const { error } = await supabase.from('contact_messages').insert({
+    id: `contact-${Date.now()}`,
+    name: trimmedName || null,
+    email: trimmedEmail,
+    message: trimmedMessage,
+  });
+  if (error) throw error;
+
+  // Best-effort admin ping — the message is already durably saved above, so
+  // a failed or skipped notification never loses it.
+  fetch('/api/notify-contact-message', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: trimmedName, email: trimmedEmail, message: trimmedMessage }),
+  }).catch(() => {});
+}
+
+export interface ContactMessage {
+  id: string;
+  name?: string;
+  email: string;
+  message: string;
+  createdAt: string;
+  isRead: boolean;
+}
+
+// Admin-only: RLS returns nothing for anyone else.
+export async function fetchContactMessages(): Promise<ContactMessage[]> {
+  const { data, error } = await supabase
+    .from('contact_messages')
+    .select('*')
+    .order('created_at', { ascending: false });
+  if (error || !data) return [];
+  return data.map((row: any) => ({
+    id: row.id,
+    name: row.name ?? undefined,
+    email: row.email,
+    message: row.message,
+    createdAt: row.created_at,
+    isRead: row.is_read,
+  }));
+}
+
+export async function markContactMessageRead(id: string): Promise<void> {
+  const { error } = await supabase.from('contact_messages').update({ is_read: true }).eq('id', id);
+  if (error) throw error;
 }

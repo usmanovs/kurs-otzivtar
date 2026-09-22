@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Teacher } from '../types';
 import { SupportedLang, TRANSLATIONS } from '../translations';
 import {
@@ -85,11 +86,11 @@ const WatchlistCard: React.FC<{
   const unrated = teacher.reviewCount === 0;
 
   return (
-    <button
-      type="button"
-      onClick={() => onViewTeacher(teacher)}
+    <Link
+      to={`/teacher/${teacher.id}`}
+      state={{ modal: true }}
       aria-label={teacher.name}
-      className="w-full text-left p-4 bg-white border border-slate-200 rounded-xl shadow-sm transition-transform hover:shadow-md active:scale-[0.99] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 focus-visible:ring-offset-amber-50"
+      className="block w-full text-left p-4 bg-white border border-slate-200 rounded-xl shadow-sm transition-transform hover:shadow-md active:scale-[0.99] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 focus-visible:ring-offset-amber-50"
     >
       <div className="flex items-start gap-3">
         <span className="shrink-0 mt-0.5 rounded bg-slate-100 px-1.5 py-0.5 font-mono text-xs font-medium tabular-nums text-slate-500">
@@ -147,7 +148,7 @@ const WatchlistCard: React.FC<{
           ))}
         </div>
       )}
-    </button>
+    </Link>
   );
 };
 
@@ -163,9 +164,10 @@ const LeaderboardRow: React.FC<{
   const filled = Math.round(teacher.averageRating);
 
   return (
-    <button
-      type="button"
-      onClick={() => onViewTeacher(teacher)}
+    <Link
+      to={`/teacher/${teacher.id}`}
+      state={{ modal: true }}
+      aria-label={teacher.name}
       className="relative w-full flex items-center pl-4 pr-5 py-3 text-left border-b border-slate-100 last:border-b-0 cursor-pointer transition-colors hover:bg-slate-50 active:bg-slate-100"
     >
       <span
@@ -211,7 +213,7 @@ const LeaderboardRow: React.FC<{
         {teacher.reviewCount}
       </div>
       <span className="flex-1" />
-    </button>
+    </Link>
   );
 };
 

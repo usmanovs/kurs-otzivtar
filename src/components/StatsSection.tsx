@@ -1,4 +1,5 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { CourseCategory, Teacher } from '../types';
 import { SupportedLang, TRANSLATIONS } from '../translations';
 import {
@@ -7,7 +8,17 @@ import {
   HEALTHY_THRESHOLD,
   bayesianRating,
 } from '../lib/ratingTone';
-import { BarChart3, ThumbsUp, ListChecks, ShieldAlert, Wallet, FileCheck, Upload } from 'lucide-react';
+import {
+  BarChart3,
+  ThumbsUp,
+  ListChecks,
+  ShieldAlert,
+  Wallet,
+  FileCheck,
+  Upload,
+  Info,
+  ChevronRight,
+} from 'lucide-react';
 import { DonutChart } from './DonutChart';
 import { countedComplaintKeys } from '../lib/complaintTags';
 
@@ -21,11 +32,21 @@ const RISK_KEYS = [
   'fraud', 'no_result', 'no_job', 'credit_pressure', 'no_contact', 'no_refund',
 ] as const;
 
+// The two risk tags severe enough to earn their own warning chip, rather
+// than reading as just another row in the list.
+const RISK_TONE: Partial<Record<(typeof RISK_KEYS)[number], 'danger' | 'warning'>> = {
+  fraud: 'danger',
+  credit_pressure: 'warning',
+};
+
 interface StatsSectionProps {
   teachers: Teacher[];
   currentLang: SupportedLang;
   /** Opens the review form, where proof is attached. */
   onOpenAddReview?: () => void;
+  /** Skips this section's own title block — for a page that already renders
+   *  its own page-level heading with the same text (e.g. /analytics). */
+  hideOwnHeader?: boolean;
 }
 
 const TONE_BAR_CLASS: Record<'success' | 'warning' | 'danger', string> = {
@@ -40,6 +61,17 @@ const TONE_TEXT_CLASS: Record<'success' | 'warning' | 'danger', string> = {
   danger: 'text-red-600',
 };
 
+const TONE_RING_CLASS: Record<'success' | 'warning' | 'danger', string> = {
+  success: '#10b981',
+  warning: '#f59e0b',
+  danger: '#ef4444',
+};
+
+const RISK_CHIP_CLASS: Record<'danger' | 'warning', string> = {
+  danger: 'bg-red-100 text-red-700',
+  warning: 'bg-amber-100 text-amber-700',
+};
+
 interface BarRowProps {
   label: string;
   count: number;
@@ -47,25 +79,111 @@ interface BarRowProps {
   barClassName?: string;
 }
 
-const BarRow: React.FC<BarRowProps> = ({ label, count, percent, barClassName = 'bg-indigo-400' }) => (
-  <div className="flex items-center gap-3">
-    <span className="text-sm text-slate-600 w-32 sm:w-44 lg:w-56 shrink-0 leading-tight">{label}</span>
-    <div className="flex-1 bg-slate-100 h-2 rounded-full overflow-hidden">
-      <div className={`h-full rounded-full ${barClassName}`} style={{ width: `${percent}%` }} />
+const BarRow: React.FC<BarRowProps> = ({ label, count, percent, barClassName = 'bg-indigo-400' }) => {
+  // Defensive clamp — a percentage this renders should never exceed the
+  // 100%-wide track it's drawn against, or fall below zero.
+  const width = Math.min(100, Math.max(0, percent));
+  return (
+    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
+      <span className="text-sm text-slate-600 sm:w-44 lg:w-56 shrink-0 leading-tight">{label}</span>
+      <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+        <div
+          className="flex-1 min-w-[32px] bg-slate-100 h-2 rounded-full overflow-hidden"
+          role="progressbar"
+          aria-valuenow={Math.round(width)}
+          aria-valuemin={0}
+          aria-valuemax={100}
+        >
+          <div className={`h-full rounded-full ${barClassName}`} style={{ width: `${width}%` }} />
+        </div>
+        <span className="text-sm font-bold text-slate-900 w-10 sm:w-16 text-right shrink-0 tabular-nums">
+          {percent.toFixed(0)}%
+        </span>
+        <span className="text-xs text-slate-400 w-10 text-right shrink-0 tabular-nums hidden sm:inline">
+          {count}
+        </span>
+      </div>
     </div>
-    <span className="text-sm font-bold text-slate-900 w-16 text-right shrink-0 tabular-nums">
-      {percent.toFixed(0)}%
+  );
+};
+
+interface RadialProgressProps {
+  percent: number;
+  color: string;
+  size?: number;
+}
+
+/** A single-value progress ring — the KPI card's recommend-rate visual. */
+const RadialProgress: React.FC<RadialProgressProps> = ({ percent, color, size = 88 }) => {
+  const stroke = 9;
+  const r = (size - stroke) / 2;
+  const c = 2 * Math.PI * r;
+  const clamped = Math.min(100, Math.max(0, percent));
+  const dash = (clamped / 100) * c;
+
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="shrink-0">
+      <g transform={`rotate(-90 ${size / 2} ${size / 2})`}>
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#f1f5f9" strokeWidth={stroke} />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          fill="none"
+          stroke={color}
+          strokeWidth={stroke}
+          strokeLinecap="round"
+          strokeDasharray={`${dash} ${c - dash}`}
+        />
+      </g>
+      <text
+        x="50%"
+        y="50%"
+        textAnchor="middle"
+        dominantBaseline="middle"
+        className="fill-slate-900 font-extrabold"
+        style={{ fontSize: 19, letterSpacing: '-0.02em' }}
+      >
+        {clamped.toFixed(0)}%
+      </text>
+    </svg>
+  );
+};
+
+/** Small hover/focus tooltip — accessible via keyboard, no extra library. */
+const InfoTooltip: React.FC<{ text: string }> = ({ text }) => {
+  const [open, setOpen] = useState(false);
+  return (
+    <span className="relative inline-flex">
+      <button
+        type="button"
+        aria-label={text}
+        onMouseEnter={() => setOpen(true)}
+        onMouseLeave={() => setOpen(false)}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setOpen(false)}
+        onClick={(e) => e.preventDefault()}
+        className="text-slate-300 hover:text-slate-500 focus:text-slate-500 transition-colors cursor-help"
+      >
+        <Info className="w-3.5 h-3.5" />
+      </button>
+      {open && (
+        <span
+          role="tooltip"
+          className="absolute z-20 bottom-full left-1/2 -translate-x-1/2 mb-2 w-52 rounded-lg bg-slate-900 text-white text-[11px] leading-snug px-2.5 py-2 shadow-lg"
+        >
+          {text}
+        </span>
+      )}
     </span>
-    <span className="text-xs text-slate-400 w-10 text-right shrink-0 tabular-nums hidden sm:inline">
-      {count}
-    </span>
-  </div>
-);
+  );
+};
 
 export const StatsSection: React.FC<StatsSectionProps> = ({
   teachers,
   currentLang,
   onOpenAddReview,
+  hideOwnHeader,
 }) => {
   const t = TRANSLATIONS[currentLang];
 
@@ -81,7 +199,7 @@ export const StatsSection: React.FC<StatsSectionProps> = ({
     ) as CourseCategory[];
     const categoryCounts = categoryKeys
       .map((cat) => ({
-        key: cat,
+        key: cat as string,
         label: t.categories[cat],
         count: teachers.filter((tch) => tch.category === cat).length,
       }))
@@ -134,6 +252,7 @@ export const StatsSection: React.FC<StatsSectionProps> = ({
             label: t.complaintTags[key],
             count,
             percent: withCons.length > 0 ? (count / withCons.length) * 100 : 0,
+            tone: RISK_TONE[key],
           };
         })
           .filter((rk) => rk.count > 0)
@@ -181,87 +300,105 @@ export const StatsSection: React.FC<StatsSectionProps> = ({
 
   return (
     <section id="stats-section" className="mb-10 scroll-mt-20">
-      <div className="flex flex-col items-center text-center gap-2 mb-5">
-        <div className="p-2.5 rounded-xl bg-indigo-50 text-indigo-600 shrink-0">
-          <BarChart3 className="w-5 h-5" />
+      {!hideOwnHeader && (
+        <div className="flex flex-col items-center text-center gap-2 mb-5">
+          <div className="p-2.5 rounded-xl bg-indigo-50 text-indigo-600 shrink-0">
+            <BarChart3 className="w-5 h-5" />
+          </div>
+          <div>
+            <h2 className="text-lg font-bold text-slate-900">{t.analytics.title}</h2>
+            <p className="text-sm text-slate-500 mt-0.5">{t.analytics.subtitle}</p>
+          </div>
         </div>
-        <div>
-          <h2 className="text-lg font-bold text-slate-900">{t.analytics.title}</h2>
-          <p className="text-sm text-slate-500 mt-0.5">{t.analytics.subtitle}</p>
+      )}
+
+      {/* Top KPI row — the three numbers a reader should see before scrolling. */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-5 flex flex-col">
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-rose-700">
+            <Wallet className="w-3.5 h-3.5" />
+            {t.analytics.disputedLabel}
+          </div>
+          <div className="mt-2 text-2xl sm:text-3xl font-extrabold text-rose-700 tabular-nums leading-tight">
+            {stats.watchdog.sumKGS.toLocaleString('ru-RU')}
+            <span className="text-sm font-bold"> сом</span>
+          </div>
+          <p className="mt-1.5 text-xs leading-snug text-slate-500">
+            {t.analytics.disputedNote.replace('{n}', String(stats.watchdog.pricedCount))}
+          </p>
+        </div>
+
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-5 flex flex-col items-center text-center">
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 mb-3">
+            <ThumbsUp className="w-3.5 h-3.5 text-indigo-600" />
+            {t.analytics.recommendRateTitle}
+          </div>
+          <RadialProgress percent={stats.recommendRate} color={TONE_RING_CLASS[recommendTone]} />
+          <p className="mt-2 text-2xs text-slate-400">
+            {t.analytics.recommendRateSubtitle} ({stats.totalReviews})
+          </p>
+        </div>
+
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-5 flex flex-col">
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700">
+            <FileCheck className="w-3.5 h-3.5 text-indigo-600" />
+            {t.analytics.provenLabel}
+            <InfoTooltip text={t.analytics.provenTooltip} />
+          </div>
+          <div className="mt-2 text-2xl sm:text-3xl font-extrabold text-slate-800 tabular-nums leading-tight">
+            {stats.watchdog.proofVerified}
+            <span className="text-sm font-semibold text-slate-400"> / {stats.watchdog.selfDeclared}</span>
+          </div>
+          <p className="mt-1.5 text-xs leading-snug text-slate-500">
+            {stats.watchdog.proofVerified === 0
+              ? t.analytics.provenNone
+              : t.analytics.provenSelfNote.replace('{n}', String(stats.watchdog.selfDeclared))}
+          </p>
+          {onOpenAddReview && (
+            <button
+              type="button"
+              id="stats-upload-proof-btn"
+              onClick={onOpenAddReview}
+              className="mt-auto pt-3 inline-flex items-center justify-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white shadow-xs transition-colors hover:bg-blue-700 cursor-pointer"
+            >
+              <Upload className="w-3.5 h-3.5" />
+              {t.analytics.provenCta}
+            </button>
+          )}
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        {/* Consumer-protection panel. Replaced a gender split, which said
-            nothing a reader could act on before paying for a course. */}
+        {/* Top risk factors */}
         <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden p-5">
-          <div className="flex items-center gap-2.5 mb-4">
-            <ShieldAlert className="w-4 h-4 text-indigo-600" />
-            <h3 className="text-sm font-bold text-slate-900">{t.analytics.watchdogTitle}</h3>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3 mb-5">
-            <div className="rounded-xl border border-rose-200/70 bg-rose-50/60 p-3">
-              <div className="flex items-center gap-1.5 text-2xs font-semibold text-rose-700">
-                <Wallet className="w-3.5 h-3.5" />
-                {t.analytics.disputedLabel}
-              </div>
-              <div className="mt-1 text-xl font-extrabold text-rose-700 tabular-nums leading-tight">
-                {stats.watchdog.sumKGS.toLocaleString('ru-RU')}
-                <span className="text-xs font-bold"> сом</span>
-              </div>
-              <p className="mt-1 text-[11px] leading-snug text-rose-900/60">
-                {t.analytics.disputedNote.replace('{n}', String(stats.watchdog.pricedCount))}
-              </p>
-            </div>
-
-            <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3">
-              <div className="flex items-center gap-1.5 text-2xs font-semibold text-slate-600">
-                <FileCheck className="w-3.5 h-3.5" />
-                {t.analytics.provenLabel}
-              </div>
-              <div className="mt-1 text-xl font-extrabold text-slate-800 tabular-nums leading-tight">
-                {stats.watchdog.proofVerified}
-              </div>
-              {/* Zero is the true figure today, and saying so is the point —
-                  a self-ticked box is not proof, and merging the two would
-                  advertise a verification this site has not performed. */}
-              <p className="mt-1 text-[11px] leading-snug text-slate-500">
-                {stats.watchdog.proofVerified === 0
-                  ? t.analytics.provenNone
-                  : t.analytics.provenSelfNote.replace('{n}', String(stats.watchdog.selfDeclared))}
-              </p>
-              {/* A zero here is a gap the reader can close, not just a fact to
-                  report — so the number comes with the way to change it. */}
-              {onOpenAddReview && (
-                <button
-                  type="button"
-                  id="stats-upload-proof-btn"
-                  onClick={onOpenAddReview}
-                  className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white shadow-xs transition-colors hover:bg-blue-700 cursor-pointer"
-                >
-                  <Upload className="w-3.5 h-3.5" />
-                  {t.analytics.provenCta}
-                </button>
-              )}
+          <div className="flex items-baseline justify-between gap-2 mb-1">
+            <div className="flex items-center gap-2.5">
+              <ShieldAlert className="w-4 h-4 text-indigo-600" />
+              <h3 className="text-sm font-bold text-slate-900">{t.analytics.risksTitle}</h3>
             </div>
           </div>
-
-          <div className="flex items-baseline justify-between gap-2 mb-3">
-            <h4 className="text-xs font-bold text-slate-700">{t.analytics.risksTitle}</h4>
-            <span className="text-2xs text-slate-400">
-              {t.analytics.risksNote.replace('{n}', String(stats.watchdog.consCount))}
-            </span>
-          </div>
-          <div className="space-y-2.5">
+          <p className="text-2xs text-slate-400 mb-4">
+            {t.analytics.risksNote.replace('{n}', String(stats.watchdog.consCount))}
+          </p>
+          <div className="space-y-3">
             {stats.watchdog.risks.map((risk) => (
-              <BarRow
-                key={risk.key}
-                label={risk.label}
-                count={risk.count}
-                percent={risk.percent}
-                barClassName="bg-rose-500"
-              />
+              <div key={risk.key}>
+                <div className="flex items-center gap-1.5 mb-1">
+                  {risk.tone && (
+                    <span
+                      className={`text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded ${RISK_CHIP_CLASS[risk.tone]}`}
+                    >
+                      {t.analytics.riskChip[risk.tone]}
+                    </span>
+                  )}
+                </div>
+                <BarRow
+                  label={risk.label}
+                  count={risk.count}
+                  percent={risk.percent}
+                  barClassName={risk.tone === 'danger' ? 'bg-red-500' : risk.tone === 'warning' ? 'bg-amber-500' : 'bg-rose-400'}
+                />
+              </div>
             ))}
           </div>
         </div>
@@ -309,29 +446,30 @@ export const StatsSection: React.FC<StatsSectionProps> = ({
             <BarChart3 className="w-4 h-4 text-indigo-600" />
             <h3 className="text-sm font-bold text-slate-900">{t.analytics.categoryTitle}</h3>
           </div>
-          <div className="space-y-2.5">
-            {stats.categories.map((c) => (
-              <BarRow key={c.key} label={c.label} count={c.count} percent={c.percent} />
-            ))}
+          <div className="space-y-1">
+            {stats.categories.map((c) =>
+              c.key === 'none' ? (
+                <div key={c.key} className="py-1.5 px-2 -mx-2 rounded-lg">
+                  <BarRow label={c.label} count={c.count} percent={c.percent} />
+                </div>
+              ) : (
+                <Link
+                  key={c.key}
+                  to={`/category/${c.key}`}
+                  className="flex items-center gap-2 py-1.5 px-2 -mx-2 rounded-lg hover:bg-slate-50 transition-colors group"
+                >
+                  <div className="flex-1 min-w-0">
+                    <BarRow label={c.label} count={c.count} percent={c.percent} />
+                  </div>
+                  <ChevronRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-indigo-500 transition-colors shrink-0" />
+                </Link>
+              )
+            )}
           </div>
-        </div>
-
-        {/* Recommend rate — hero number */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden p-5 flex flex-col items-center justify-center text-center">
-          <div className="flex items-center gap-2.5 mb-3">
-            <ThumbsUp className="w-4 h-4 text-indigo-600" />
-            <h3 className="text-sm font-bold text-slate-900">{t.analytics.recommendRateTitle}</h3>
-          </div>
-          <div className={`text-5xl font-extrabold tracking-tight ${TONE_TEXT_CLASS[recommendTone]}`}>
-            {stats.recommendRate.toFixed(0)}%
-          </div>
-          <p className="text-2xs text-slate-400 mt-2">
-            {t.analytics.recommendRateSubtitle} ({stats.totalReviews})
-          </p>
         </div>
 
         {/* Directory coverage */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden p-5">
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden p-5 lg:col-span-2">
           <div className="flex items-center gap-2.5 mb-4">
             <ListChecks className="w-4 h-4 text-indigo-600" />
             <h3 className="text-sm font-bold text-slate-900">{t.analytics.coverageTitle}</h3>

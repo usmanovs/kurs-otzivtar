@@ -26,8 +26,4 @@ export const SUBNICHES_BY_CATEGORY: Partial<Record<CourseCategory, string[]>> = 
 // people the same skip button that left 62% of the directory uncategorised.
 export const NON_CREATABLE_CATEGORIES: readonly string[] = ['all', 'unknown'];
 
-export const ALL_SUBNICHES: string[] = Array.from(
-  new Set(Object.values(SUBNICHES_BY_CATEGORY).flat())
-);
-
 export type SortOption = 'default' | 'most_reviewed' | 'highest_rated' | 'newest';

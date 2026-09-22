@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { CourseCategory, Teacher } from '../types';
 import { SupportedLang, TRANSLATIONS } from '../translations';
 import { scoreTone, RATING_BADGE_CLASS } from '../lib/ratingTone';
@@ -8,6 +9,7 @@ import { FilterDrawer, DirectoryFilters, DEFAULT_FILTERS, activeFilterCount } fr
 import { DirectorySearch } from './DirectorySearch';
 import { TikTokIcon } from './TikTokIcon';
 import { plural, pluralForm } from '../lib/plural';
+import { ALL_CATEGORY_SLUGS_SET } from '../lib/categories';
 
 interface TeachersSectionProps {
   teachers: Teacher[];
@@ -184,7 +186,10 @@ export const TeachersSection: React.FC<TeachersSectionProps> = ({
       // "Багыты тактала элек" is the absence of a topic, not a topic — as a
       // primary chip it competes with real disciplines and invites people to
       // browse the pile nobody has sorted yet. It lives in the drawer instead.
-      .filter(([key]) => key !== 'unknown')
+      // The membership check is the same shared list the category page and
+      // sitemap use, so a chip here can never link to a page that page
+      // considers non-existent.
+      .filter(([key]) => ALL_CATEGORY_SLUGS_SET.has(key))
       .sort(
         ([aKey, aCount], [bKey, bCount]) =>
           bCount - aCount || t.categories[aKey].localeCompare(t.categories[bKey], 'ru')
@@ -275,10 +280,9 @@ export const TeachersSection: React.FC<TeachersSectionProps> = ({
       {/* One scrollable row instead of a dropdown: the categories that matter
           are visible without opening anything. */}
       <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-2 mb-1">
-        <button
-          type="button"
-          onClick={() => onSelectCategory('all')}
-          aria-pressed={selectedCategory === 'all'}
+        <Link
+          to="/"
+          aria-current={selectedCategory === 'all' ? 'page' : undefined}
           className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${
             selectedCategory === 'all'
               ? 'bg-slate-900 text-white'
@@ -286,13 +290,12 @@ export const TeachersSection: React.FC<TeachersSectionProps> = ({
           }`}
         >
           {t.categories.all}
-        </button>
+        </Link>
         {categoryChips.map((key) => (
           <React.Fragment key={key}>
-            <button
-              type="button"
-              onClick={() => onSelectCategory(key)}
-              aria-pressed={selectedCategory === key}
+            <Link
+              to={`/category/${key}`}
+              aria-current={selectedCategory === key ? 'page' : undefined}
               className={`shrink-0 whitespace-nowrap rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${
                 selectedCategory === key
                   ? 'bg-slate-900 text-white'
@@ -300,7 +303,7 @@ export const TeachersSection: React.FC<TeachersSectionProps> = ({
               }`}
             >
               {t.categories[key]}
-            </button>
+            </Link>
 
             {/* The sub-disciplines follow their own parent inside this same
                 strip. As a permanent second row they cost a row of height on
@@ -375,31 +378,28 @@ export const TeachersSection: React.FC<TeachersSectionProps> = ({
                   ? topPositiveTags(teacher, 1)
                   : [];
             return (
-            // The card cannot be a <button>: it contains its own buttons and
-            // external links, and nesting interactive elements is invalid.
-            // role/tabIndex plus a guarded key handler gives the same
-            // behaviour without breaking the nested controls.
+            // The card can't be a single <a>: it contains its own real links
+            // (Instagram/TikTok/website) and buttons, and nesting anchors is
+            // invalid HTML. Instead a real, crawlable <Link> is stretched to
+            // cover the whole card (the "stretched link" pattern) sitting
+            // beneath the decorative content, which is marked
+            // pointer-events-none so clicks fall through to it; the actions
+            // row (edit, socials, quick-review) is a normal sibling and stays
+            // independently clickable on top.
             <div
               key={teacher.id}
               id={`teacher-card-${teacher.id}`}
-              role="button"
-              tabIndex={0}
-              aria-label={teacher.name}
-              onClick={() => onViewTeacher(teacher)}
-              onKeyDown={(e) => {
-                // Only when the card itself has focus — otherwise Enter on a
-                // nested button would fire that button and open the profile.
-                if (e.target !== e.currentTarget) return;
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  onViewTeacher(teacher);
-                }
-              }}
-              className="group relative flex items-center gap-3 p-3.5 bg-white border border-slate-200/80 rounded-2xl shadow-sm hover:shadow hover:border-indigo-200 active:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 transition-all cursor-pointer"
+              className="group relative flex items-center gap-3 p-3.5 bg-white border border-slate-200/80 rounded-2xl shadow-sm hover:shadow hover:border-indigo-200 transition-all"
             >
+              <Link
+                to={`/teacher/${teacher.id}`}
+                state={{ modal: true }}
+                aria-label={teacher.name}
+                className="absolute inset-0 z-0 rounded-2xl active:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 cursor-pointer"
+              />
               {/* Avatar carries the score, instead of the score claiming a row
                   of its own. */}
-              <div className="relative shrink-0">
+              <div className="relative shrink-0 pointer-events-none">
                 <TeacherAvatar teacher={teacher} />
                 {/* Colour carries the tier, but never alone — the number is
                     right there, and unrated says "—" rather than a 0.0 that
@@ -413,7 +413,7 @@ export const TeachersSection: React.FC<TeachersSectionProps> = ({
                 </span>
               </div>
 
-              <div className="flex-1 min-w-0">
+              <div className="relative flex-1 min-w-0 pointer-events-none">
                 <h3 className="text-sm sm:text-base font-bold text-slate-900 truncate group-hover:text-indigo-600 transition-colors">
                   {teacher.name}
                 </h3>
@@ -459,7 +459,7 @@ export const TeachersSection: React.FC<TeachersSectionProps> = ({
                 )}
               </div>
 
-              <div className="flex items-center gap-1 shrink-0">
+              <div className="relative z-10 flex items-center gap-1 shrink-0">
                 {isAdmin && (
                   <button
                     type="button"

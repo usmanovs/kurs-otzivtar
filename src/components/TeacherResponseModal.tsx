@@ -3,6 +3,7 @@ import { Review, Teacher } from '../types';
 import { SupportedLang, TRANSLATIONS } from '../translations';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { submitTeacherResponse } from '../lib/api';
+import { hasRealTitle } from '../lib/reviewTitle';
 import { X, MessageSquareReply, Check } from 'lucide-react';
 
 interface TeacherResponseModalProps {
@@ -168,7 +169,7 @@ export const TeacherResponseModal: React.FC<TeacherResponseModalProps> = ({
                   <option value="">{t.responseModal.reviewNone}</option>
                   {reviews.map((r) => (
                     <option key={r.id} value={r.id}>
-                      {r.overallRating}★ — {r.title.slice(0, 60)}
+                      {r.overallRating}★ — {(hasRealTitle(r.title) ? r.title : r.fullReview).slice(0, 60)}
                     </option>
                   ))}
                 </select>

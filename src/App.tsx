@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, lazy, Suspense } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { LANG_STORAGE_KEY, readStoredLang } from './lib/lang';
+import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import type { Session } from '@supabase/supabase-js';
 import { Course, CourseCategory, Review, Teacher, FeaturedVideo } from './types';
 import { calculateTeacherMetrics } from './data/teachers';
@@ -33,13 +34,15 @@ import { TopRatedSection } from './components/TopRatedSection';
 import { FeaturedVideosSection } from './components/FeaturedVideosSection';
 import { ReportScamSection } from './components/ReportScamSection';
 import { StatsBar } from './components/StatsBar';
-import { StatsSection } from './components/StatsSection';
+import { AnalyticsTeaser } from './components/AnalyticsTeaser';
 import { ModerationPanel } from './components/ModerationPanel';
 import { TeachersSection } from './components/TeachersSection';
 import { TeacherLeaderboardSection } from './components/TeacherLeaderboardSection';
 import { RecentReviewPopup } from './components/RecentReviewPopup';
 import { ScrollFadeRow } from './components/ScrollFadeRow';
 import { HeroSearch } from './components/HeroSearch';
+import { usePrerenderData } from './lib/prerenderData';
+import { VoteMap, loadVotedReviews, saveVotedReviews, computeVote } from './lib/reviewVotes';
 
 // Lazy-loaded: only needed once a user opens one of these modals, so keeping
 // them out of the initial bundle shrinks first-load JS meaningfully.
@@ -59,25 +62,6 @@ import {
   Users,
 } from 'lucide-react';
 
-const LANG_STORAGE_KEY = 'kursotzivtar_lang';
-const VOTED_REVIEWS_KEY = 'kursotzivtar_voted_reviews_v1';
-
-const CATEGORY_SLUGS = new Set<string>([
-  'it_programming', 'design_uiux', 'languages', 'marketing_smm', 'business_trading',
-  'data_analytics', 'psychology', 'beauty_cosmetology', 'driving_school', 'cooking_culinary',
-  'finance_accounting', 'kids_development', 'arts_music', 'ort_school', 'public_speaking',
-]);
-
-type VoteMap = Record<string, 'helpful' | 'unhelpful'>;
-
-function loadVotedReviews(): VoteMap {
-  try {
-    const saved = localStorage.getItem(VOTED_REVIEWS_KEY);
-    return saved ? JSON.parse(saved) : {};
-  } catch {
-    return {};
-  }
-}
 
 function applyVoteOverlay(teachers: Teacher[], votes: VoteMap): Teacher[] {
   return teachers.map((tch) => ({
@@ -87,7 +71,7 @@ function applyVoteOverlay(teachers: Teacher[], votes: VoteMap): Teacher[] {
 }
 
 export default function App() {
-  const { teacherId: urlTeacherId, categorySlug: urlCategorySlug } = useParams<{ teacherId?: string; categorySlug?: string }>();
+  const { teacherId: urlTeacherId } = useParams<{ teacherId?: string }>();
   const navigate = useNavigate();
   const location = useLocation();
   const highlightReviewId = location.hash.startsWith('#review-item-')
@@ -95,29 +79,26 @@ export default function App() {
     : undefined;
 
   // Language state
-  const [currentLang, setCurrentLang] = useState<SupportedLang>(() => {
-    const saved = localStorage.getItem(LANG_STORAGE_KEY);
-    return (saved === 'ru' || saved === 'ky') ? saved : 'ky';
-  });
+  const [currentLang, setCurrentLang] = useState<SupportedLang>(readStoredLang);
 
   // Courses & Teachers — loaded from Supabase (shared, persistent data)
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [teachers, setTeachers] = useState<Teacher[]>([]);
-  const [featuredVideos, setFeaturedVideos] = useState<FeaturedVideo[]>([]);
+  // When the page was prerendered, its data is the initial state — the static
+  // HTML and the first client render match — and the effects below refresh it.
+  // Live values (site stats) start from the build-time last-known numbers.
+  const seed = usePrerenderData('/');
+  const [courses, setCourses] = useState<Course[]>(seed?.courses ?? []);
+  const [teachers, setTeachers] = useState<Teacher[]>(seed?.teachers ?? []);
+  const [featuredVideos, setFeaturedVideos] = useState<FeaturedVideo[]>(seed?.featuredVideos ?? []);
   const [recentReview, setRecentReview] = useState<RecentReviewSummary | null>(null);
-  const [siteStats, setSiteStats] = useState<SiteStats | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [siteStats, setSiteStats] = useState<SiteStats | null>(seed?.siteStats ?? null);
+  const [isLoading, setIsLoading] = useState(!seed?.courses);
   const [loadError, setLoadError] = useState(false);
 
   // Per-browser record of which reviews this visitor already voted on
   const [votedReviews, setVotedReviews] = useState<VoteMap>(() => loadVotedReviews());
 
   useEffect(() => {
-    try {
-      localStorage.setItem(VOTED_REVIEWS_KEY, JSON.stringify(votedReviews));
-    } catch (e) {
-      console.error('Failed to save voted reviews to localStorage', e);
-    }
+    saveVotedReviews(votedReviews);
   }, [votedReviews]);
 
   // Real (unfaked) activity numbers — one visit recorded per browser per day,
@@ -177,11 +158,14 @@ export default function App() {
   // Modals state
   const selectedTeacherForDetail = urlTeacherId ? teachers.find((tch) => tch.id === urlTeacherId) ?? null : null;
   const teacherNotFound = !isLoading && !!urlTeacherId && !selectedTeacherForDetail;
-  const selectedCategory: CourseCategory | 'all' =
-    urlCategorySlug && CATEGORY_SLUGS.has(urlCategorySlug) ? (urlCategorySlug as CourseCategory) : 'all';
-  const handleSelectCategory = (category: CourseCategory | 'all') => {
-    navigate(category === 'all' ? '/' : `/category/${category}`);
-  };
+  // Directory filter only — /category/:slug is its own page now, so picking a
+  // chip here narrows the list in place instead of navigating away.
+  const [selectedCategory, setSelectedCategory] = useState<CourseCategory | 'all'>('all');
+  const handleSelectCategory = setSelectedCategory;
+  // In-app teacher clicks open the profile as a modal over the homepage;
+  // TeacherRoute reads this state to tell them apart from a direct visit.
+  const openTeacher = (id: string, hash?: string) =>
+    navigate(`/teacher/${id}${hash ? `#${hash}` : ''}`, { state: { modal: true } });
   const [isAddReviewOpen, setIsAddReviewOpen] = useState(false);
   const [reviewPreselectedTeacher, setReviewPreselectedTeacher] = useState<Teacher | null>(null);
   const [isAddTeacherOpen, setIsAddTeacherOpen] = useState(false);
@@ -210,18 +194,38 @@ export default function App() {
     return () => sub.subscription.unsubscribe();
   }, []);
 
+  // Lets links from other routes (e.g. the /about page CTA) open this modal
+  // on arrival, without App needing to know about those pages' own state.
+  useEffect(() => {
+    if (window.location.hash === '#write-review') {
+      setIsAddReviewOpen(true);
+      history.replaceState(null, '', window.location.pathname + window.location.search);
+    }
+  }, []);
+
+  // Same idea from the standalone teacher page, which also knows who the
+  // review is for. Waits for the teachers to load so the name can be resolved.
+  useEffect(() => {
+    const writeReviewFor = (location.state as { writeReviewFor?: string } | null)?.writeReviewFor;
+    if (!writeReviewFor || isLoading) return;
+    setReviewPreselectedTeacher(teachers.find((tch) => tch.id === writeReviewFor) ?? null);
+    setIsAddReviewOpen(true);
+    navigate(location.pathname + location.search, { replace: true, state: null });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoading, location.state]);
+
   const t = TRANSLATIONS[currentLang];
 
   // Update the page title/description when viewing an individual teacher or category page
   useEffect(() => {
-    if (selectedTeacherForDetail) {
+    if (teacherNotFound) {
+      document.title = `${t.teacherNotFound.title} — ${t.siteTitle}`;
+    } else if (selectedTeacherForDetail) {
       document.title = `${selectedTeacherForDetail.name} — ${t.siteTitle}`;
-    } else if (selectedCategory !== 'all') {
-      document.title = `${t.categories[selectedCategory]} — ${t.siteTitle}`;
     } else {
       document.title = `${t.siteTitle} - ${t.siteSubtitle}`;
     }
-  }, [selectedTeacherForDetail, selectedCategory, t]);
+  }, [teacherNotFound, selectedTeacherForDetail, t]);
 
   // Keep the meta description and canonical link in sync so shared teacher/category
   // links and search results show content-specific text instead of the generic homepage copy.
@@ -233,104 +237,37 @@ export default function App() {
     let description = `${t.siteSubtitle}.`;
     let canonicalUrl = `${origin}/`;
 
-    if (selectedTeacherForDetail) {
+    if (teacherNotFound) {
+      description = t.teacherNotFound.message;
+      canonicalUrl = `${origin}${location.pathname}`;
+    } else if (selectedTeacherForDetail) {
       description = selectedTeacherForDetail.bio || description;
       canonicalUrl = `${origin}/teacher/${selectedTeacherForDetail.id}`;
-    } else if (selectedCategory !== 'all') {
-      description = t.categoryPage.metaDescription.replace('{category}', t.categories[selectedCategory]);
-      canonicalUrl = `${origin}/category/${selectedCategory}`;
     }
 
     descriptionTag?.setAttribute('content', description);
     canonicalTag?.setAttribute('href', canonicalUrl);
-  }, [selectedTeacherForDetail, selectedCategory, t]);
+  }, [teacherNotFound, selectedTeacherForDetail, location.pathname, t]);
 
-  // Inject Person/AggregateRating JSON-LD structured data for the currently
-  // viewed teacher, so search engines can show star-rating rich snippets.
+  // A dead teacher/category link still renders a page (the "not found"
+  // panel below), but it must never be indexed as if it were real content —
+  // there is nothing here for a search result to point to. The tag is
+  // created on demand and removed the moment the visitor navigates
+  // somewhere real, so it can never leak onto a page that should be indexed.
   useEffect(() => {
-    const scriptId = 'teacher-structured-data';
-    const existing = document.getElementById(scriptId);
-    if (existing) existing.remove();
-
-    if (!selectedTeacherForDetail || selectedTeacherForDetail.reviewCount === 0) return;
-
-    const teacher = selectedTeacherForDetail;
-    const structuredData = {
-      '@context': 'https://schema.org',
-      '@type': 'Person',
-      name: teacher.name,
-      ...(teacher.photoUrl && { image: teacher.photoUrl }),
-      ...(teacher.bio && { description: teacher.bio }),
-      url: `${window.location.origin}/teacher/${teacher.id}`,
-      aggregateRating: {
-        '@type': 'AggregateRating',
-        ratingValue: teacher.averageRating,
-        reviewCount: teacher.reviewCount,
-        bestRating: 5,
-        worstRating: 1,
-      },
-      review: teacher.reviews.slice(0, 10).map((r) => ({
-        '@type': 'Review',
-        author: { '@type': 'Person', name: r.authorName },
-        datePublished: r.date,
-        reviewRating: {
-          '@type': 'Rating',
-          ratingValue: r.overallRating,
-          bestRating: 5,
-          worstRating: 1,
-        },
-        reviewBody: r.fullReview,
-      })),
-    };
-
-    const script = document.createElement('script');
-    script.id = scriptId;
-    script.type = 'application/ld+json';
-    script.textContent = JSON.stringify(structuredData);
-    document.head.appendChild(script);
-
-    return () => {
-      document.getElementById(scriptId)?.remove();
-    };
-  }, [selectedTeacherForDetail]);
-
-  // Inject CollectionPage/ItemList JSON-LD for category pages, so search engines
-  // can understand and index each category as a distinct, listable page.
-  useEffect(() => {
-    const scriptId = 'category-structured-data';
-    const existing = document.getElementById(scriptId);
-    if (existing) existing.remove();
-
-    if (selectedCategory === 'all') return;
-
-    const categoryTeachers = teachers.filter((tch) => tch.category === selectedCategory);
-    const categoryName = t.categories[selectedCategory];
-    const structuredData = {
-      '@context': 'https://schema.org',
-      '@type': 'CollectionPage',
-      name: `${categoryName} — ${t.siteTitle}`,
-      url: `${window.location.origin}/category/${selectedCategory}`,
-      mainEntity: {
-        '@type': 'ItemList',
-        itemListElement: categoryTeachers.slice(0, 30).map((tch, i) => ({
-          '@type': 'ListItem',
-          position: i + 1,
-          url: `${window.location.origin}/teacher/${tch.id}`,
-          name: tch.name,
-        })),
-      },
-    };
-
-    const script = document.createElement('script');
-    script.id = scriptId;
-    script.type = 'application/ld+json';
-    script.textContent = JSON.stringify(structuredData);
-    document.head.appendChild(script);
-
-    return () => {
-      document.getElementById(scriptId)?.remove();
-    };
-  }, [selectedCategory, teachers, t]);
+    const shouldNoindex = teacherNotFound;
+    let tag = document.querySelector('meta[name="robots"]');
+    if (shouldNoindex) {
+      if (!tag) {
+        tag = document.createElement('meta');
+        tag.setAttribute('name', 'robots');
+        document.head.appendChild(tag);
+      }
+      tag.setAttribute('content', 'noindex');
+    } else if (tag) {
+      tag.remove();
+    }
+  }, [teacherNotFound]);
 
   // Save lang to localStorage
   const handleSelectLang = (lang: SupportedLang) => {
@@ -429,22 +366,7 @@ export default function App() {
     const review = teacher?.reviews.find((r) => r.id === reviewId);
     if (!teacher || !review) return;
 
-    const prevVote = review.userVoted;
-    let helpfulCount = review.helpfulCount;
-    let unhelpfulCount = review.unhelpfulCount;
-    let newVote: 'helpful' | 'unhelpful' | undefined;
-
-    if (prevVote === type) {
-      if (type === 'helpful') helpfulCount = Math.max(0, helpfulCount - 1);
-      else unhelpfulCount = Math.max(0, unhelpfulCount - 1);
-      newVote = undefined;
-    } else {
-      if (prevVote === 'helpful') helpfulCount = Math.max(0, helpfulCount - 1);
-      if (prevVote === 'unhelpful') unhelpfulCount = Math.max(0, unhelpfulCount - 1);
-      if (type === 'helpful') helpfulCount += 1;
-      else unhelpfulCount += 1;
-      newVote = type;
-    }
+    const { helpfulCount, unhelpfulCount, newVote } = computeVote(review, type);
 
     setTeachers((prev) =>
       prev.map((tch) => {
@@ -612,7 +534,7 @@ export default function App() {
           onDismiss={() => setRecentReview(null)}
           onClick={() => {
             setRecentReview(null);
-            navigate(`/teacher/${recentReview.teacherId}#review-item-${recentReview.reviewId}`);
+            openTeacher(recentReview.teacherId, `review-item-${recentReview.reviewId}`);
           }}
         />
       )}
@@ -624,7 +546,6 @@ export default function App() {
         isUserSignedIn={isUserSignedIn}
         signedInEmail={signedInEmail}
         onSelectLang={handleSelectLang}
-        onOpenAdminLogin={() => setIsAdminLoginOpen(true)}
         onOpenModeration={() => setIsModerationOpen(true)}
         onSignOutAdmin={() => signOutAdmin()}
         onOpenUserSignIn={() => setIsUserSignInOpen(true)}
@@ -715,7 +636,7 @@ export default function App() {
             currentLang={currentLang}
             onChange={setSearchQuery}
             onSubmit={scrollToTeachers}
-            onSelectTeacher={(teacher) => navigate(`/teacher/${teacher.id}`)}
+            onSelectTeacher={(teacher) => openTeacher(teacher.id)}
           />
 
           {/* One swipeable row on phones (wrapping put these on three lines);
@@ -798,7 +719,7 @@ export default function App() {
                   setReviewPreselectedTeacher(null);
                   setIsAddReviewOpen(true);
                 }}
-                className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm rounded-full transition-all shadow-xs cursor-pointer shrink-0"
+                className="px-5 py-2.5 bg-transparent hover:bg-indigo-600/10 border-2 border-indigo-600 text-indigo-600 font-semibold text-sm rounded-full transition-colors cursor-pointer shrink-0"
               >
                 {t.submitReviewBtn}
               </button>
@@ -811,7 +732,7 @@ export default function App() {
         <TeacherLeaderboardSection
           teachers={teachers}
           currentLang={currentLang}
-          onViewTeacher={(teacher) => navigate(`/teacher/${teacher.id}`)}
+          onViewTeacher={(teacher) => openTeacher(teacher.id)}
         />
 
         {/* Directly under the caution list, on purpose: the two panels are
@@ -819,7 +740,7 @@ export default function App() {
         <TopRatedSection
           teachers={teachers}
           currentLang={currentLang}
-          onViewTeacher={(teacher) => navigate(`/teacher/${teacher.id}`)}
+          onViewTeacher={(teacher) => openTeacher(teacher.id)}
         />
 
         {/* Teachers & Mentors Directory */}
@@ -842,7 +763,7 @@ export default function App() {
             setEditingTeacher(teacher);
             setIsAddTeacherOpen(true);
           }}
-          onViewTeacher={(teacher) => navigate(`/teacher/${teacher.id}`)}
+          onViewTeacher={(teacher) => openTeacher(teacher.id)}
           onOpenAddReview={(teacher) => {
             setReviewPreselectedTeacher(teacher);
             setIsAddReviewOpen(true);
@@ -869,15 +790,8 @@ export default function App() {
           warningCoursesCount={warningCoursesCount}
         />
 
-        {/* Teacher analytics: gender/category breakdown, rating health, etc. */}
-        <StatsSection
-          teachers={teachers}
-          currentLang={currentLang}
-          onOpenAddReview={() => {
-            setReviewPreselectedTeacher(null);
-            setIsAddReviewOpen(true);
-          }}
-        />
+        {/* Lightweight summary — the full dashboard now lives at /analytics */}
+        <AnalyticsTeaser teachers={teachers} currentLang={currentLang} />
 
       </main>
 
@@ -895,10 +809,21 @@ export default function App() {
               <p className="text-xs text-slate-500 mt-1.5 max-w-md">
                 {t.footer.mission}
               </p>
+              <nav className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-3 text-xs font-medium text-slate-500">
+                <Link to="/reviews" className="hover:text-indigo-600 transition-colors">
+                  {t.navAllReviews}
+                </Link>
+                <Link to="/analytics" className="hover:text-indigo-600 transition-colors">
+                  {t.navStats}
+                </Link>
+                <Link to="/about" className="hover:text-indigo-600 transition-colors">
+                  {t.navAbout}
+                </Link>
+              </nav>
             </div>
 
             <div className="text-xs text-slate-400 text-center md:text-right">
-              <div>{t.footer.copyright.replace('{year}', String(new Date().getFullYear()))}</div>
+              <div suppressHydrationWarning>{t.footer.copyright.replace('{year}', String(new Date().getFullYear()))}</div>
               <div className="mt-1">
                 {t.footer.callToAction}
               </div>
@@ -973,7 +898,7 @@ export default function App() {
             currentLang={currentLang}
             onClose={() => setIsMyReviewsOpen(false)}
             onSelectReview={(teacherId, reviewId) => {
-              navigate(`/teacher/${teacherId}#review-item-${reviewId}`);
+              openTeacher(teacherId, `review-item-${reviewId}`);
             }}
           />
         )}

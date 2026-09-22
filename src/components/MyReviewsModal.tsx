@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { SupportedLang, TRANSLATIONS } from '../translations';
 import { fetchMyReviews, MyReviewSummary } from '../lib/api';
+import { hasRealTitle } from '../lib/reviewTitle';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
 import { X, Star, EyeOff, MessageSquareText } from 'lucide-react';
@@ -127,7 +128,9 @@ export const MyReviewsModal: React.FC<MyReviewsModalProps> = ({
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-slate-600 truncate">{r.title}</p>
+                    <p className="text-xs text-slate-600 truncate">
+                      {hasRealTitle(r.title) ? r.title : r.fullReview}
+                    </p>
                     <p className="text-2xs text-slate-400 mt-0.5">{r.date}</p>
                   </div>
 

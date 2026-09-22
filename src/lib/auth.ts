@@ -3,7 +3,7 @@ import { supabase } from './supabaseClient';
 // The only account allowed to edit existing teacher profiles.
 // Enforced for real by the "owner update teachers" RLS policy in Supabase —
 // this constant only controls whether the UI *offers* the edit action.
-export const ADMIN_EMAIL = 'usmanovs.seyitbek@gmail.com';
+export const ADMIN_EMAIL = 'usmanov.seyitbek@gmail.com';
 
 export async function sendAdminLoginCode() {
   const { error } = await supabase.auth.signInWithOtp({
@@ -76,4 +76,22 @@ export async function verifySignInCode(email: string, code: string) {
 
 export async function signOutUser() {
   await supabase.auth.signOut();
+}
+
+/**
+ * Redirects the whole page to Google's consent screen and back — unlike the
+ * OTP flows above there's no code to verify here, Supabase handles the
+ * token exchange itself once the browser lands back on this origin, and the
+ * existing onAuthStateChange listener in App.tsx picks up the new session.
+ *
+ * Requires the Google provider to be turned on in the Supabase dashboard
+ * (Authentication -> Providers -> Google) with a Google Cloud OAuth client
+ * ID/secret configured there — that part can't be done from this codebase.
+ */
+export async function signInWithGoogle() {
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: window.location.origin },
+  });
+  if (error) throw error;
 }

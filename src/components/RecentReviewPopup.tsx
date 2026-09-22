@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { SupportedLang, TRANSLATIONS } from '../translations';
 import { RecentReviewSummary } from '../lib/api';
+import { hasRealTitle } from '../lib/reviewTitle';
 import { X, MessageSquareText } from 'lucide-react';
 
 /** How long the pill stays before retiring itself. */
@@ -76,7 +77,7 @@ export const RecentReviewPopup: React.FC<RecentReviewPopupProps> = ({
           <span className="truncate text-xs font-medium">
             <span className="font-bold text-indigo-300">{t.recentReviewPopup.badge}:</span>{' '}
             <span className="font-semibold">{review.teacherName}</span>
-            {review.title ? ` — ${review.title}` : ''}
+            {hasRealTitle(review.title) ? ` — ${review.title}` : ''}
           </span>
         </button>
 

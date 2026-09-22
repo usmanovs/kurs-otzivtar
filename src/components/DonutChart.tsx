@@ -39,7 +39,7 @@ export const DonutChart: React.FC<DonutChartProps> = ({
   let offset = 0;
 
   return (
-    <div className="flex items-center justify-center gap-5 sm:gap-7 flex-wrap sm:flex-nowrap">
+    <div className="flex flex-col items-center gap-5">
       <svg
         width={SIZE}
         height={SIZE}
@@ -103,10 +103,9 @@ export const DonutChart: React.FC<DonutChartProps> = ({
       </svg>
 
       {/* Every slice is named and numbered here, so identity never rests on
-          colour alone. */}
-      {/* Fixed width rather than flex-1: stretching it left short labels like
-          "Эркек" marooned from their own numbers. */}
-      <ul className="w-full sm:w-auto sm:min-w-[190px] space-y-2.5">
+          colour alone. Centered below the ring, capped so long labels wrap
+          without stretching the legend edge-to-edge. */}
+      <ul className="w-full max-w-[280px] space-y-2.5">
         {slices.map((s) => (
           <li key={s.label} className="flex items-center gap-2.5">
             <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${s.chipClass}`} aria-hidden="true" />

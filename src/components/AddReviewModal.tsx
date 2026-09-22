@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { CourseCategory, Review, StudentStatus, Teacher } from '../types';
 import { SupportedLang, TRANSLATIONS } from '../translations';
 import { useEscapeKey } from '../hooks/useEscapeKey';
@@ -7,12 +7,14 @@ import {
   teacherNameKey,
   submitVerificationProof,
   checkReviewCooldown,
+  logReviewFunnelEvent,
   type ReviewEnrichment,
   type NewTeacherSocials,
 } from '../lib/api';
 import { sendReviewEmailCode, verifyReviewEmailCode } from '../lib/auth';
 import { TikTokIcon } from './TikTokIcon';
 import { NON_CREATABLE_CATEGORIES } from '../lib/subniches';
+import { findLikelyDuplicateTeacher } from '../lib/teacherSearch';
 import {
   PRO_TAGS,
   CON_TAGS,
@@ -24,6 +26,7 @@ import {
   X,
   Star,
   AlertTriangle,
+  Info,
   Send,
   ThumbsUp,
   ThumbsDown,
@@ -36,6 +39,22 @@ import {
   Instagram,
   Youtube,
 } from 'lucide-react';
+
+// Temporary: the email checkpoint is real friction (confirmed via funnel
+// tracking — reviewers repeatedly abandon right at this step), and early on,
+// with so few reviews published, that friction costs more in lost genuine
+// reviews than it stops in fake ones. Once the site has enough real volume
+// that a handful of fabricated 5-star reviews can't meaningfully skew a
+// teacher's rating, the tradeoff flips and this should come back on.
+// Remove this gate (and just use `overallRating >= 3`) once past 300.
+const EMAIL_VERIFICATION_MIN_REVIEWS = 300;
+
+// Teachers with a caught pattern of coordinated fake 5-star reviews (near-
+// identical generic praise, submitted in tight bursts). A 5-star review for
+// one of these still publishes, but only with proof attached — the same
+// honor-system opt-in isn't enough once a teacher has actually been caught
+// gaming it. Add/remove teacher ids here as moderation finds or clears them.
+const POSITIVE_PROOF_REQUIRED_TEACHER_IDS = new Set<string>(['teacher-1788667078173']);
 
 interface AddReviewModalProps {
   teachers: Teacher[];
@@ -103,6 +122,19 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
   const [proofDragging, setProofDragging] = useState(false);
   const [proofError, setProofError] = useState('');
 
+  // Funnel instrumentation — fires once per modal open, and once per step a
+  // visitor actually reaches, so drop-off at the email step can be measured
+  // against how many people got there in the first place.
+  const hasLoggedEmailRequired = useRef(false);
+  const hasSubmittedRef = useRef(false);
+  useEffect(() => {
+    logReviewFunnelEvent('opened');
+    return () => {
+      if (!hasSubmittedRef.current) logReviewFunnelEvent('closed');
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // A 3+ star review needs a confirmed inbox before it saves — someone
   // faking praise for themselves or a friend has to also control an email
   // account for it. Below 3 stars none of this renders or runs; a complaint
@@ -142,6 +174,17 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
     return !teachers.some((teacher) => teacherNameKey(teacher.name) === normalized);
   }, [teacherName, teachers]);
 
+  // Only worth checking once they're actually about to create a new profile
+  // — someone who matched an existing teacher exactly has nothing to be
+  // warned about. Comparing against the exact name (rather than a plain
+  // boolean) means dismissing the suggestion only sticks for that name —
+  // typing anything else re-evaluates fresh instead of staying hidden.
+  const [dismissedDuplicateFor, setDismissedDuplicateFor] = useState<string | null>(null);
+  const likelyDuplicateTeacher = useMemo(() => {
+    if (!willCreateTeacher || dismissedDuplicateFor === teacherName) return undefined;
+    return findLikelyDuplicateTeacher(teacherName, teachers);
+  }, [willCreateTeacher, teacherName, teachers, dismissedDuplicateFor]);
+
   // Only meaningful once the teacher already exists — nobody can have
   // reviewed a profile in the last 24 hours that doesn't exist yet.
   const matchedTeacherId = useMemo(() => {
@@ -150,9 +193,24 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
     return teachers.find((teacher) => teacherNameKey(teacher.name) === normalized)?.id;
   }, [teacherName, teachers]);
 
+  const needsPositiveProof =
+    overallRating === 5 && !!matchedTeacherId && POSITIVE_PROOF_REQUIRED_TEACHER_IDS.has(matchedTeacherId);
+
   // A signed-in account is already a verified inbox — asking for a fresh
   // code on every review would just repeat a check already passed at sign-in.
-  const needsEmailConfirmation = overallRating >= 3 && !isUserSignedIn;
+  const totalReviewCount = useMemo(
+    () => teachers.reduce((acc, tch) => acc + tch.reviews.length, 0),
+    [teachers]
+  );
+  const needsEmailConfirmation =
+    overallRating >= 3 && !isUserSignedIn && totalReviewCount >= EMAIL_VERIFICATION_MIN_REVIEWS;
+
+  useEffect(() => {
+    if (needsEmailConfirmation && !hasLoggedEmailRequired.current) {
+      hasLoggedEmailRequired.current = true;
+      logReviewFunnelEvent('email_required', overallRating);
+    }
+  }, [needsEmailConfirmation, overallRating]);
 
   const getRatingDesc = (val: number) =>
     ['', 'Өтө начар / Шектүү курс', 'Начар / Көңүл калтырган', 'Орточо / Кемчиликтери бар', 'Жакшы / Сапаттуу', 'Мыкты / Толук акталды'][val] || '';
@@ -219,6 +277,10 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
     }
     if (!attested) {
       setErrorMsg(t.addReviewModal.errorAttest);
+      return;
+    }
+    if (needsPositiveProof && !proofFile) {
+      setErrorMsg(t.addReviewModal.errorPositiveProofRequired);
       return;
     }
     if (wantsProof && !proofFile) {
@@ -303,7 +365,10 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
         jobSupportRating: 0,
         valueRating: 0,
         wouldRecommend,
-        title: wouldRecommend ? 'Жакшы тажрыйба болду' : 'Көңүл калтырган тажрыйба',
+        // No title field in this form — authors never write one, and an
+        // auto-generated headline just duplicated across every card. See
+        // hasRealTitle() for how display code treats an empty title.
+        title: '',
         fullReview: fullReview.trim(),
         pros: [],
         cons: [],
@@ -321,9 +386,11 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
       setBusy(false);
       return; // App already surfaced the failure; keep their text on screen
     }
+    hasSubmittedRef.current = true;
+    logReviewFunnelEvent('submitted', overallRating, saved.teacherId);
     // The proof can only be attached once the row exists, so it is uploaded
     // here rather than on submit. A failure must not cost them the review.
-    if (wantsProof && proofFile) {
+    if ((wantsProof || needsPositiveProof) && proofFile) {
       try {
         await submitVerificationProof(saved.reviewId, saved.teacherId, proofFile);
       } catch {
@@ -442,6 +509,40 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
               </datalist>
             </div>
 
+            {/* Catches the exact way a duplicate profile gets created: same
+                person, name typed in a different word order or only
+                partially. Offering the existing profile here is cheaper than
+                merging two profiles by hand after the fact. */}
+            {likelyDuplicateTeacher && (
+              <div className="flex items-start gap-2.5 p-3 rounded-xl border border-sky-200 bg-sky-50/70 animate-fade-in">
+                <Info className="w-4 h-4 text-sky-600 shrink-0 mt-0.5" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs text-sky-900">
+                    {t.addReviewModal.duplicateTeacherSuggestion}{' '}
+                    <span className="font-bold">{likelyDuplicateTeacher.name}</span>
+                  </p>
+                  <div className="flex flex-wrap items-center gap-2 mt-2">
+                    <button
+                      type="button"
+                      id="use-duplicate-teacher-btn"
+                      onClick={() => setTeacherName(likelyDuplicateTeacher.name)}
+                      className="px-3 py-1.5 rounded-full bg-sky-600 hover:bg-sky-700 text-white text-2xs font-semibold transition-colors cursor-pointer"
+                    >
+                      {t.addReviewModal.duplicateTeacherUseBtn}
+                    </button>
+                    <button
+                      type="button"
+                      id="dismiss-duplicate-teacher-btn"
+                      onClick={() => setDismissedDuplicateFor(teacherName)}
+                      className="px-3 py-1.5 rounded-full text-sky-700 hover:bg-sky-100 text-2xs font-semibold transition-colors cursor-pointer"
+                    >
+                      {t.addReviewModal.duplicateTeacherDismissBtn}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* This review is about to create the profile, so it is the only
                 chance to file it under something. */}
             {willCreateTeacher && (
@@ -530,7 +631,10 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
                     key={star}
                     type="button"
                     id={`select-overall-star-${star}`}
-                    onClick={() => setOverallRating(star)}
+                    onClick={() => {
+                      setOverallRating(star);
+                      logReviewFunnelEvent('rating_selected', star);
+                    }}
                     className="p-1 text-slate-300 hover:text-amber-400 focus:outline-none transition-transform hover:scale-110 cursor-pointer"
                   >
                     <Star
@@ -706,27 +810,46 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
 
             {/* Collapsed by default so the fast path stays fast, but visible
                 to anyone who came here specifically to submit a verified
-                review — which is what they were looking for and not finding. */}
+                review — which is what they were looking for and not finding.
+                Opt-in for every rating and teacher, except a specific teacher
+                already caught soliciting fake 5-star reviews (see
+                POSITIVE_PROOF_REQUIRED_TEACHER_IDS) — for that one, a 5-star
+                review needs proof before it can publish. */}
             <div className="-mt-2">
-              <label className="flex items-start gap-2.5 cursor-pointer">
-                <input
-                  type="checkbox"
-                  id="want-proof-checkbox"
-                  checked={wantsProof}
-                  onChange={(e) => {
-                    setWantsProof(e.target.checked);
-                    if (!e.target.checked) setProofFile(null);
-                  }}
-                  className="mt-0.5 rounded text-emerald-600 focus:ring-emerald-500"
-                />
-                <span className="text-xs text-slate-700 font-medium leading-relaxed">
-                  {t.addReviewModal.wantProofLabel}
-                </span>
-              </label>
+              {needsPositiveProof ? (
+                <div className="flex items-start gap-2 text-xs text-amber-800 font-semibold leading-relaxed">
+                  <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                  <span>{t.addReviewModal.errorPositiveProofRequired}</span>
+                </div>
+              ) : (
+                <label className="flex items-start gap-2.5 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    id="want-proof-checkbox"
+                    checked={wantsProof}
+                    onChange={(e) => {
+                      setWantsProof(e.target.checked);
+                      if (!e.target.checked) setProofFile(null);
+                    }}
+                    className="mt-0.5 rounded text-emerald-600 focus:ring-emerald-500"
+                  />
+                  <span className="text-xs text-slate-700 font-medium leading-relaxed">
+                    {t.addReviewModal.wantProofLabel}
+                  </span>
+                </label>
+              )}
 
-              {wantsProof && (
-                <div className="mt-2.5 ml-6 rounded-xl border border-emerald-200 bg-emerald-50/70 p-3.5 animate-fade-in">
-                  <p className="text-2xs text-emerald-900/80 mb-2 leading-relaxed">
+              {(wantsProof || needsPositiveProof) && (
+                <div
+                  className={`mt-2.5 ml-6 rounded-xl border p-3.5 animate-fade-in ${
+                    needsPositiveProof ? 'border-amber-200 bg-amber-50/70' : 'border-emerald-200 bg-emerald-50/70'
+                  }`}
+                >
+                  <p
+                    className={`text-2xs mb-2 leading-relaxed ${
+                      needsPositiveProof ? 'text-amber-900/80' : 'text-emerald-900/80'
+                    }`}
+                  >
                     {t.addReviewModal.wantProofHint}
                   </p>
                   {/* A drop target as well as a picker: a receipt is usually
@@ -747,12 +870,18 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
                     }}
                     className={`flex flex-col items-center justify-center gap-1.5 rounded-lg border-2 border-dashed px-3 py-4 text-center transition-colors cursor-pointer ${
                       proofDragging
-                        ? 'border-emerald-500 bg-emerald-100/70'
-                        : 'border-emerald-300 bg-white/60 hover:border-emerald-400'
+                        ? needsPositiveProof
+                          ? 'border-amber-500 bg-amber-100/70'
+                          : 'border-emerald-500 bg-emerald-100/70'
+                        : needsPositiveProof
+                          ? 'border-amber-300 bg-white/60 hover:border-amber-400'
+                          : 'border-emerald-300 bg-white/60 hover:border-emerald-400'
                     }`}
                   >
-                    <UploadCloud className="w-5 h-5 text-emerald-600" />
-                    <span className="text-2xs font-semibold text-emerald-900">
+                    <UploadCloud className={`w-5 h-5 ${needsPositiveProof ? 'text-amber-600' : 'text-emerald-600'}`} />
+                    <span
+                      className={`text-2xs font-semibold ${needsPositiveProof ? 'text-amber-900' : 'text-emerald-900'}`}
+                    >
                       {t.addReviewModal.dropzoneCta}
                     </span>
                     <input
@@ -764,11 +893,17 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
                     />
                   </label>
                   {proofFile && (
-                    <p className="text-2xs text-emerald-900 mt-1.5 font-medium">
+                    <p
+                      className={`text-2xs mt-1.5 font-medium ${needsPositiveProof ? 'text-amber-900' : 'text-emerald-900'}`}
+                    >
                       {proofFile.name} — {(proofFile.size / 1024).toFixed(0)} KB
                     </p>
                   )}
-                  <p className="text-2xs text-emerald-900/70 mt-1.5 leading-relaxed">
+                  <p
+                    className={`text-2xs mt-1.5 leading-relaxed ${
+                      needsPositiveProof ? 'text-amber-900/70' : 'text-emerald-900/70'
+                    }`}
+                  >
                     {t.verifyModal.privacyNote}
                   </p>
                 </div>

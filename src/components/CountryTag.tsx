@@ -14,7 +14,11 @@ import React, { useState } from 'react';
  * Flags: lipis/flag-icons (MIT), stored at public/flags/<code>.svg.
  */
 const AVAILABLE = new Set([
-  'kg', 'us', 'de', 'gb', 'ru', 'kz', 'uz', 'tr', 'tj', 'cn', 'kr', 'ae',
+  'ae', 'af', 'am', 'at', 'au', 'az', 'be', 'bg', 'by', 'ca', 'ch', 'cn',
+  'cz', 'de', 'dk', 'ee', 'es', 'fi', 'fr', 'gb', 'ge', 'hu', 'ie', 'in',
+  'it', 'jp', 'kg', 'kr', 'kw', 'kz', 'lt', 'lv', 'md', 'mn', 'nl', 'no',
+  'nz', 'pk', 'pl', 'qa', 'ro', 'ru', 'sa', 'se', 'tj', 'tm', 'tr', 'ua',
+  'us', 'uz',
 ]);
 
 interface CountryTagProps {

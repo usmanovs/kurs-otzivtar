@@ -3,32 +3,32 @@
     {
       "source": "/(.*)",
       "has": [{ "type": "host", "value": "kurs-otzivtar.vercel.app" }],
-      "destination": "https://kursotzyv.org/$1",
+      "destination": "https://www.kursotzyv.org/$1",
       "permanent": true
     },
     {
       "source": "/(.*)",
       "has": [{ "type": "host", "value": "kurs-otzivtar-seyitbeks-projects.vercel.app" }],
-      "destination": "https://kursotzyv.org/$1",
+      "destination": "https://www.kursotzyv.org/$1",
       "permanent": true
     },
     {
       "source": "/(.*)",
       "has": [{ "type": "host", "value": "kurs-otzivtar.com" }],
-      "destination": "https://kursotzyv.org/$1",
+      "destination": "https://www.kursotzyv.org/$1",
       "permanent": true
     },
     {
       "source": "/(.*)",
       "has": [{ "type": "host", "value": "www.kurs-otzivtar.com" }],
-      "destination": "https://kursotzyv.org/$1",
+      "destination": "https://www.kursotzyv.org/$1",
       "permanent": true
     }
   ],
   "rewrites": [
     {
       "source": "/((?!api|assets|teachers|flags|favicon|apple-touch-icon|og-image|icon-|manifest\\.webmanifest|sw\\.js|screenshots|\\.well-known|robots\\.txt|sitemap\\.xml).*)",
-      "destination": "/index.html"
+      "destination": "/_shell.html"
     }
   ]
 }

@@ -104,6 +104,40 @@ export function rankTeachers(
     .map((x) => x.tch);
 }
 
+/**
+ * Catches the one kind of duplicate that keeps slipping through: the same
+ * person entered with their name words in a different order ("Махабат
+ * Исмаилова" vs "Исмаилова Махабат"), or with only part of the name typed.
+ * Exact-string matching (teacherNameKey) never catches this — it's a whole
+ * different string — which is exactly how that duplicate got created and had
+ * to be merged by hand.
+ *
+ * Deliberately narrow: an equal set of name-words in any order, or one name's
+ * words fully contained in the other's (only once both sides have at least
+ * two words, so a single common first name like "Айбек" doesn't false-match
+ * every unrelated Айбек in the directory). Nothing fuzzier than that — a
+ * confident wrong suggestion during review submission is worse than missing
+ * a subtler duplicate.
+ */
+export function findLikelyDuplicateTeacher(rawName: string, teachers: Teacher[]): Teacher | undefined {
+  const wordsOf = (name: string) => new Set(foldSearchText(name).trim().split(/\s+/).filter(Boolean));
+  const inputWords = wordsOf(rawName);
+  if (inputWords.size === 0) return undefined;
+
+  const isSubset = (a: Set<string>, b: Set<string>) => a.size > 0 && [...a].every((w) => b.has(w));
+
+  return teachers.find((teacher) => {
+    const teacherWords = wordsOf(teacher.name);
+    if (teacherWords.size === 0) return false;
+    const sameWords = teacherWords.size === inputWords.size && isSubset(inputWords, teacherWords);
+    const partialMatch =
+      inputWords.size >= 2 &&
+      teacherWords.size >= 2 &&
+      (isSubset(inputWords, teacherWords) || isSubset(teacherWords, inputWords));
+    return sameWords || partialMatch;
+  });
+}
+
 export interface HighlightPart {
   text: string;
   match: boolean;
