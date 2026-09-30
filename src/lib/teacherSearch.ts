@@ -107,17 +107,21 @@ export function rankTeachers(
 /**
  * Catches the one kind of duplicate that keeps slipping through: the same
  * person entered with their name words in a different order ("Махабат
- * Исмаилова" vs "Исмаилова Махабат"), or with only part of the name typed.
- * Exact-string matching (teacherNameKey) never catches this — it's a whole
- * different string — which is exactly how that duplicate got created and had
- * to be merged by hand.
+ * Исмаилова" vs "Исмаилова Махабат"), with only part of the name typed, or
+ * with one word spelled a letter differently ("Азиретали Барпиев" vs
+ * "Азиреталы Барпиев" — a real duplicate that slipped through and had to be
+ * merged by hand, same as the reordering case above it).
  *
- * Deliberately narrow: an equal set of name-words in any order, or one name's
- * words fully contained in the other's (only once both sides have at least
- * two words, so a single common first name like "Айбек" doesn't false-match
- * every unrelated Айбек in the directory). Nothing fuzzier than that — a
- * confident wrong suggestion during review submission is worse than missing
- * a subtler duplicate.
+ * Deliberately narrow on both fronts:
+ * - The exact/reordering/subset check only fires once both sides have at
+ *   least two words, so a single common first name like "Айбек" doesn't
+ *   false-match every unrelated Айбек in the directory.
+ * - The one-letter-typo check only forgives a single insertion, deletion or
+ *   substitution, and only on words of 6+ letters — short names are exactly
+ *   where one letter is likeliest to turn one real name into a different
+ *   real one ("Айбек"/"Айгек"), so those are left alone.
+ * Nothing fuzzier than that — a confident wrong suggestion during review
+ * submission is worse than missing a subtler duplicate.
  */
 export function findLikelyDuplicateTeacher(rawName: string, teachers: Teacher[]): Teacher | undefined {
   const wordsOf = (name: string) => new Set(foldSearchText(name).trim().split(/\s+/).filter(Boolean));
@@ -125,6 +129,39 @@ export function findLikelyDuplicateTeacher(rawName: string, teachers: Teacher[])
   if (inputWords.size === 0) return undefined;
 
   const isSubset = (a: Set<string>, b: Set<string>) => a.size > 0 && [...a].every((w) => b.has(w));
+
+  // Classic edit distance, but we only ever need to know whether it's <= 1,
+  // so a mismatched length alone is enough to bail out early.
+  const isOneEditApart = (a: string, b: string): boolean => {
+    if (a === b) return true;
+    if (Math.min(a.length, b.length) < 6 || Math.abs(a.length - b.length) > 1) return false;
+    const [shorter, longer] = a.length <= b.length ? [a, b] : [b, a];
+    if (shorter.length === longer.length) {
+      let diffs = 0;
+      for (let i = 0; i < shorter.length; i++) {
+        if (shorter[i] !== longer[i] && ++diffs > 1) return false;
+      }
+      return true;
+    }
+    // longer has exactly one extra letter — find where it was inserted.
+    let i = 0;
+    while (i < shorter.length && shorter[i] === longer[i]) i++;
+    return shorter.slice(i) === longer.slice(i + 1);
+  };
+
+  // Same word count, and every input word is a one-edit (or exact) match to
+  // some not-yet-used teacher word — order-independent, greedy pairing is
+  // fine at name-length word counts.
+  const isTypoOfSameName = (input: Set<string>, teacher: Set<string>): boolean => {
+    if (input.size === 0 || input.size !== teacher.size) return false;
+    const remaining = [...teacher];
+    for (const w of input) {
+      const i = remaining.findIndex((tw) => isOneEditApart(w, tw));
+      if (i === -1) return false;
+      remaining.splice(i, 1);
+    }
+    return true;
+  };
 
   return teachers.find((teacher) => {
     const teacherWords = wordsOf(teacher.name);
@@ -134,7 +171,7 @@ export function findLikelyDuplicateTeacher(rawName: string, teachers: Teacher[])
       inputWords.size >= 2 &&
       teacherWords.size >= 2 &&
       (isSubset(inputWords, teacherWords) || isSubset(teacherWords, inputWords));
-    return sameWords || partialMatch;
+    return sameWords || partialMatch || isTypoOfSameName(inputWords, teacherWords);
   });
 }
 
