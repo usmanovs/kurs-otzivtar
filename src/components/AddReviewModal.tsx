@@ -54,7 +54,16 @@ const EMAIL_VERIFICATION_MIN_REVIEWS = 300;
 // one of these still publishes, but only with proof attached — the same
 // honor-system opt-in isn't enough once a teacher has actually been caught
 // gaming it. Add/remove teacher ids here as moderation finds or clears them.
-const POSITIVE_PROOF_REQUIRED_TEACHER_IDS = new Set<string>(['teacher-1788667078173']);
+//
+// teacher-samara-keneshova: added 2026-11-07 after 64 five-star reviews landed
+// in ~24h (Oct 5-6) on a profile that had 7 mostly 1-star reviews before. The
+// IP log showed 64 distinct addresses, so it is NOT confirmed as one source —
+// it may be a solicited campaign of real people. Proof-on-5-star is the
+// non-destructive response; remove her once things look organic again.
+const POSITIVE_PROOF_REQUIRED_TEACHER_IDS = new Set<string>([
+  'teacher-1788667078173',
+  'teacher-samara-keneshova',
+]);
 
 interface AddReviewModalProps {
   teachers: Teacher[];
