@@ -114,12 +114,12 @@ export function homeJsonLd(description: string, lang: SupportedLang) {
   };
 }
 
-/** FAQPage markup for the /faq page. The answers are the page's own visible text. */
-export function faqJsonLd(items: readonly { q: string; a: string }[], lang: SupportedLang) {
+/** FAQPage markup. The answers are the page's own visible text; `path` is the page it sits on (default /faq). */
+export function faqJsonLd(items: readonly { q: string; a: string }[], lang: SupportedLang, path = '/faq') {
   return {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
-    url: `${SITE_URL}${localePath('/faq', lang)}`,
+    url: `${SITE_URL}${localePath(path, lang)}`,
     inLanguage: lang,
     mainEntity: items.map((item) => ({
       '@type': 'Question',

@@ -6,7 +6,7 @@ import { ALL_CATEGORY_SLUGS } from '../lib/categories';
 import { SupportedLang, TRANSLATIONS } from '../translations';
 import { usePrerenderData } from '../lib/prerenderData';
 import { fetchTeachers } from '../lib/api';
-import { breadcrumbJsonLd, categoryJsonLd } from '../lib/structuredData';
+import { breadcrumbJsonLd, categoryJsonLd, faqJsonLd } from '../lib/structuredData';
 import { setPageMeta } from '../lib/pageMeta';
 import { JsonLd } from './JsonLd';
 import { AppPromo } from './AppPromo';
@@ -89,6 +89,9 @@ export const CategoryPage: React.FC = () => {
   const sorted = [...list].sort((a, b) => b.reviewCount - a.reviewCount || b.averageRating - a.averageRating);
   const intro = buildCategoryIntro(slug, list, currentLang);
   const updated = latestReviewDate(list);
+  // Hand-written buying guide for this category (what to check, red flags, Q&A).
+  type Guide = { checks: string[]; redFlags: string[]; faq: { q: string; a: string }[] };
+  const guide = (t.categoryPage.guides as Record<string, Guide>)[slug];
   const crumbs = [
     { name: t.categoryPage.breadcrumbHome, path: '/' },
     { name: label, path: `/category/${slug}` },
@@ -98,6 +101,7 @@ export const CategoryPage: React.FC = () => {
     <div className="min-h-screen bg-slate-50">
       <JsonLd data={categoryJsonLd(slug, heading, sorted, currentLang)} />
       <JsonLd data={breadcrumbJsonLd(crumbs, currentLang)} />
+      {guide && <JsonLd data={faqJsonLd(guide.faq, currentLang, `/category/${slug}`)} />}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
         <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-1 text-sm text-slate-500 mb-4">
           <Link to="/" className="hover:text-slate-900 hover:underline">{crumbs[0].name}</Link>
@@ -134,6 +138,41 @@ export const CategoryPage: React.FC = () => {
               </li>
             ))}
           </ul>
+        )}
+
+        {guide && (
+          <section className="mb-10" aria-labelledby="category-guide-title">
+            <h2 id="category-guide-title" className="text-lg font-bold text-slate-900 mb-4">
+              {t.categoryPage.guideTitle.replace('{category}', label)}
+            </h2>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="rounded-2xl border border-emerald-100 bg-emerald-50/50 p-4">
+                <h3 className="text-sm font-bold text-emerald-900 mb-2">{t.categoryPage.guideChecksTitle}</h3>
+                <ul className="list-disc pl-5 space-y-1.5 text-sm text-slate-700 leading-relaxed">
+                  {guide.checks.map((c) => (
+                    <li key={c}>{c}</li>
+                  ))}
+                </ul>
+              </div>
+              <div className="rounded-2xl border border-amber-100 bg-amber-50/60 p-4">
+                <h3 className="text-sm font-bold text-amber-900 mb-2">{t.categoryPage.guideRedFlagsTitle}</h3>
+                <ul className="list-disc pl-5 space-y-1.5 text-sm text-slate-700 leading-relaxed">
+                  {guide.redFlags.map((c) => (
+                    <li key={c}>{c}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+            <h3 className="text-base font-bold text-slate-900 mt-6 mb-3">{t.categoryPage.guideFaqTitle}</h3>
+            <div className="space-y-3">
+              {guide.faq.map((item) => (
+                <div key={item.q} className="rounded-2xl border border-slate-200 bg-white p-4">
+                  <h4 className="text-sm font-bold text-slate-900">{item.q}</h4>
+                  <p className="mt-1.5 text-sm text-slate-600 leading-relaxed">{item.a}</p>
+                </div>
+              ))}
+            </div>
+          </section>
         )}
 
         <h2 className="text-lg font-bold text-slate-900 mb-3">{t.categoryPage.otherCategories}</h2>
