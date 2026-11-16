@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from '../lib/i18n';
 import { SupportedLang, TRANSLATIONS } from '../translations';
 import { PenLine, Globe, Menu, X, ShieldCheck, LogOut, User, MessageSquareText, Sparkles, BarChart3, Heart } from 'lucide-react';
 import { DONATE_URL } from '../lib/donate';

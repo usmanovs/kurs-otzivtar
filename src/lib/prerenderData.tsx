@@ -1,4 +1,5 @@
 import { createContext, useContext } from 'react';
+import { stripLang } from './i18n';
 import type { Course, FeaturedVideo, Teacher } from '../types';
 import type { FeedReviewSummary, ReviewsFeedCounts, SiteStats } from './api';
 
@@ -30,7 +31,8 @@ export const PrerenderContext = createContext<PrerenderData | null>(null);
  */
 export function usePrerenderData(route?: string): PrerenderData | null {
   const data = useContext(PrerenderContext);
-  return route === undefined || data?.route === route ? data : null;
+  // The payload's route carries the /ru prefix for Russian pages; the pages ask for the bare route.
+  return route === undefined || (data && stripLang(data.route) === route) ? data : null;
 }
 
 /** Reads the payload the prerender step embedded in the HTML, if any. */

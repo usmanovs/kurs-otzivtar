@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { readStoredLang } from '../lib/lang';
-import { Link } from 'react-router-dom';
+import { Link, useLang, localePath } from '../lib/i18n';
 import { SupportedLang, TRANSLATIONS } from '../translations';
 import { submitContactMessage } from '../lib/api';
 import { setPageMeta } from '../lib/pageMeta';
@@ -26,7 +25,7 @@ import {
  * recourse exists (and what doesn't yet), and who runs the platform.
  */
 export const AboutFeaturesPage: React.FC = () => {
-  const [currentLang] = useState<SupportedLang>(readStoredLang);
+  const currentLang = useLang();
   const t = TRANSLATIONS[currentLang];
   const a = t.aboutPage;
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
@@ -63,7 +62,7 @@ export const AboutFeaturesPage: React.FC = () => {
   };
 
   useEffect(() => {
-    setPageMeta({ title: `${a.title} — Kursotzyv.org`, description: a.subtitle, path: '/about' });
+    setPageMeta({ title: `${a.title} — Kursotzyv.org`, description: a.subtitle, path: localePath('/about', currentLang) });
   }, [a]);
 
   return (

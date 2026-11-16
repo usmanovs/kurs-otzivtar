@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
+import { Link, localePath, useLang } from '../lib/i18n';
 import { CourseCategory, Teacher } from '../types';
 import { ALL_CATEGORY_SLUGS } from '../lib/categories';
 import { SupportedLang, TRANSLATIONS } from '../translations';
-import { readStoredLang } from '../lib/lang';
 import { usePrerenderData } from '../lib/prerenderData';
 import { fetchTeachers } from '../lib/api';
 import { breadcrumbJsonLd, categoryJsonLd } from '../lib/structuredData';
 import { setPageMeta } from '../lib/pageMeta';
 import { JsonLd } from './JsonLd';
+import { AppPromo } from './AppPromo';
+import { latestReviewDate } from '../lib/keyFacts';
 import { NotFoundPage } from './NotFoundPage';
 import { ChevronRight, Star } from 'lucide-react';
 
@@ -49,7 +51,7 @@ export const CategoryPage: React.FC = () => {
   const { categorySlug = '' } = useParams<{ categorySlug: string }>();
   const valid = ALL_CATEGORY_SLUGS.includes(categorySlug);
   const slug = categorySlug as CourseCategory;
-  const [currentLang] = useState(readStoredLang);
+  const currentLang = useLang();
   const t = TRANSLATIONS[currentLang];
   const initial = usePrerenderData()?.teachers.filter((tch) => tch.category === slug) ?? null;
   const [teachers, setTeachers] = useState<Teacher[] | null>(initial && initial.length > 0 ? initial : null);
@@ -77,7 +79,7 @@ export const CategoryPage: React.FC = () => {
     setPageMeta({
       title: `${heading} — Kursotzyv.org`,
       description: t.categoryPage.metaDescription.replace('{category}', label),
-      path: `/category/${slug}`,
+      path: localePath(`/category/${slug}`, currentLang),
     });
   }, [valid, heading, label, slug, t]);
 
@@ -86,6 +88,7 @@ export const CategoryPage: React.FC = () => {
   const list = teachers ?? [];
   const sorted = [...list].sort((a, b) => b.reviewCount - a.reviewCount || b.averageRating - a.averageRating);
   const intro = buildCategoryIntro(slug, list, currentLang);
+  const updated = latestReviewDate(list);
   const crumbs = [
     { name: t.categoryPage.breadcrumbHome, path: '/' },
     { name: label, path: `/category/${slug}` },
@@ -93,8 +96,8 @@ export const CategoryPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <JsonLd data={categoryJsonLd(slug, heading, sorted)} />
-      <JsonLd data={breadcrumbJsonLd(crumbs)} />
+      <JsonLd data={categoryJsonLd(slug, heading, sorted, currentLang)} />
+      <JsonLd data={breadcrumbJsonLd(crumbs, currentLang)} />
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
         <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-1 text-sm text-slate-500 mb-4">
           <Link to="/" className="hover:text-slate-900 hover:underline">{crumbs[0].name}</Link>
@@ -104,7 +107,12 @@ export const CategoryPage: React.FC = () => {
 
         <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-3">{heading}</h1>
         <p className="text-slate-600 leading-relaxed mb-2">{intro.framing}</p>
-        {intro.stats && <p className="text-slate-600 leading-relaxed mb-6">{intro.stats}</p>}
+        {intro.stats && <p className="text-slate-600 leading-relaxed mb-2">{intro.stats}</p>}
+        {updated && (
+          <p className="text-xs text-slate-400 mb-6">
+            {t.updatedLabel}: <time dateTime={updated}>{updated}</time>
+          </p>
+        )}
 
         <h2 className="text-lg font-bold text-slate-900 mb-3">{t.categoryPage.teachersHeading}</h2>
         {teachers !== null && sorted.length === 0 ? (
@@ -144,6 +152,7 @@ export const CategoryPage: React.FC = () => {
         <Link to="/" className="text-sm font-semibold text-indigo-600 hover:underline">
           {t.categoryPage.backHome}
         </Link>
+        <AppPromo variant="compact" />
       </div>
     </div>
   );

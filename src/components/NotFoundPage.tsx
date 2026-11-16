@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { readStoredLang } from '../lib/lang';
-import { Link } from 'react-router-dom';
+import { Link, useLang } from '../lib/i18n';
 import { SupportedLang, TRANSLATIONS } from '../translations';
 import { AlertTriangle } from 'lucide-react';
 
@@ -12,7 +11,7 @@ import { AlertTriangle } from 'lucide-react';
  * gives search engines no signal not to index it.
  */
 export const NotFoundPage: React.FC = () => {
-  const [currentLang] = useState<SupportedLang>(readStoredLang);
+  const currentLang = useLang();
   const t = TRANSLATIONS[currentLang];
 
   useEffect(() => {

@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react';
-import { readStoredLang } from '../lib/lang';
-import { Link } from 'react-router-dom';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Link, useLang, localePath } from '../lib/i18n';
 import { SupportedLang, TRANSLATIONS } from '../translations';
 import { Teacher } from '../types';
 import { fetchTeachers } from '../lib/api';
 import { StatsSection } from './StatsSection';
+import { computeKeyFacts } from '../lib/keyFacts';
+import { pluralForm } from '../lib/plural';
 import { usePrerenderData } from '../lib/prerenderData';
 import { setPageMeta } from '../lib/pageMeta';
 import { ArrowLeft, ChevronRight, Loader2 } from 'lucide-react';
@@ -16,7 +17,7 @@ import { ArrowLeft, ChevronRight, Loader2 } from 'lucide-react';
  * outside the main App component, same as /about and /reviews.
  */
 export const AnalyticsPage: React.FC = () => {
-  const [currentLang] = useState<SupportedLang>(readStoredLang);
+  const currentLang = useLang();
   const t = TRANSLATIONS[currentLang];
   const p = t.analyticsPage;
 
@@ -26,9 +27,10 @@ export const AnalyticsPage: React.FC = () => {
   const [teachers, setTeachers] = useState<Teacher[]>(seed ?? []);
   const [isLoading, setIsLoading] = useState(!seed);
   const [loadError, setLoadError] = useState(false);
+  const keyFacts = useMemo(() => computeKeyFacts(teachers), [teachers]);
 
   useEffect(() => {
-    setPageMeta({ title: `${p.title} — Kursotzyv.org`, description: p.intro, path: '/analytics' });
+    setPageMeta({ title: `${p.title} — Kursotzyv.org`, description: p.intro, path: localePath('/analytics', currentLang) });
   }, [p]);
 
   useEffect(() => {
@@ -65,6 +67,20 @@ export const AnalyticsPage: React.FC = () => {
             {p.title}
           </h1>
           <p className="text-sm sm:text-base text-slate-500 mt-3">{p.intro}</p>
+          {keyFacts && (
+            <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 text-left">
+              <h2 className="text-sm font-bold text-slate-900">{t.keyFacts.title}</h2>
+              <p className="mt-1.5 text-sm text-slate-600 leading-relaxed">
+                {t.keyFacts.line
+                  .replace('{date}', keyFacts.date)
+                  .replace('{teachers}', `${keyFacts.teachers} ${pluralForm(keyFacts.teachers, t.plurals.teacher, currentLang)}`)
+                  .replace('{reviews}', `${keyFacts.reviews} ${pluralForm(keyFacts.reviews, t.plurals.review, currentLang)}`)
+                  .replace('{critical}', String(keyFacts.criticalPercent))
+                  .replace('{recommend}', String(keyFacts.recommendPercent))}
+              </p>
+              <p className="mt-1 text-xs text-slate-400">{t.keyFacts.note}</p>
+            </div>
+          )}
         </div>
 
         {isLoading && (
@@ -83,7 +99,7 @@ export const AnalyticsPage: React.FC = () => {
             currentLang={currentLang}
             hideOwnHeader
             onOpenAddReview={() => {
-              window.location.href = '/#write-review';
+              window.location.href = localePath('/#write-review', currentLang);
             }}
           />
         )}

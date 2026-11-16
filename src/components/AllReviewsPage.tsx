@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { readStoredLang } from '../lib/lang';
-import { Link } from 'react-router-dom';
+import { Link, useLang, localePath } from '../lib/i18n';
 import { SupportedLang, TRANSLATIONS } from '../translations';
 import {
   fetchAllReviews,
@@ -131,7 +130,7 @@ function SkeletonCard() {
  * same criteria across pages instead of only ever touching what's loaded.
  */
 export const AllReviewsPage: React.FC = () => {
-  const [currentLang] = useState<SupportedLang>(readStoredLang);
+  const currentLang = useLang();
   const t = TRANSLATIONS[currentLang];
   const p = t.allReviewsPage;
 
@@ -162,7 +161,7 @@ export const AllReviewsPage: React.FC = () => {
   const [counts, setCounts] = useState<ReviewsFeedCounts | null>(seededFeed?.counts ?? null);
 
   useEffect(() => {
-    setPageMeta({ title: `${p.title} — Kursotzyv.org`, description: p.subtitle, path: '/reviews' });
+    setPageMeta({ title: `${p.title} — Kursotzyv.org`, description: p.subtitle, path: localePath('/reviews', currentLang) });
   }, [p]);
 
   // Debounce free-text search so every keystroke doesn't re-query.

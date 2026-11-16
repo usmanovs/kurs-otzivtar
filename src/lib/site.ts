@@ -18,3 +18,6 @@ export const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com
  * keep showing the old one. Bump it whenever public/og-image.png changes.
  */
 export const OG_IMAGE_URL = `${SITE_URL}/og-image.png?v=2`;
+
+/** <lastmod> for /faq in sitemap.xml — static copy, so bump it when the answers change. */
+export const FAQ_LASTMOD = '2026-11-16';

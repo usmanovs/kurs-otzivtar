@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, lazy, Suspense } from 'react';
-import { LANG_STORAGE_KEY, readStoredLang } from './lib/lang';
-import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
+import { useParams, useLocation } from 'react-router-dom';
+import { useNavigate, Link, useLang, useSwitchLang, localePath } from './lib/i18n';
 import type { Session } from '@supabase/supabase-js';
 import { Course, CourseCategory, Review, Teacher, FeaturedVideo } from './types';
 import { calculateTeacherMetrics } from './data/teachers';
@@ -42,7 +42,8 @@ import { RecentReviewPopup } from './components/RecentReviewPopup';
 import { ScrollFadeRow } from './components/ScrollFadeRow';
 import { HeroSearch } from './components/HeroSearch';
 import { usePrerenderData } from './lib/prerenderData';
-import { PLAY_STORE_URL } from './lib/site';
+import { PLAY_STORE_URL, SITE_URL } from './lib/site';
+import { AppPromo } from './components/AppPromo';
 import { VoteMap, loadVotedReviews, saveVotedReviews, computeVote } from './lib/reviewVotes';
 
 // Lazy-loaded: only needed once a user opens one of these modals, so keeping
@@ -80,7 +81,8 @@ export default function App() {
     : undefined;
 
   // Language state
-  const [currentLang, setCurrentLang] = useState<SupportedLang>(readStoredLang);
+  const currentLang = useLang();
+  const switchLang = useSwitchLang();
 
   // Courses & Teachers — loaded from Supabase (shared, persistent data)
   // When the page was prerendered, its data is the initial state — the static
@@ -233,22 +235,20 @@ export default function App() {
   useEffect(() => {
     const descriptionTag = document.querySelector('meta[name="description"]');
     const canonicalTag = document.querySelector('link[rel="canonical"]');
-    const origin = window.location.origin;
-
-    let description = `${t.siteSubtitle}.`;
-    let canonicalUrl = `${origin}/`;
+    let description = t.homeMetaDescription;
+    let canonicalUrl = `${SITE_URL}${localePath('/', currentLang)}`;
 
     if (teacherNotFound) {
       description = t.teacherNotFound.message;
-      canonicalUrl = `${origin}${location.pathname}`;
+      canonicalUrl = `${SITE_URL}${location.pathname}`;
     } else if (selectedTeacherForDetail) {
       description = selectedTeacherForDetail.bio || description;
-      canonicalUrl = `${origin}/teacher/${selectedTeacherForDetail.id}`;
+      canonicalUrl = `${SITE_URL}${localePath(`/teacher/${selectedTeacherForDetail.id}`, currentLang)}`;
     }
 
     descriptionTag?.setAttribute('content', description);
     canonicalTag?.setAttribute('href', canonicalUrl);
-  }, [teacherNotFound, selectedTeacherForDetail, location.pathname, t]);
+  }, [teacherNotFound, selectedTeacherForDetail, location.pathname, currentLang, t]);
 
   // A dead teacher/category link still renders a page (the "not found"
   // panel below), but it must never be indexed as if it were real content —
@@ -270,11 +270,8 @@ export default function App() {
     }
   }, [teacherNotFound]);
 
-  // Save lang to localStorage
-  const handleSelectLang = (lang: SupportedLang) => {
-    setCurrentLang(lang);
-    localStorage.setItem(LANG_STORAGE_KEY, lang);
-  };
+  // Language lives in the URL (/ru/… is Russian); switching navigates to the other one.
+  const handleSelectLang = (lang: SupportedLang) => switchLang(lang);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -794,6 +791,9 @@ export default function App() {
         {/* Lightweight summary — the full dashboard now lives at /analytics */}
         <AnalyticsTeaser teachers={teachers} currentLang={currentLang} />
 
+        {/* Android app download */}
+        <AppPromo />
+
       </main>
 
       {/* Footer */}
@@ -819,6 +819,9 @@ export default function App() {
                 </Link>
                 <Link to="/about" className="hover:text-indigo-600 transition-colors">
                   {t.navAbout}
+                </Link>
+                <Link to="/faq" className="hover:text-indigo-600 transition-colors">
+                  {t.navFaq}
                 </Link>
                 <a
                   href={PLAY_STORE_URL}

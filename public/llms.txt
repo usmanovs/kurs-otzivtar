@@ -1,15 +1,17 @@
 # Kursotzyv.org
 
-> Kursotzyv.org is an independent review platform for online courses and course instructors in Kyrgyzstan. Students publish ratings and written reviews of instructors so that people can check an instructor's track record before paying for a course. The interface is in Kyrgyz (default) and Russian; the Android app «Кыргыз Курстар» is on Google Play.
+> Kursotzyv.org is an independent review platform for online courses and course instructors in Kyrgyzstan. Students publish ratings and written reviews of instructors so that people can check an instructor's track record before paying for a course. The site is published in Kyrgyz (default, at /) and Russian (at /ru/); the Android app «Кыргыз Курстар» is on Google Play.
 
 ## What is on the site
 - [Homepage](https://www.kursotzyv.org/): top- and lowest-rated instructors, searchable directory, category filters.
 - [All reviews](https://www.kursotzyv.org/reviews): newest reviews across every instructor, filterable by rating.
 - [Analytics](https://www.kursotzyv.org/analytics): aggregate statistics across all instructors.
 - [About](https://www.kursotzyv.org/about): how the platform works.
+- [FAQ](https://www.kursotzyv.org/faq): short answers on how ratings are calculated, what the proof badge means, imported reviews, moderation and what to check before paying for a course.
 - Category pages: `https://www.kursotzyv.org/category/<slug>` (for example `it_programming`, `marketing_smm`, `youtube`, `business_trading`, `psychology`, `beauty_cosmetology`, `kids_development`, `public_speaking`, `sewing_fashion`).
 - Instructor pages: `https://www.kursotzyv.org/teacher/<id>` — one page per instructor with rating summary, rating distribution and every published review.
 - [Full instructor list with ratings](https://www.kursotzyv.org/llms-full.txt): machine-readable index of every rated instructor.
+- Russian versions: every page above also exists in Russian under `https://www.kursotzyv.org/ru/` (for example `/ru/faq`, `/ru/teacher/<id>`). Each page links its other-language twin with hreflang.
 - [Android app](https://play.google.com/store/apps/details?id=com.kursotzyv.app): «Кыргыз Курстар» on Google Play.
 
 ## How the data works

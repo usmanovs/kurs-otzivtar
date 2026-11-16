@@ -4,6 +4,7 @@ import { SupportedLang, TRANSLATIONS } from '../translations';
 import { ratingTone, RATING_STAR_CLASS } from '../lib/ratingTone';
 import { fetchReviewIpLog, fetchApprovedResponses, TeacherResponse } from '../lib/api';
 import { SITE_URL } from '../lib/site';
+import { localePath } from '../lib/i18n';
 import { VerifyReviewModal } from './VerifyReviewModal';
 import { TeacherResponseModal } from './TeacherResponseModal';
 import { CountryTag } from './CountryTag';
@@ -117,7 +118,7 @@ export function useTeacherShare(teacher: Teacher, currentLang: SupportedLang) {
   const t = TRANSLATIONS[currentLang];
   const [copied, setCopied] = useState(false);
   const share = async () => {
-    const shareUrl = `${SITE_URL}/teacher/${teacher.id}`;
+    const shareUrl = `${SITE_URL}${localePath(`/teacher/${teacher.id}`, currentLang)}`;
     const shareData = {
       title: `${teacher.name} — Kursotzyv.org`,
       text: t.detailModal.shareText.replace('{name}', teacher.name),

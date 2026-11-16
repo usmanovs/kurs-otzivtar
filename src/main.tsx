@@ -1,17 +1,11 @@
 import {StrictMode} from 'react';
 import {createRoot, hydrateRoot} from 'react-dom/client';
-import {BrowserRouter, Routes, Route, useLocation} from 'react-router-dom';
+import {BrowserRouter} from 'react-router-dom';
 import {Analytics} from '@vercel/analytics/react';
 import {SpeedInsights} from '@vercel/speed-insights/react';
-import App from './App.tsx';
-import { AboutFeaturesPage } from './components/AboutFeaturesPage.tsx';
-import { AllReviewsPage } from './components/AllReviewsPage.tsx';
-import { AnalyticsPage } from './components/AnalyticsPage.tsx';
-import { NotFoundPage } from './components/NotFoundPage.tsx';
-import { TeacherPage } from './components/TeacherPage.tsx';
-import { CategoryPage } from './components/CategoryPage.tsx';
+import { AppRoutes } from './AppRoutes.tsx';
 import { PrerenderContext, readPrerenderPayload } from './lib/prerenderData.tsx';
-import { readStoredLang } from './lib/lang.ts';
+import { langFromPath } from './lib/i18n.tsx';
 import './index.css';
 
 if ('serviceWorker' in navigator) {
@@ -20,29 +14,11 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-/**
- * A click inside the app opens the teacher as a modal over the homepage (the
- * link carries state.modal); a direct visit — Google, a shared link, a
- * category page — gets the standalone profile page.
- */
-function TeacherRoute() {
-  const location = useLocation();
-  return (location.state as { modal?: boolean } | null)?.modal ? <App /> : <TeacherPage />;
-}
-
 const tree = (
   <StrictMode>
     <PrerenderContext.Provider value={readPrerenderPayload()}>
       <BrowserRouter>
-        <Routes>
-          <Route path="/teacher/:teacherId" element={<TeacherRoute />} />
-          <Route path="/category/:categorySlug" element={<CategoryPage />} />
-          <Route path="/about" element={<AboutFeaturesPage />} />
-          <Route path="/reviews" element={<AllReviewsPage />} />
-          <Route path="/analytics" element={<AnalyticsPage />} />
-          <Route path="/" element={<App />} />
-          <Route path="*" element={<NotFoundPage />} />
-        </Routes>
+        <AppRoutes />
       </BrowserRouter>
       <Analytics />
       {/* Real-user LCP/FCP from actual devices. Synthetic loads from a fast
@@ -54,14 +30,14 @@ const tree = (
 );
 
 const container = document.getElementById('root')!;
-// Prerendered HTML is Kyrgyz unless told otherwise. Hydrate only when the
-// visitor's language matches what was rendered, the HTML is for this very
-// path, and it wasn't a modal visit;
+// Prerendered HTML carries its language (data-lang) and path. Hydrate only
+// when both match this URL — the language comes from the URL prefix, so that
+// is the same thing — and it wasn't a modal visit;
 // otherwise a clean client render avoids a hydration mismatch.
 const prerendered = container.dataset.prerendered === '1';
 const modalVisit = (window.history.state?.usr as { modal?: boolean } | undefined)?.modal;
 const pathname = window.location.pathname.replace(/\/+$/, '') || '/';
-if (prerendered && !modalVisit && container.dataset.path === pathname && container.dataset.lang === readStoredLang()) {
+if (prerendered && !modalVisit && container.dataset.path === pathname && container.dataset.lang === langFromPath(window.location.pathname)) {
   hydrateRoot(container, tree);
 } else {
   container.innerHTML = '';

@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useParams } from 'react-router-dom';
+import { Link, useNavigate, useLang, localePath } from '../lib/i18n';
 import { Teacher } from '../types';
 import { TRANSLATIONS } from '../translations';
-import { readStoredLang } from '../lib/lang';
 import { usePrerenderData } from '../lib/prerenderData';
 import { fetchTeacherById, updateReviewVoteCounts } from '../lib/api';
 import { supabase } from '../lib/supabaseClient';
@@ -12,6 +12,8 @@ import { calculateTeacherMetrics } from '../data/teachers';
 import { breadcrumbJsonLd, teacherJsonLd } from '../lib/structuredData';
 import { setPageMeta } from '../lib/pageMeta';
 import { JsonLd } from './JsonLd';
+import { AppPromo } from './AppPromo';
+import { latestReviewDate } from '../lib/keyFacts';
 import { TeacherHeaderIdentity, TeacherProfileBody, TeacherSocialLinks, ShareButton } from './TeacherProfile';
 import { AlertTriangle, ChevronRight } from 'lucide-react';
 
@@ -34,7 +36,7 @@ export const TeacherPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const initial = usePrerenderData()?.teachers.find((tch) => tch.id === teacherId) ?? null;
-  const [currentLang] = useState(readStoredLang);
+  const currentLang = useLang();
   const [teacher, setTeacher] = useState<Teacher | null>(initial);
   const [status, setStatus] = useState<'loading' | 'ready' | 'missing'>(initial ? 'ready' : 'loading');
   const [isAdmin, setIsAdmin] = useState(false);
@@ -74,7 +76,7 @@ export const TeacherPage: React.FC = () => {
           .replace('{rating}', teacher.averageRating.toFixed(1))
           .replace('{count}', String(teacher.reviewCount))
       : t.teacherPage.metaDescriptionNoReviews.replace('{name}', teacher.name);
-    setPageMeta({ title: `${teacher.name} — Kursotzyv.org`, description, path: `/teacher/${teacher.id}` });
+    setPageMeta({ title: `${teacher.name} — Kursotzyv.org`, description, path: localePath(`/teacher/${teacher.id}`, currentLang) });
   }, [teacher, t]);
 
   // Reviews deep-link with #review-item-<id>.
@@ -124,6 +126,7 @@ export const TeacherPage: React.FC = () => {
   }
 
   const categoryLabel = teacher.category ? t.categories[teacher.category] : undefined;
+  const updated = latestReviewDate([teacher]);
   const crumbs = [
     { name: t.teacherPage.breadcrumbHome, path: '/' },
     ...(teacher.category && categoryLabel ? [{ name: categoryLabel, path: `/category/${teacher.category}` }] : []),
@@ -132,8 +135,8 @@ export const TeacherPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <JsonLd data={teacherJsonLd(teacher)} />
-      <JsonLd data={breadcrumbJsonLd(crumbs)} />
+      <JsonLd data={teacherJsonLd(teacher, currentLang)} />
+      <JsonLd data={breadcrumbJsonLd(crumbs, currentLang)} />
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
         <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-1 text-sm text-slate-500 mb-4">
           {crumbs.map((c, i) => (
@@ -172,6 +175,12 @@ export const TeacherPage: React.FC = () => {
             />
           </div>
         </div>
+        {updated && (
+          <p className="mt-3 text-xs text-slate-400">
+            {t.updatedLabel}: <time dateTime={updated}>{updated}</time>
+          </p>
+        )}
+        <AppPromo variant="compact" />
       </div>
     </div>
   );
