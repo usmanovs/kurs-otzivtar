@@ -372,6 +372,16 @@ async function main(): Promise<void> {
       ])
     : [[], [], null];
 
+  // Other rated instructors in the same category, most-reviewed first — the
+  // internal links that give a teacher page somewhere to send a crawler (it had
+  // two links: home and its category).
+  const relatedFor = (teacher: Teacher) =>
+    withReviews
+      .filter((o) => o.id !== teacher.id && teacher.category && o.category === teacher.category)
+      .sort((a, b) => b.reviewCount - a.reviewCount)
+      .slice(0, 6)
+      .map((o) => ({ id: o.id, name: o.name }));
+
   let pages = 0;
   for (const lang of LANGS) {
     const t = TRANSLATIONS[lang];
@@ -443,8 +453,8 @@ async function main(): Promise<void> {
         template,
         `teacher/${encodeURIComponent(teacher.id)}`,
         lang,
-        { title: `${teacher.name} — Kursotzyv.org`, description, image },
-        { teachers: [teacher] }
+        { title: t.teacherPage.metaTitle.replace('{name}', teacher.name), description, image },
+        { teachers: [teacher], related: relatedFor(teacher) }
       );
       pages++;
     }

@@ -19,6 +19,8 @@ export interface PrerenderData {
   siteStats?: SiteStats | null;
   /** /reviews only: the first page of the feed and its filter counts. */
   feed?: { reviews: FeedReviewSummary[]; hasMore: boolean; counts: ReviewsFeedCounts | null };
+  /** Teacher pages only: other instructors in the same category, for internal links (names only — no ratings that could go stale between deploys). */
+  related?: { id: string; name: string }[];
   /** ISO time of the build; the "now" the prerendered relative dates were computed against. */
   builtAt?: string;
 }

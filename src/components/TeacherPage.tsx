@@ -35,7 +35,10 @@ export const TeacherPage: React.FC = () => {
   const { teacherId = '' } = useParams<{ teacherId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
-  const initial = usePrerenderData()?.teachers.find((tch) => tch.id === teacherId) ?? null;
+  const payload = usePrerenderData();
+  const initial = payload?.teachers.find((tch) => tch.id === teacherId) ?? null;
+  // The payload belongs to whichever page was landed on, so only trust its related list for this teacher.
+  const related = payload?.teachers[0]?.id === teacherId ? payload.related : undefined;
   const currentLang = useLang();
   const [teacher, setTeacher] = useState<Teacher | null>(initial);
   const [status, setStatus] = useState<'loading' | 'ready' | 'missing'>(initial ? 'ready' : 'loading');
@@ -76,7 +79,7 @@ export const TeacherPage: React.FC = () => {
           .replace('{rating}', teacher.averageRating.toFixed(1))
           .replace('{count}', String(teacher.reviewCount))
       : t.teacherPage.metaDescriptionNoReviews.replace('{name}', teacher.name);
-    setPageMeta({ title: `${teacher.name} — Kursotzyv.org`, description, path: localePath(`/teacher/${teacher.id}`, currentLang) });
+    setPageMeta({ title: t.teacherPage.metaTitle.replace('{name}', teacher.name), description, path: localePath(`/teacher/${teacher.id}`, currentLang) });
   }, [teacher, t]);
 
   // Reviews deep-link with #review-item-<id>.
@@ -175,6 +178,23 @@ export const TeacherPage: React.FC = () => {
             />
           </div>
         </div>
+        {related && related.length > 0 && (
+          <nav aria-label={t.teacherPage.relatedTitle} className="mt-6">
+            <h2 className="text-sm font-bold text-slate-900">{t.teacherPage.relatedTitle}</h2>
+            <ul className="mt-2 flex flex-wrap gap-2">
+              {related.map((r) => (
+                <li key={r.id}>
+                  <Link
+                    to={`/teacher/${r.id}`}
+                    className="inline-block rounded-full bg-white border border-slate-200 px-3 py-1.5 text-sm text-slate-700 hover:border-indigo-300 hover:text-indigo-700 transition-colors"
+                  >
+                    {r.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        )}
         {updated && (
           <p className="mt-3 text-xs text-slate-400">
             {t.updatedLabel}: <time dateTime={updated}>{updated}</time>

@@ -84,6 +84,8 @@ const ky = {
     breadcrumbHome: 'Башкы бет',
     metaDescription: '{name} — рейтинг {rating} / 5, {count} студенттин чыныгы сын-пикири. Жазылуудан мурун окуп чыгыңыз — Kursotzyv.org.',
     metaDescriptionNoReviews: '{name} жөнүндө студенттердин чыныгы сын-пикирлери — Kursotzyv.org.',
+    metaTitle: '{name}: студенттердин сын-пикирлери — Kursotzyv.org',
+    relatedTitle: 'Ушул багыттагы башка мугалимдер',
     loading: 'Жүктөлүүдө...',
   },
   hero: {
@@ -922,6 +924,8 @@ const ru: TranslationDict = {
     breadcrumbHome: 'Главная',
     metaDescription: '{name} — рейтинг {rating} из 5, {count} реальных отзывов студентов. Прочитайте перед записью — Kursotzyv.org.',
     metaDescriptionNoReviews: 'Реальные отзывы студентов о {name} — Kursotzyv.org.',
+    metaTitle: '{name}: отзывы студентов — Kursotzyv.org',
+    relatedTitle: 'Другие преподаватели этого направления',
     loading: 'Загрузка...',
   },
   hero: {
