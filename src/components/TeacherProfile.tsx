@@ -9,6 +9,8 @@ import { TeacherResponseModal } from './TeacherResponseModal';
 import { CountryTag } from './CountryTag';
 import { TikTokIcon } from './TikTokIcon';
 import { buildHeaderTags } from '../lib/headerTags';
+import { getUnusualActivity } from '../lib/unusualActivity';
+import { pluralForm } from '../lib/plural';
 import {
   X,
   Star,
@@ -398,6 +400,8 @@ export const TeacherProfileBody: React.FC<TeacherProfileBodyProps> = ({
     );
   };
 
+  const unusualActivity = getUnusualActivity(teacher);
+
   const getStatusLabel = (status: string) => {
     if (status === 'graduate') return 'Бүтүрүүчү';
     if (status === 'current_student') return 'Окуп жатат';
@@ -430,6 +434,28 @@ export const TeacherProfileBody: React.FC<TeacherProfileBodyProps> = ({
           {teacher.bio && (
             <div className="text-sm text-slate-600 leading-relaxed bg-slate-50 p-4 rounded-xl border border-slate-200">
               {teacher.bio}
+            </div>
+          )}
+
+          {/* Shown only for profiles flagged in lib/unusualActivity. Numbers are
+              computed from the reviews themselves; nothing is hidden. */}
+          {unusualActivity && (
+            <div
+              role="note"
+              className="flex items-start gap-2.5 rounded-2xl border border-amber-200 bg-amber-50 p-3.5 sm:p-4"
+            >
+              <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" aria-hidden="true" />
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-amber-900">{t.detailModal.unusualActivityTitle}</p>
+                <p className="mt-1 text-xs sm:text-sm text-amber-900/90 leading-relaxed">
+                  {t.detailModal.unusualActivityBody
+                    .replace('{from}', unusualActivity.from)
+                    .replace('{to}', unusualActivity.to)
+                    .replace('{count}', String(unusualActivity.count))
+                    .replace('{reviews}', pluralForm(unusualActivity.count, t.plurals.review, currentLang))
+                    .replace('{percent}', String(unusualActivity.percent))}
+                </p>
+              </div>
             </div>
           )}
 
