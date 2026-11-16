@@ -36,7 +36,8 @@ import { Routes, Route } from 'react-router-dom';
 import { mapTeacherRow } from '../src/lib/mappers';
 import { PrerenderContext, PrerenderData } from '../src/lib/prerenderData';
 import { SITE_URL } from '../src/lib/site';
-import { websiteJsonLd } from '../src/lib/structuredData';
+import { homeJsonLd } from '../src/lib/structuredData';
+import { getUnusualActivity } from '../src/lib/unusualActivity';
 import { buildCategoryIntro } from '../src/components/CategoryPage';
 import { TeacherPage } from '../src/components/TeacherPage';
 import { CategoryPage } from '../src/components/CategoryPage';
@@ -238,6 +239,38 @@ function writeRoute(template: string, routeDir: string, meta: PageMeta): void {
 
 const BUILT_AT = new Date().toISOString();
 
+/**
+ * Machine-readable index of every rated profile, for answer engines
+ * (see public/llms.txt). Same inclusion rule as the sitemap: hidden profiles
+ * and profiles without reviews are left out.
+ */
+function buildLlmsFull(rated: Teacher[]): string {
+  const lines = [
+    '# Kursotzyv.org — rated instructors',
+    '',
+    `> ${rated.length} instructors with at least one published review. Generated ${BUILT_AT.slice(0, 10)}. Ratings are 1–5 stars from student reviews; they are opinions, and reviews without a proof badge are unverified. Overview: https://www.kursotzyv.org/llms.txt`,
+    '',
+  ];
+  const byCategory = new Map<string, Teacher[]>();
+  for (const tch of rated) {
+    const key = tch.category ?? 'other';
+    byCategory.set(key, [...(byCategory.get(key) ?? []), tch]);
+  }
+  for (const [slug, list] of byCategory) {
+    lines.push(`## ${slug === 'other' ? 'Other' : CATEGORY_NAMES[slug] ?? slug}`);
+    for (const tch of [...list].sort((a, b) => b.reviewCount - a.reviewCount)) {
+      const note = getUnusualActivity(tch)
+        ? ' — NOTE: unusual burst of unverified 5-star reviews, see profile'
+        : '';
+      lines.push(
+        `- [${tch.name}](${SITE_URL}/teacher/${tch.id}): ${tch.averageRating.toFixed(1)}/5 from ${tch.reviewCount} reviews, ${tch.recommendPercent}% recommend${note}`
+      );
+    }
+    lines.push('');
+  }
+  return lines.join('\n');
+}
+
 /** Full page: meta tags + the server-rendered body + the data to hydrate with. */
 function writeRendered(
   template: string,
@@ -277,6 +310,11 @@ async function main(): Promise<void> {
   const withReviews = all.filter((tch) => tch.reviewCount > 0);
   const categorySlugs = ALL_CATEGORY_SLUGS.filter((slug) => all.some((tch) => tch.category === slug));
 
+  if (withReviews.length > 0) {
+    fs.writeFileSync(path.join(DIST_DIR, 'llms-full.txt'), buildLlmsFull(withReviews));
+    console.log('[prerender] wrote /llms-full.txt');
+  }
+
   writeRendered(
     template,
     'about',
@@ -307,7 +345,7 @@ async function main(): Promise<void> {
       },
       { teachers: slimForListing(all), courses, featuredVideos: videoRows, siteStats },
       `    <script type="application/ld+json">${safeJson(
-        websiteJsonLd('Kursotzyv.org', 'Кыргызстандагы онлайн жана IT курстардын чыныгы сын-пикирлери', 'ky')
+        homeJsonLd('Кыргызстандагы онлайн жана IT курстардын чыныгы сын-пикирлери', 'ky')
       )}</script>\n  `
     );
     writeRendered(

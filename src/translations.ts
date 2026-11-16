@@ -19,6 +19,7 @@ const ky = {
   navReportScam: 'Кайда кайрылуу',
   navStats: 'Аналитика',
   navAbout: 'Өзгөчөлүктөр',
+  navApp: 'Android колдонмо',
   navAllReviews: 'Бардык пикирлер',
   navDonate: 'Колдоо көрсөтүү',
   navMenu: {
@@ -787,6 +788,7 @@ const ru: TranslationDict = {
   navReportScam: 'Куда обращаться',
   navStats: 'Аналитика',
   navAbout: 'Особенности',
+  navApp: 'Android-приложение',
   navAllReviews: 'Все отзывы',
   navDonate: 'Поддержать проект',
   navMenu: {

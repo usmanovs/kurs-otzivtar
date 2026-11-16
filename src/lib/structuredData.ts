@@ -1,5 +1,5 @@
 import { CourseCategory, Teacher } from '../types';
-import { SITE_URL } from './site';
+import { APP_NAME, PLAY_STORE_URL, SITE_URL } from './site';
 
 // Pure schema.org builders shared by the page components (which render them
 // inline, so they exist in the prerendered HTML) and the prerender script.
@@ -77,5 +77,47 @@ export function websiteJsonLd(name: string, description: string, inLanguage: str
     url: `${SITE_URL}/`,
     description,
     inLanguage,
+  };
+}
+
+/**
+ * Homepage entity graph: the publisher, the site, and the Android app — the
+ * facts a search or answer engine needs to tell what this is and who runs it.
+ * Every claim here is visible on the page (footer link to the app, site name).
+ */
+export function homeJsonLd(description: string, inLanguage: string) {
+  return {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'Organization',
+        '@id': `${SITE_URL}/#organization`,
+        name: 'Kursotzyv.org',
+        url: `${SITE_URL}/`,
+        logo: `${SITE_URL}/icon-512.png`,
+        description,
+        areaServed: { '@type': 'Country', name: 'Kyrgyzstan' },
+        sameAs: [PLAY_STORE_URL],
+      },
+      {
+        '@type': 'WebSite',
+        '@id': `${SITE_URL}/#website`,
+        name: 'Kursotzyv.org',
+        url: `${SITE_URL}/`,
+        description,
+        inLanguage,
+        publisher: { '@id': `${SITE_URL}/#organization` },
+      },
+      {
+        '@type': 'MobileApplication',
+        '@id': `${SITE_URL}/#android-app`,
+        name: APP_NAME,
+        operatingSystem: 'ANDROID',
+        applicationCategory: 'EducationApplication',
+        url: PLAY_STORE_URL,
+        inLanguage,
+        publisher: { '@id': `${SITE_URL}/#organization` },
+      },
+    ],
   };
 }

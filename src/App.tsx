@@ -42,6 +42,7 @@ import { RecentReviewPopup } from './components/RecentReviewPopup';
 import { ScrollFadeRow } from './components/ScrollFadeRow';
 import { HeroSearch } from './components/HeroSearch';
 import { usePrerenderData } from './lib/prerenderData';
+import { PLAY_STORE_URL } from './lib/site';
 import { VoteMap, loadVotedReviews, saveVotedReviews, computeVote } from './lib/reviewVotes';
 
 // Lazy-loaded: only needed once a user opens one of these modals, so keeping
@@ -819,6 +820,14 @@ export default function App() {
                 <Link to="/about" className="hover:text-indigo-600 transition-colors">
                   {t.navAbout}
                 </Link>
+                <a
+                  href={PLAY_STORE_URL}
+                  target="_blank"
+                  rel="noopener"
+                  className="hover:text-indigo-600 transition-colors"
+                >
+                  {t.navApp}
+                </a>
               </nav>
             </div>
 

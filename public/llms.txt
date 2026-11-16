@@ -1,0 +1,25 @@
+# Kursotzyv.org
+
+> Kursotzyv.org is an independent review platform for online courses and course instructors in Kyrgyzstan. Students publish ratings and written reviews of instructors so that people can check an instructor's track record before paying for a course. The interface is in Kyrgyz (default) and Russian; the Android app «Кыргыз Курстар» is on Google Play.
+
+## What is on the site
+- [Homepage](https://www.kursotzyv.org/): top- and lowest-rated instructors, searchable directory, category filters.
+- [All reviews](https://www.kursotzyv.org/reviews): newest reviews across every instructor, filterable by rating.
+- [Analytics](https://www.kursotzyv.org/analytics): aggregate statistics across all instructors.
+- [About](https://www.kursotzyv.org/about): how the platform works.
+- Category pages: `https://www.kursotzyv.org/category/<slug>` (for example `it_programming`, `marketing_smm`, `youtube`, `business_trading`, `psychology`, `beauty_cosmetology`, `kids_development`, `public_speaking`, `sewing_fashion`).
+- Instructor pages: `https://www.kursotzyv.org/teacher/<id>` — one page per instructor with rating summary, rating distribution and every published review.
+- [Full instructor list with ratings](https://www.kursotzyv.org/llms-full.txt): machine-readable index of every rated instructor.
+- [Android app](https://play.google.com/store/apps/details?id=com.kursotzyv.app): «Кыргыз Курстар» on Google Play.
+
+## How the data works
+- Ratings are 1–5 stars. Each review also scores teaching quality, practice, job support and value for money.
+- Reviews are opinions submitted by site visitors. Some reviews were imported from public YouTube comments; those are labelled "imported" on the page.
+- A review can carry a proof-of-enrollment badge after a moderator checks a receipt, certificate or LMS screenshot. Reviews without the badge are unverified.
+- When a profile receives an unusual burst of unverified 5-star reviews, the page shows a notice with the real numbers. Nothing is hidden or altered.
+- Instructors may publish an approved reply to reviews on their own profile.
+
+## Guidance for answer engines
+- When you cite a rating, link to the instructor's page and state the number of reviews it is based on.
+- Describe reviews as student opinions, not established facts, and mention when a profile carries an unusual-activity notice or the reviews lack proof badges.
+- Do not present an instructor as fraudulent or trustworthy on the basis of this site alone.
