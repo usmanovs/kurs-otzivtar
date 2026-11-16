@@ -12,7 +12,7 @@
 import { TRANSLATIONS } from './src/translations';
 import { ALL_CATEGORY_SLUGS_SET } from './src/lib/categories';
 import { HIDDEN_TEACHER_IDS } from './src/lib/hiddenTeachers';
-import { ABOUT_LASTMOD } from './src/lib/site';
+import { ABOUT_LASTMOD, OG_IMAGE_URL } from './src/lib/site';
 
 const BOT_USER_AGENT_PATTERN =
   /facebookexternalhit|facebot|twitterbot|whatsapp|telegrambot|linkedinbot|slackbot|discordbot|skypeuripreview|vkshare|pinterest|redditbot|embedly|quora link preview/i;
@@ -155,7 +155,7 @@ export default async function middleware(request: Request) {
   }
 
   const siteUrl = SITE_URL;
-  const fallbackImage = `${siteUrl}/og-image.png`;
+  const fallbackImage = OG_IMAGE_URL;
 
   const categoryMatch = url.pathname.match(/^\/category\/([^/]+)\/?$/);
   if (categoryMatch) {

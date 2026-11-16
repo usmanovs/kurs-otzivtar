@@ -35,7 +35,7 @@ import { StaticRouter } from 'react-router-dom';
 import { Routes, Route } from 'react-router-dom';
 import { mapTeacherRow } from '../src/lib/mappers';
 import { PrerenderContext, PrerenderData } from '../src/lib/prerenderData';
-import { SITE_URL } from '../src/lib/site';
+import { OG_IMAGE_URL, SITE_URL } from '../src/lib/site';
 import { homeJsonLd } from '../src/lib/structuredData';
 import { getUnusualActivity } from '../src/lib/unusualActivity';
 import { buildCategoryIntro } from '../src/components/CategoryPage';
@@ -180,7 +180,7 @@ function injectHead(template: string, { title, description, canonicalPath, image
   const canonicalUrl = `${SITE_URL}${canonicalPath}`;
   const safeTitle = escapeHtml(title);
   const safeDescription = escapeHtml(description);
-  const safeImage = escapeHtml(image || `${SITE_URL}/og-image.png`);
+  const safeImage = escapeHtml(image || OG_IMAGE_URL);
 
   return template
     .replace(/<title>.*?<\/title>/s, `<title>${safeTitle}</title>`)
