@@ -54,7 +54,7 @@ export const AnalyticsTeaser: React.FC<AnalyticsTeaserProps> = ({ teachers, curr
               {stats.disputedSumKGS.toLocaleString('ru-RU')}
               <span className="text-2xs font-bold"> сом</span>
             </div>
-            <div className="text-2xs text-rose-900/60 mt-0.5">{p.disputedLabel}</div>
+            <div className="text-2xs text-rose-900 mt-0.5">{p.disputedLabel}</div>
           </div>
           <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3">
             <div className="text-lg font-extrabold text-slate-800 tabular-nums leading-tight">
@@ -66,13 +66,13 @@ export const AnalyticsTeaser: React.FC<AnalyticsTeaserProps> = ({ teachers, curr
             <div className="text-lg font-extrabold text-emerald-700 tabular-nums leading-tight">
               {stats.recommendRate.toFixed(0)}%
             </div>
-            <div className="text-2xs text-emerald-900/60 mt-0.5">{p.recommendLabel}</div>
+            <div className="text-2xs text-emerald-900 mt-0.5">{p.recommendLabel}</div>
           </div>
           <div className="rounded-xl border border-amber-200/70 bg-amber-50/60 p-3">
             <div className="text-lg font-extrabold text-amber-700 tabular-nums leading-tight">
               {stats.flagged}
             </div>
-            <div className="text-2xs text-amber-900/60 mt-0.5">{p.flaggedLabel}</div>
+            <div className="text-2xs text-amber-900 mt-0.5">{p.flaggedLabel}</div>
           </div>
         </div>
 

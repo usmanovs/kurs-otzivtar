@@ -379,7 +379,7 @@ export const AllReviewsPage: React.FC = () => {
                           </span>
                           <StarRow rating={review.overallRating} />
                         </div>
-                        <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 mt-0.5 text-2xs text-slate-400/70">
+                        <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 mt-0.5 text-2xs text-slate-500/70">
                           <span>{review.isAnonymous ? p.anonymousAuthor : review.authorName}</span>
                           <span aria-hidden="true">•</span>
                           <span className="whitespace-nowrap">

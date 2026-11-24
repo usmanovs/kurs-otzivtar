@@ -25,8 +25,8 @@ export function scoreTone(averageRating: number, reviewCount: number): RatingTon
 
 export const RATING_BADGE_CLASS: Record<RatingTone, string> = {
   danger: 'bg-rose-600',
-  warning: 'bg-amber-500',
-  success: 'bg-emerald-600',
+  warning: 'bg-amber-700',
+  success: 'bg-emerald-700',
   neutral: 'bg-slate-500',
 };
 
@@ -39,8 +39,8 @@ export const RATING_STAR_CLASS: Record<RatingTone, string> = {
 
 export const RATING_TEXT_CLASS: Record<RatingTone, string> = {
   danger: 'text-rose-600',
-  warning: 'text-amber-600',
-  success: 'text-emerald-600',
+  warning: 'text-amber-700',
+  success: 'text-emerald-700',
   neutral: 'text-slate-500',
 };
 

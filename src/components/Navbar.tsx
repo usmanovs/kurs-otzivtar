@@ -279,7 +279,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </>
               ) : isUserSignedIn ? (
                 <>
-                  <div className="px-5 py-2 text-2xs text-slate-400 truncate">
+                  <div className="px-5 py-2 text-2xs text-slate-500 truncate">
                     {t.userAuth.signedInAs.replace('{email}', signedInEmail || '')}
                   </div>
                   <button

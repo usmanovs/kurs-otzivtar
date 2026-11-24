@@ -131,7 +131,7 @@ export const MyReviewsModal: React.FC<MyReviewsModalProps> = ({
                     <p className="text-xs text-slate-600 truncate">
                       {hasRealTitle(r.title) ? r.title : r.fullReview}
                     </p>
-                    <p className="text-2xs text-slate-400 mt-0.5">{r.date}</p>
+                    <p className="text-2xs text-slate-500 mt-0.5">{r.date}</p>
                   </div>
 
                   <div className="flex items-center gap-1 shrink-0 text-sm font-bold text-slate-700 tabular-nums">

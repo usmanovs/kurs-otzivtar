@@ -200,7 +200,7 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
                           <div className="text-sm font-semibold text-slate-900 truncate">
                             {tch.name}
                           </div>
-                          <div className="text-2xs text-slate-400 truncate">
+                          <div className="text-2xs text-slate-500 truncate">
                             {tch.category ? t.categories[tch.category] : t.analytics.categoryUnspecified}
                           </div>
                         </div>
@@ -219,7 +219,7 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
                             </span>
                           </div>
                         ) : (
-                          <span className="text-2xs text-slate-400 shrink-0">
+                          <span className="text-2xs text-slate-500 shrink-0">
                             {t.hero.searchNoReviews}
                           </span>
                         )}

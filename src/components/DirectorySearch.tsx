@@ -265,7 +265,7 @@ export const DirectorySearch: React.FC<DirectorySearchProps> = ({
                             <span className="font-medium text-slate-400">({tch.reviewCount})</span>
                           </span>
                         ) : (
-                          <span className="shrink-0 text-2xs text-slate-400">
+                          <span className="shrink-0 text-2xs text-slate-500">
                             {t.hero.searchNoReviews}
                           </span>
                         )}

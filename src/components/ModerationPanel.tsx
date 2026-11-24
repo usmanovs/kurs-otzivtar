@@ -436,7 +436,7 @@ export const ModerationPanel: React.FC<ModerationPanelProps> = ({
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <div className="text-sm font-bold text-slate-900 truncate">{r.teacherName}</div>
-                        <div className="text-2xs text-slate-400 truncate">
+                        <div className="text-2xs text-slate-500 truncate">
                           {r.isAnonymous ? '—' : r.authorName} · {r.date}
                           {r.isHidden ? ` · ${t.moderation.reviewsHiddenBadge}` : ''}
                         </div>

@@ -35,7 +35,7 @@ export const PartnersSection: React.FC = () => {
                 </span>
                 <span className="mt-1.5 block text-base font-bold text-slate-900 group-hover:text-indigo-700">{p.name}</span>
                 <span className="mt-1 block text-sm leading-relaxed text-slate-600">{t[p.id].blurb}</span>
-                <span className="mt-1.5 block text-xs leading-relaxed text-slate-400">{t[p.id].scope}</span>
+                <span className="mt-1.5 block text-xs leading-relaxed text-slate-500">{t[p.id].scope}</span>
                 <span className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-indigo-600">
                   {t.visit} · {p.host}
                   <ExternalLink className="h-3 w-3" aria-hidden="true" />

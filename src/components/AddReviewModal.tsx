@@ -1123,7 +1123,7 @@ export const AddReviewModal: React.FC<AddReviewModalProps> = ({
                 placeholder="+996 700 000 000"
                 className="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
               />
-              <p className="text-2xs text-slate-400 mt-1">{t.addReviewModal.whatsappNote}</p>
+              <p className="text-2xs text-slate-500 mt-1">{t.addReviewModal.whatsappNote}</p>
             </div>
 
             <label className="flex items-start gap-2.5 p-3.5 rounded-xl bg-red-50 border border-red-200 cursor-pointer">

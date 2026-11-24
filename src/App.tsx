@@ -838,7 +838,7 @@ export default function App() {
               </nav>
             </div>
 
-            <div className="text-xs text-slate-400 text-center md:text-right">
+            <div className="text-xs text-slate-500 text-center md:text-right">
               <div suppressHydrationWarning>{t.footer.copyright.replace('{year}', String(new Date().getFullYear()))}</div>
               <div className="mt-1">
                 {t.footer.callToAction}
@@ -849,7 +849,7 @@ export default function App() {
                     <button
                       type="button"
                       onClick={() => setIsModerationOpen(true)}
-                      className="inline-flex items-center gap-1 text-slate-400 hover:text-indigo-600 transition-colors cursor-pointer"
+                      className="inline-flex items-center gap-1 text-slate-500 hover:text-indigo-600 transition-colors cursor-pointer"
                     >
                       <ShieldCheck className="w-3 h-3" />
                       <span>{t.moderation.openButton}</span>
@@ -857,7 +857,7 @@ export default function App() {
                     <button
                       type="button"
                       onClick={() => signOutAdmin()}
-                      className="inline-flex items-center gap-1 text-slate-400 hover:text-red-600 transition-colors cursor-pointer"
+                      className="inline-flex items-center gap-1 text-slate-500 hover:text-red-600 transition-colors cursor-pointer"
                     >
                       <LogOut className="w-3 h-3" />
                       <span>{t.adminAuth.signOut}</span>
@@ -867,7 +867,7 @@ export default function App() {
                   <button
                     type="button"
                     onClick={() => setIsAdminLoginOpen(true)}
-                    className="inline-flex items-center gap-1 text-slate-300 hover:text-slate-500 transition-colors cursor-pointer"
+                    className="inline-flex items-center gap-1 text-slate-500 hover:text-slate-700 transition-colors cursor-pointer"
                   >
                     <ShieldCheck className="w-3 h-3" />
                     <span>{t.adminAuth.signIn}</span>

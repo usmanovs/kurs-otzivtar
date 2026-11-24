@@ -334,7 +334,7 @@ export const StatsSection: React.FC<StatsSectionProps> = ({
             {t.analytics.recommendRateTitle}
           </div>
           <RadialProgress percent={stats.recommendRate} color={TONE_RING_CLASS[recommendTone]} />
-          <p className="mt-2 text-2xs text-slate-400">
+          <p className="mt-2 text-2xs text-slate-500">
             {t.analytics.recommendRateSubtitle} ({stats.totalReviews})
           </p>
         </div>
@@ -377,7 +377,7 @@ export const StatsSection: React.FC<StatsSectionProps> = ({
               <h3 className="text-sm font-bold text-slate-900">{t.analytics.risksTitle}</h3>
             </div>
           </div>
-          <p className="text-2xs text-slate-400 mb-4">
+          <p className="text-2xs text-slate-500 mb-4">
             {t.analytics.risksNote.replace('{n}', String(stats.watchdog.consCount))}
           </p>
           <div className="space-y-3">
@@ -409,7 +409,7 @@ export const StatsSection: React.FC<StatsSectionProps> = ({
             <ListChecks className="w-4 h-4 text-indigo-600" />
             <h3 className="text-sm font-bold text-slate-900">{t.analytics.ratingHealthTitle}</h3>
           </div>
-          <p className="text-2xs text-slate-400 mb-4">{t.analytics.ratingHealthSubtitle}</p>
+          <p className="text-2xs text-slate-500 mb-4">{t.analytics.ratingHealthSubtitle}</p>
           <DonutChart
             ariaLabel={t.analytics.ratingHealthTitle}
             centerValue={String(stats.ratingHealth.reviewedTotal)}

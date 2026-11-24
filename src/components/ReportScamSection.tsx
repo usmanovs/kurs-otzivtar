@@ -156,7 +156,7 @@ export const ReportScamSection: React.FC<ReportScamSectionProps> = ({ currentLan
                   <span className="block text-xs font-semibold text-slate-800 leading-snug group-hover:text-indigo-700">
                     {t[item.titleKey]}
                   </span>
-                  <span className="block text-2xs text-slate-400 mt-0.5">{t[item.srcKey]}</span>
+                  <span className="block text-2xs text-slate-500 mt-0.5">{t[item.srcKey]}</span>
                 </span>
                 <ExternalLink className="w-3 h-3 text-slate-300 shrink-0 mt-0.5 group-hover:text-indigo-400" />
               </a>

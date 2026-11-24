@@ -186,7 +186,7 @@ const LeaderboardRow: React.FC<{
         {unrated ? (
           // No reviews means no rating — showing five empty stars and "0.0"
           // would read as a bad score rather than an absent one.
-          <span className="text-2xs text-slate-400">{t.leaderboard.noRating}</span>
+          <span className="text-2xs text-slate-500">{t.leaderboard.noRating}</span>
         ) : (
           <>
             <div className="flex items-center gap-0.5">
