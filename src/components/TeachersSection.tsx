@@ -258,6 +258,7 @@ export const TeachersSection: React.FC<TeachersSectionProps> = ({
             type="button"
             id="directory-filters-btn"
             onClick={() => setIsFilterOpen(true)}
+            aria-label={t.teachersSection.filtersBtn}
             aria-haspopup="dialog"
             aria-expanded={isFilterOpen}
             className={`relative inline-flex shrink-0 items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold transition-colors cursor-pointer ${

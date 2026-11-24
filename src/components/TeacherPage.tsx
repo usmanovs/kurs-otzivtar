@@ -140,7 +140,7 @@ export const TeacherPage: React.FC = () => {
     <div className="min-h-screen bg-slate-50">
       <JsonLd data={teacherJsonLd(teacher, currentLang)} />
       <JsonLd data={breadcrumbJsonLd(crumbs, currentLang)} />
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
         <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-1 text-sm text-slate-500 mb-4">
           {crumbs.map((c, i) => (
             <React.Fragment key={c.path}>
@@ -196,12 +196,12 @@ export const TeacherPage: React.FC = () => {
           </nav>
         )}
         {updated && (
-          <p className="mt-3 text-xs text-slate-400">
+          <p className="mt-3 text-xs text-slate-500">
             {t.updatedLabel}: <time dateTime={updated}>{updated}</time>
           </p>
         )}
         <AppPromo variant="compact" />
-      </div>
+      </main>
     </div>
   );
 };

@@ -93,7 +93,7 @@ const WatchlistCard: React.FC<{
       className="block w-full text-left p-4 bg-white border border-slate-200 rounded-xl shadow-sm transition-transform hover:shadow-md active:scale-[0.99] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 focus-visible:ring-offset-amber-50"
     >
       <div className="flex items-start gap-3">
-        <span className="shrink-0 mt-0.5 rounded bg-slate-100 px-1.5 py-0.5 font-mono text-xs font-medium tabular-nums text-slate-500">
+        <span className="shrink-0 mt-0.5 rounded bg-slate-100 px-1.5 py-0.5 font-mono text-xs font-medium tabular-nums text-slate-600">
           #{String(rank).padStart(2, '0')}
         </span>
 
@@ -119,7 +119,7 @@ const WatchlistCard: React.FC<{
             <span className="text-xs text-slate-400">{t.leaderboard.noRating}</span>
           ) : (
             <>
-              <span className="inline-flex items-center gap-1 rounded-lg border border-red-200 bg-red-50 px-2 py-1 text-sm font-bold tabular-nums text-red-600">
+              <span className="inline-flex items-center gap-1 rounded-lg border border-red-200 bg-red-50 px-2 py-1 text-sm font-bold tabular-nums text-red-700">
                 <Star className="h-3.5 w-3.5 fill-current" />
                 {teacher.averageRating.toFixed(1)}
               </span>
@@ -311,9 +311,9 @@ export const TeacherLeaderboardSection: React.FC<TeacherLeaderboardSectionProps>
                   {t.leaderboard.flaggedDossier}
                 </span>
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                  <h3 className="text-base font-bold text-slate-900 leading-snug">
+                  <h2 className="text-base font-bold text-slate-900 leading-snug">
                     {t.leaderboard.flaggedTitle}
-                  </h3>
+                  </h2>
                   <span className="inline-flex items-center rounded-full border border-amber-300/70 bg-amber-100 px-2 py-0.5 text-2xs font-bold text-amber-900 tabular-nums">
                     {t.leaderboard.flaggedCount.replace('{n}', plural(flaggedTotal, t.plurals.teacher, currentLang))}
                   </span>

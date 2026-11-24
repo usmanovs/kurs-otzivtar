@@ -78,7 +78,7 @@ export const AnalyticsPage: React.FC = () => {
                   .replace('{critical}', String(keyFacts.criticalPercent))
                   .replace('{recommend}', String(keyFacts.recommendPercent))}
               </p>
-              <p className="mt-1 text-xs text-slate-400">{t.keyFacts.note}</p>
+              <p className="mt-1 text-xs text-slate-500">{t.keyFacts.note}</p>
             </div>
           )}
         </div>

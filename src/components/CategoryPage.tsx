@@ -102,7 +102,7 @@ export const CategoryPage: React.FC = () => {
       <JsonLd data={categoryJsonLd(slug, heading, sorted, currentLang)} />
       <JsonLd data={breadcrumbJsonLd(crumbs, currentLang)} />
       {guide && <JsonLd data={faqJsonLd(guide.faq, currentLang, `/category/${slug}`)} />}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
         <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-1 text-sm text-slate-500 mb-4">
           <Link to="/" className="hover:text-slate-900 hover:underline">{crumbs[0].name}</Link>
           <ChevronRight className="w-3.5 h-3.5 text-slate-300" aria-hidden="true" />
@@ -113,7 +113,7 @@ export const CategoryPage: React.FC = () => {
         <p className="text-slate-600 leading-relaxed mb-2">{intro.framing}</p>
         {intro.stats && <p className="text-slate-600 leading-relaxed mb-2">{intro.stats}</p>}
         {updated && (
-          <p className="text-xs text-slate-400 mb-6">
+          <p className="text-xs text-slate-500 mb-6">
             {t.updatedLabel}: <time dateTime={updated}>{updated}</time>
           </p>
         )}
@@ -192,7 +192,7 @@ export const CategoryPage: React.FC = () => {
           {t.categoryPage.backHome}
         </Link>
         <AppPromo variant="compact" />
-      </div>
+      </main>
     </div>
   );
 };

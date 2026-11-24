@@ -98,9 +98,9 @@ export const TopRatedSection: React.FC<TopRatedSectionProps> = ({
               {t.topRated.badge}
             </span>
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-              <h3 className="text-base font-bold text-slate-900 leading-snug">
+              <h2 className="text-base font-bold text-slate-900 leading-snug">
                 {t.topRated.title}
-              </h3>
+              </h2>
               <span className="inline-flex items-center rounded-full border border-emerald-300/70 bg-emerald-100 px-2 py-0.5 text-2xs font-bold text-emerald-900 tabular-nums">
                 {t.topRated.count.replace('{n}', plural(top.length, t.plurals.teacher, currentLang))}
               </span>
@@ -119,7 +119,6 @@ export const TopRatedSection: React.FC<TopRatedSectionProps> = ({
                 key={teacher.id}
                 to={`/teacher/${teacher.id}`}
                 state={{ modal: true }}
-                aria-label={teacher.name}
                 className="w-full text-left flex items-center gap-3 p-3.5 bg-white border border-slate-200/80 rounded-xl shadow-sm transition-transform hover:shadow-md active:scale-[0.99] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 focus-visible:ring-offset-emerald-50"
               >
                 <Avatar teacher={teacher} />

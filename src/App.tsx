@@ -641,9 +641,9 @@ export default function App() {
           {/* One swipeable row on phones (wrapping put these on three lines);
               reverts to a centred wrap once there's width for it. */}
           <div className="text-xs">
-            <span className="block sm:hidden text-slate-400 mb-1.5">{t.hero.popularLabel}</span>
+            <span className="block sm:hidden text-slate-500 mb-1.5">{t.hero.popularLabel}</span>
             <ScrollFadeRow className="flex items-center gap-2 overflow-x-auto no-scrollbar -mx-4 px-4 snap-x snap-mandatory scroll-pl-4 sm:mx-0 sm:px-0 sm:flex-wrap sm:justify-center sm:overflow-visible sm:snap-none">
-              <span className="hidden sm:inline text-slate-400 shrink-0">{t.hero.popularLabel}</span>
+              <span className="hidden sm:inline text-slate-500 shrink-0">{t.hero.popularLabel}</span>
               {popularTags.map((tag) => (
                 <button
                   key={tag}
@@ -815,23 +815,23 @@ export default function App() {
                 {t.footer.mission}
               </p>
               <nav className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-3 text-xs font-medium text-slate-500">
-                <Link to="/reviews" className="hover:text-indigo-600 transition-colors">
+                <Link to="/reviews" className="inline-flex min-h-6 items-center hover:text-indigo-600 transition-colors">
                   {t.navAllReviews}
                 </Link>
-                <Link to="/analytics" className="hover:text-indigo-600 transition-colors">
+                <Link to="/analytics" className="inline-flex min-h-6 items-center hover:text-indigo-600 transition-colors">
                   {t.navStats}
                 </Link>
-                <Link to="/about" className="hover:text-indigo-600 transition-colors">
+                <Link to="/about" className="inline-flex min-h-6 items-center hover:text-indigo-600 transition-colors">
                   {t.navAbout}
                 </Link>
-                <Link to="/faq" className="hover:text-indigo-600 transition-colors">
+                <Link to="/faq" className="inline-flex min-h-6 items-center hover:text-indigo-600 transition-colors">
                   {t.navFaq}
                 </Link>
                 <a
                   href={PLAY_STORE_URL}
                   target="_blank"
                   rel="noopener"
-                  className="hover:text-indigo-600 transition-colors"
+                  className="inline-flex min-h-6 items-center hover:text-indigo-600 transition-colors"
                 >
                   {t.navApp}
                 </a>
