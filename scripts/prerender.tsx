@@ -396,7 +396,7 @@ async function main(): Promise<void> {
         template,
         '',
         lang,
-        { title: `${t.siteTitle} - ${t.siteSubtitle}`, description: t.homeMetaDescription },
+        { title: t.homeTitle, description: t.homeMetaDescription },
         { teachers: slimForListing(all), courses, featuredVideos: videoRows, siteStats },
         `    <script type="application/ld+json">${safeJson(homeJsonLd(t.siteSubtitle, lang))}</script>\n  `
       );
@@ -435,7 +435,7 @@ async function main(): Promise<void> {
         template,
         `category/${slug}`,
         lang,
-        { title: `${t.categories[slug as keyof typeof t.categories]} ${t.categoryPage.headingSuffix} — Kursotzyv.org`, description: intro.framing },
+        { title: t.categoryPage.metaTitle.replace('{category}', t.categories[slug as keyof typeof t.categories]), description: intro.framing },
         { teachers: inCategory }
       );
       pages++;

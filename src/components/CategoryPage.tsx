@@ -77,7 +77,7 @@ export const CategoryPage: React.FC = () => {
   useEffect(() => {
     if (!valid) return;
     setPageMeta({
-      title: `${heading} — Kursotzyv.org`,
+      title: t.categoryPage.metaTitle.replace('{category}', label),
       description: t.categoryPage.metaDescription.replace('{category}', label),
       path: localePath(`/category/${slug}`, currentLang),
     });

@@ -8,6 +8,8 @@ export type SupportedLang = 'ky' | 'ru';
 const ky = {
   siteTitle: 'Kursotzyv.org',
   siteSubtitle: 'Кыргызстандагы онлайн курстардын чынчыл сын-пикирлери',
+  // <title> for the homepage, kept under ~60 characters so it isn't cut in results.
+  homeTitle: 'Kursotzyv.org — Кыргызстандагы курстардын сын-пикирлери',
   homeMetaDescription:
     'Кыргызстандагы онлайн жана IT курстардын ачык жана чынчыл сын-пикирлери, студенттердин пикирлери жана сапат рейтинги.',
   tagline: 'Билим берүүдөгү ачык-айкындуулук жана студенттердин чыныгы тажрыйбасы',
@@ -219,6 +221,7 @@ const ky = {
       },
     },
     headingSuffix: 'мугалимдер жана сын-пикирлер',
+    metaTitle: '{category}: сын-пикирлер — Kursotzyv.org',
     metaDescription: '{category} тармагындагы мугалимдер жөнүндө студенттердин чыныгы сын-пикирлерин окуңуз — Kursotzyv.org.',
     breadcrumbHome: 'Башкы бет',
     teachersHeading: 'Бул багыттагы мугалимдер',
@@ -243,7 +246,7 @@ const ky = {
     breadcrumbHome: 'Башкы бет',
     metaDescription: '{name} — рейтинг {rating} / 5, {count} студенттин чыныгы сын-пикири. Жазылуудан мурун окуп чыгыңыз — Kursotzyv.org.',
     metaDescriptionNoReviews: '{name} жөнүндө студенттердин чыныгы сын-пикирлери — Kursotzyv.org.',
-    metaTitle: '{name}: студенттердин сын-пикирлери — Kursotzyv.org',
+    metaTitle: '{name}: сын-пикирлер — Kursotzyv.org',
     relatedTitle: 'Ушул багыттагы башка мугалимдер',
     loading: 'Жүктөлүүдө...',
   },
@@ -1021,6 +1024,7 @@ export type TranslationDict = typeof ky;
 const ru: TranslationDict = {
   siteTitle: 'Kursotzyv.org',
   siteSubtitle: 'Честные отзывы об онлайн-курсах в Кыргызстане',
+  homeTitle: 'Kursotzyv.org — Честные отзывы о курсах в Кыргызстане',
   homeMetaDescription:
     'Честные и открытые отзывы об онлайн- и IT-курсах Кыргызстана: мнения студентов и рейтинг качества преподавателей.',
   tagline: 'Прозрачность в образовании и реальный опыт студентов',
@@ -1232,6 +1236,7 @@ const ru: TranslationDict = {
       },
     },
     headingSuffix: 'преподаватели и отзывы',
+    metaTitle: '{category}: отзывы о курсах — Kursotzyv.org',
     metaDescription: 'Реальные отзывы студентов о преподавателях в категории «{category}» — Kursotzyv.org.',
     breadcrumbHome: 'Главная',
     teachersHeading: 'Преподаватели этого направления',

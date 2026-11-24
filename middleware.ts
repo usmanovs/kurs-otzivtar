@@ -196,12 +196,17 @@ async function teacherExists(id: string): Promise<boolean | null> {
   const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!supabaseUrl || !supabaseAnonKey) return null;
   try {
-    const res = await fetch(`${supabaseUrl}/rest/v1/teachers?id=eq.${encodeURIComponent(id)}&select=id`, {
+    const res = await fetch(`${supabaseUrl}/rest/v1/teachers?id=eq.${encodeURIComponent(id)}&select=id,reviews(is_hidden)`, {
       headers: { apikey: supabaseAnonKey, Authorization: `Bearer ${supabaseAnonKey}` },
     });
     if (!res.ok) return null;
     const rows = await res.json();
-    return Array.isArray(rows) ? rows.length > 0 : null;
+    if (!Array.isArray(rows)) return null;
+    // Same rule as the sitemap: no published review, no page to index.
+    return rows.some(
+      (row: { reviews?: { is_hidden?: boolean }[] }) =>
+        Array.isArray(row.reviews) && row.reviews.some((r) => !r?.is_hidden)
+    );
   } catch {
     return null; // Unknown — never turn a lookup failure into a 404.
   }

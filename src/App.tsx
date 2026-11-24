@@ -227,7 +227,7 @@ export default function App() {
     } else if (selectedTeacherForDetail) {
       document.title = `${selectedTeacherForDetail.name} — ${t.siteTitle}`;
     } else {
-      document.title = `${t.siteTitle} - ${t.siteSubtitle}`;
+      document.title = t.homeTitle;
     }
   }, [teacherNotFound, selectedTeacherForDetail, t]);
 
