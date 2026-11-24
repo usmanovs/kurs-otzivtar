@@ -2,25 +2,45 @@
   "redirects": [
     {
       "source": "/(.*)",
-      "has": [{ "type": "host", "value": "kurs-otzivtar.vercel.app" }],
+      "has": [
+        {
+          "type": "host",
+          "value": "kurs-otzivtar.vercel.app"
+        }
+      ],
       "destination": "https://www.kursotzyv.org/$1",
       "permanent": true
     },
     {
       "source": "/(.*)",
-      "has": [{ "type": "host", "value": "kurs-otzivtar-seyitbeks-projects.vercel.app" }],
+      "has": [
+        {
+          "type": "host",
+          "value": "kurs-otzivtar-seyitbeks-projects.vercel.app"
+        }
+      ],
       "destination": "https://www.kursotzyv.org/$1",
       "permanent": true
     },
     {
       "source": "/(.*)",
-      "has": [{ "type": "host", "value": "kurs-otzivtar.com" }],
+      "has": [
+        {
+          "type": "host",
+          "value": "kurs-otzivtar.com"
+        }
+      ],
       "destination": "https://www.kursotzyv.org/$1",
       "permanent": true
     },
     {
       "source": "/(.*)",
-      "has": [{ "type": "host", "value": "www.kurs-otzivtar.com" }],
+      "has": [
+        {
+          "type": "host",
+          "value": "www.kurs-otzivtar.com"
+        }
+      ],
       "destination": "https://www.kursotzyv.org/$1",
       "permanent": true
     }
@@ -29,6 +49,35 @@
     {
       "source": "/((?!api|assets|teachers|flags|favicon|apple-touch-icon|og-image|icon-|manifest\\.webmanifest|sw\\.js|screenshots|\\.well-known|robots\\.txt|sitemap\\.xml).*)",
       "destination": "/_shell.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/teachers/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=86400, stale-while-revalidate=604800"
+        }
+      ]
+    },
+    {
+      "source": "/flags/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=86400, stale-while-revalidate=604800"
+        }
+      ]
+    },
+    {
+      "source": "/app/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=86400, stale-while-revalidate=604800"
+        }
+      ]
     }
   ]
 }
