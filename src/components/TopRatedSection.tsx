@@ -105,7 +105,7 @@ export const TopRatedSection: React.FC<TopRatedSectionProps> = ({
                 {t.topRated.count.replace('{n}', plural(top.length, t.plurals.teacher, currentLang))}
               </span>
             </div>
-            <p className="text-2xs text-emerald-900/70 mt-1 leading-snug">
+            <p className="text-2xs text-emerald-900 mt-1 leading-snug">
               {t.topRated.criterion}
             </p>
           </div>
@@ -164,7 +164,7 @@ export const TopRatedSection: React.FC<TopRatedSectionProps> = ({
         {/* Says exactly what this ranking rests on. Without it an emerald
             frame reads as an endorsement the site has not earned the right
             to make. */}
-        <p className="flex items-start gap-1.5 mt-4 pt-3 border-t border-emerald-200/60 text-xs text-emerald-900/70">
+        <p className="flex items-start gap-1.5 mt-4 pt-3 border-t border-emerald-200/60 text-xs text-emerald-900">
           <ShieldCheck className="w-3.5 h-3.5 shrink-0 mt-px" />
           <span className="leading-snug">{t.topRated.basis}</span>
         </p>

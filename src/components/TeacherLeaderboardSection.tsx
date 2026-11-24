@@ -89,7 +89,6 @@ const WatchlistCard: React.FC<{
     <Link
       to={`/teacher/${teacher.id}`}
       state={{ modal: true }}
-      aria-label={teacher.name}
       className="block w-full text-left p-4 bg-white border border-slate-200 rounded-xl shadow-sm transition-transform hover:shadow-md active:scale-[0.99] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 focus-visible:ring-offset-amber-50"
     >
       <div className="flex items-start gap-3">
@@ -167,7 +166,6 @@ const LeaderboardRow: React.FC<{
     <Link
       to={`/teacher/${teacher.id}`}
       state={{ modal: true }}
-      aria-label={teacher.name}
       className="relative w-full flex items-center pl-4 pr-5 py-3 text-left border-b border-slate-100 last:border-b-0 cursor-pointer transition-colors hover:bg-slate-50 active:bg-slate-100"
     >
       <span
@@ -320,7 +318,7 @@ export const TeacherLeaderboardSection: React.FC<TeacherLeaderboardSectionProps>
                 </div>
                 {/* Says what put someone here, so the list reads as a criterion
                     rather than an opinion. */}
-                <p className="text-2xs text-amber-900/75 mt-1 leading-snug">
+                <p className="text-2xs text-amber-900 mt-1 leading-snug">
                   {t.leaderboard.flaggedCriterion}
                 </p>
               </div>
@@ -357,7 +355,7 @@ export const TeacherLeaderboardSection: React.FC<TeacherLeaderboardSectionProps>
                 )}
               </button>
             )}
-            <p className="flex items-start gap-1.5 mt-4 pt-3 border-t border-amber-200/60 text-xs text-amber-800/80">
+            <p className="flex items-start gap-1.5 mt-4 pt-3 border-t border-amber-200/60 text-xs text-amber-900">
               <Info className="w-3.5 h-3.5 shrink-0 mt-px" />
               <span className="leading-snug">{t.leaderboard.lowReviewNotice}</span>
             </p>
