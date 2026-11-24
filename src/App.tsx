@@ -44,6 +44,7 @@ import { HeroSearch } from './components/HeroSearch';
 import { usePrerenderData } from './lib/prerenderData';
 import { PLAY_STORE_URL, SITE_URL } from './lib/site';
 import { AppPromo } from './components/AppPromo';
+import { PartnersSection } from './components/PartnersSection';
 import { VoteMap, loadVotedReviews, saveVotedReviews, computeVote } from './lib/reviewVotes';
 
 // Lazy-loaded: only needed once a user opens one of these modals, so keeping
@@ -793,6 +794,9 @@ export default function App() {
 
         {/* Android app download */}
         <AppPromo />
+
+        {/* Partner firms */}
+        <PartnersSection />
 
       </main>
 
