@@ -12,6 +12,7 @@
 import { TRANSLATIONS } from './src/translations';
 import { ALL_CATEGORY_SLUGS_SET } from './src/lib/categories';
 import { HIDDEN_TEACHER_IDS } from './src/lib/hiddenTeachers';
+import { isProfileIndexable } from './src/lib/indexability';
 import { ABOUT_LASTMOD, FAQ_LASTMOD, OG_IMAGE_URL } from './src/lib/site';
 
 const BOT_USER_AGENT_PATTERN =
@@ -52,7 +53,7 @@ function buildPreviewHtml(opts: { title: string; description: string; image: str
 
 interface RealSiteData {
   /** id -> newest review date (YYYY-MM-DD) */
-  teachers: { id: string; lastmod: string }[];
+  teachers: { id: string; lastmod: string; reviewCount: number; bio: string }[];
   /** slug -> newest review date among that category's teachers, '' if none */
   categories: { slug: string; lastmod: string }[];
   /** newest review date on the whole site */
@@ -73,13 +74,13 @@ const newest = (a: string, b: string) => (b > a ? b : a);
 // actually changed — never the request time.
 async function fetchRealSiteData(supabaseUrl: string, supabaseAnonKey: string): Promise<RealSiteData> {
   const headers = { apikey: supabaseAnonKey, Authorization: `Bearer ${supabaseAnonKey}` };
-  const res = await fetch(`${supabaseUrl}/rest/v1/teachers?select=id,category,reviews(review_date,is_hidden)`, { headers });
+  const res = await fetch(`${supabaseUrl}/rest/v1/teachers?select=id,category,bio,reviews(review_date,is_hidden)`, { headers });
   if (!res.ok) return EMPTY_SITE_DATA;
 
   const rows = await res.json();
   if (!Array.isArray(rows)) return EMPTY_SITE_DATA;
 
-  const teachers: { id: string; lastmod: string }[] = [];
+  const teachers: { id: string; lastmod: string; reviewCount: number; bio: string }[] = [];
   const categoryLastmod = new Map<string, string>();
   let siteLastmod = '';
   for (const row of rows) {
@@ -94,7 +95,7 @@ async function fetchRealSiteData(supabaseUrl: string, supabaseAnonKey: string): 
       : [];
     const lastmod = dates.reduce(newest, '');
     if (dates.length > 0) {
-      teachers.push({ id: row.id, lastmod });
+      teachers.push({ id: row.id, lastmod, reviewCount: dates.length, bio: typeof row.bio === 'string' ? row.bio : '' });
       siteLastmod = newest(siteLastmod, lastmod);
     }
     if (row.category && ALL_CATEGORY_SLUGS_SET.has(row.category)) {
@@ -135,6 +136,9 @@ async function handleSitemap(): Promise<Response> {
     return [`  <url><loc>${ky}</loc>${lm}${links}</url>`, `  <url><loc>${ru}</loc>${lm}${links}</url>`];
   };
 
+  const singleEntry = (loc: string, lastmod: string) =>
+    `  <url><loc>${loc}</loc>${lastmod ? `<lastmod>${lastmod}</lastmod>` : ''}</url>`;
+
   // /about and /faq are static copy with no data behind them: their dates are
   // constants that get bumped when the copy changes (see lib/site.ts).
   const urls = [
@@ -144,7 +148,16 @@ async function handleSitemap(): Promise<Response> {
     ...entries('/about', ABOUT_LASTMOD),
     ...entries('/faq', FAQ_LASTMOD),
     ...data.categories.flatMap((c) => entries(`/category/${c.slug}`, c.lastmod)),
-    ...data.teachers.flatMap((tch) => entries(`/teacher/${encodeURIComponent(tch.id)}`, tch.lastmod)),
+    // Thin profiles are noindex (see lib/indexability.ts), so they stay out of the
+    // sitemap; a profile only lists a language twin when that twin is indexable too.
+    ...data.teachers.flatMap((tch) => {
+      const path = `/teacher/${encodeURIComponent(tch.id)}`;
+      const ky = isProfileIndexable(tch, 'ky');
+      const ru = isProfileIndexable(tch, 'ru');
+      if (ky && ru) return entries(path, tch.lastmod);
+      if (ky) return [singleEntry(`${SITE_URL}${path}`, tch.lastmod)];
+      return [];
+    }),
   ];
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>

@@ -44,6 +44,7 @@ import { localePath } from '../src/lib/i18n';
 import { computeKeyFacts } from '../src/lib/keyFacts';
 import type { SupportedLang } from '../src/translations';
 import type { Teacher } from '../src/types';
+import { isProfileIndexable } from '../src/lib/indexability';
 import { mapCourseRow, mapFeaturedVideoRow, REVIEWS_FEED_PAGE_SIZE } from '../src/lib/api';
 import type { FeedReviewSummary, ReviewsFeedCounts, SiteStats } from '../src/lib/api';
 
@@ -287,18 +288,27 @@ function writeRendered(
   lang: SupportedLang,
   meta: Omit<PageMeta, 'canonicalPath'>,
   data: Omit<PrerenderData, 'route' | 'builtAt'>,
-  extraHead = ''
+  extraHead = '',
+  indexing: { noindex?: boolean; hreflang?: boolean } = {}
 ): void {
+  const { noindex = false, hreflang = true } = indexing;
   const urlPath = localePath(`/${route}`, lang);
   const payload: PrerenderData = { ...data, route: urlPath, builtAt: BUILT_AT };
   const body = renderApp(urlPath, payload);
   const rootShell = /<div id="root">[\s\S]*?<\/div>\s*(?=<\/body>)/;
   if (!rootShell.test(template)) throw new Error('dist/index.html has an unexpected shape');
   const alt = (l: SupportedLang) => `${SITE_URL}${localePath(`/${route}`, l)}`;
+  // hreflang must be reciprocal and only point at indexable pages, so a page whose
+  // twin is noindex declares no alternates at all.
   const alternates = [
-    `    <link rel="alternate" hreflang="ky" href="${alt('ky')}" />`,
-    `    <link rel="alternate" hreflang="ru" href="${alt('ru')}" />`,
-    `    <link rel="alternate" hreflang="x-default" href="${alt('ky')}" />`,
+    ...(hreflang
+      ? [
+          `    <link rel="alternate" hreflang="ky" href="${alt('ky')}" />`,
+          `    <link rel="alternate" hreflang="ru" href="${alt('ru')}" />`,
+          `    <link rel="alternate" hreflang="x-default" href="${alt('ky')}" />`,
+        ]
+      : []),
+    ...(noindex ? ['    <meta name="robots" content="noindex, follow" />'] : []),
     `    <meta property="og:locale" content="${OG_LOCALE[lang]}" />`,
     `    <meta property="og:locale:alternate" content="${OG_LOCALE[lang === 'ky' ? 'ru' : 'ky']}" />`,
   ].join('\n');
@@ -309,7 +319,7 @@ function writeRendered(
       `<div id="root" data-prerendered="1" data-lang="${lang}" data-path="${urlPath}">${body}</div>\n    <script id="__PRERENDER__" type="application/json">${safeJson(payload)}</script>\n  `
     );
   writeHtml(dirFor(lang, route), html);
-  writtenUrls.push(`${SITE_URL}${urlPath}`);
+  if (!noindex) writtenUrls.push(`${SITE_URL}${urlPath}`);
 }
 
 /**
@@ -383,6 +393,7 @@ async function main(): Promise<void> {
       .map((o) => ({ id: o.id, name: o.name }));
 
   let pages = 0;
+  let noindexed = 0;
   for (const lang of LANGS) {
     const t = TRANSLATIONS[lang];
 
@@ -442,6 +453,7 @@ async function main(): Promise<void> {
     }
 
     for (const teacher of withReviews) {
+      const indexable = isProfileIndexable(teacher, lang);
       const description = t.teacherPage.metaDescription
         .replace('{name}', teacher.name)
         .replace('{rating}', teacher.averageRating.toFixed(1))
@@ -454,14 +466,24 @@ async function main(): Promise<void> {
         `teacher/${encodeURIComponent(teacher.id)}`,
         lang,
         { title: t.teacherPage.metaTitle.replace('{name}', teacher.name), description, image },
-        { teachers: [teacher], related: relatedFor(teacher) }
+        { teachers: [teacher], related: relatedFor(teacher) },
+        '',
+        {
+          noindex: !indexable,
+          // Both copies must be indexable for the pair to reference each other.
+          hreflang: isProfileIndexable(teacher, 'ky') && isProfileIndexable(teacher, 'ru'),
+        }
       );
+      if (!indexable) noindexed++;
       pages++;
     }
   }
 
   await submitToIndexNow(writtenUrls);
 
+  console.log(
+    `[prerender] ${noindexed} thin profile pages marked noindex (kept out of the sitemap and hreflang).`
+  );
   console.log(
     `[prerender] done: ${pages} pages (${LANGS.join(' + ')}): home, reviews, analytics, about, faq, ${categorySlugs.length} categories, ${withReviews.length} teachers per language.`
   );
